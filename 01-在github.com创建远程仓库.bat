@@ -25,7 +25,7 @@ git init
 git add .
 git commit -m "s1"
 gh repo create nvim1 --public --description "nvim1" --source=. --remote=origin
-REM git branch -M main
+git branch -M main
 REM git remote add origin git@github.com:peter-lyr/nvim1.git
 REM git push -u origin main
 
