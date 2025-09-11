@@ -1,1 +1,1 @@
-source ~/AppData/Local/nvim/init-1.lua
+source ~/AppData/Local/nvim/init.lua
