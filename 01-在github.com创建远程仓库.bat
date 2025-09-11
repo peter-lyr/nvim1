@@ -1,4 +1,5 @@
 @echo off
+chcp 936
 REM import os
 REM def run_print_cmd(cmd):
 REM     print(f"+++++ {cmd}")
