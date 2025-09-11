@@ -8,7 +8,8 @@ REM gh repo create nvim1 --public --description "nvim1" --source=. --remote=orig
 REM git branch -M main
 REM git remote add origin git@github.com:peter-lyr/nvim1.git
 REM git push -u origin main
-git commit -m "s5"
+git commit -m "s6"
+git push
 
 REM 有.git
 REM git remote add origin git@github.com:peter-lyr/test-2.git
