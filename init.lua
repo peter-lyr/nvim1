@@ -40,7 +40,7 @@ NvimQt = { string.sub(vim.env.VIMRUNTIME, 1, #vim.env.VIMRUNTIME - 12) .. 'nvim-
 require 'lazy'.setup {
   defaults = { lazy = true, },
   spec = {
-    { import = 't.t', },
+    -- { import = 't', },
   },
   root = DataLazyPlugins,
   readme = { enabled = false, },
