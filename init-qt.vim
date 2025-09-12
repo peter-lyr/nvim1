@@ -1,1 +1,1 @@
-source ~/AppData/Local/nvim1/init.lua
+source ~\Dp1\lazy\nvim1\init.lua

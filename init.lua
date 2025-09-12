@@ -16,6 +16,7 @@ Mason                = Dp1 .. '\\Mason'
 StdConfig            = vim.fn.stdpath 'config' .. '\\'
 StdData              = vim.fn.stdpath 'data' .. '\\'
 LazyPath             = Dp1 .. '\\lazy\\lazy.nvim'
+Nvim1                = Dp1 .. '\\lazy\\nvim1'
 DataLazyPlugins      = Dp1 .. '\\lazy\\plugins'
 
 math.huge            = 1073741824 -- 解决gitsigns的ig无用的问题
@@ -34,13 +35,14 @@ if not vim.loop.fs_stat(LazyPath) or vim.fn.filereadable(LazyPath .. '\\README.m
 end
 
 vim.opt.rtp:prepend(LazyPath)
+vim.opt.rtp:prepend(Nvim1)
 
 NvimQt = { string.sub(vim.env.VIMRUNTIME, 1, #vim.env.VIMRUNTIME - 12) .. 'nvim-qt\\runtime', }
 
 require 'lazy'.setup {
   defaults = { lazy = true, },
   spec = {
-    -- { import = 't', },
+    { import = 'plugins1', },
   },
   root = DataLazyPlugins,
   readme = { enabled = false, },
