@@ -26,11 +26,14 @@ require 'which-key'.register {
   ['<leader>wnl'] = { ':<c-u>vnew<cr>', 'window.new right', mode = { 'n', 'v', }, },
   ['<leader>wnt'] = { ':<c-u>tabnew<cr>', 'window.new tab', mode = { 'n', 'v', }, },
 
-  ['<leader>wo'] = { name = 'window.new.inc', },
-  ['<leader>woj'] = { function() W.new_win_finc_down() end, 'window.new.inc down', mode = { 'n', 'v', }, },
-  ['<leader>wok'] = { function() W.new_win_finc_up() end, 'window.new.inc up', mode = { 'n', 'v', }, },
-  ['<leader>woh'] = { function() W.new_win_finc_left() end, 'window.new.inc left', mode = { 'n', 'v', }, },
-  ['<leader>wol'] = { function() W.new_win_finc_right() end, 'window.new.inc right', mode = { 'n', 'v', }, },
+  ['<leader>wan'] = { function() W.new_empty_file() end, 'new_empty_file', mode = { 'n', 'v', }, },
+  ['<leader>wac'] = { function() W.copy_cur_file() end, 'copy_cur_file', mode = { 'n', 'v', }, },
+
+  -- ['<leader>wo'] = { name = 'window.new.inc', },
+  -- ['<leader>woj'] = { function() W.new_win_finc_down() end, 'window.new.inc down', mode = { 'n', 'v', }, },
+  -- ['<leader>wok'] = { function() W.new_win_finc_up() end, 'window.new.inc up', mode = { 'n', 'v', }, },
+  -- ['<leader>woh'] = { function() W.new_win_finc_left() end, 'window.new.inc left', mode = { 'n', 'v', }, },
+  -- ['<leader>wol'] = { function() W.new_win_finc_right() end, 'window.new.inc right', mode = { 'n', 'v', }, },
 
   ['<leader>we'] = { '<c-w>=', 'window equal', mode = { 'n', 'v', }, },
   ['<leader>wm'] = { function() W.win_max_height() end, 'window max height', mode = { 'n', 'v', }, },

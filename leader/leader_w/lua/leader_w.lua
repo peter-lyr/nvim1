@@ -28,31 +28,68 @@ function W.tabclose()
   ]]
 end
 
-function W.new_win_finc_do(new)
+function W.get_cur_bname()
   local bname = require 'f'.rep_slash(vim.fn.bufname())
-  local head = vim.fn.fnamemodify(bname, ':h')
-  local col = #head + 2
-  vim.cmd(new)
-  vim.fn.setline(1, bname)
-  require 'f'.cmd('norm 0%sl', col)
-  vim.fn.setpos('.', { 0, 1, col, })
+  local tail = vim.fn.fnamemodify(bname, ':t')
+  vim.fn.timer_start(40, function ()
+    local col = #tail
+    require 'f'.feed_keys([[\<c-f>]])
+    require 'f'.feed_keys(tostring(col) .. 'h')
+  end)
+  return bname
 end
 
-function W.new_win_finc_down()
-  W.new_win_finc_do 'new'
+function W.new_empty_file()
+  local bname = W.get_cur_bname()
+  if not require 'f'.is(bname) then
+    return
+  end
+  vim.ui.input({ prompt = 'new_empty_file: ', default = bname, }, function(file_path)
+    if file_path then
+      require 'f'.cmd('e %s', file_path)
+      require 'f'.cmd('w %s', file_path)
+    end
+  end)
 end
 
-function W.new_win_finc_up()
-  W.new_win_finc_do 'leftabove new'
+function W.copy_cur_file()
+  local bname = W.get_cur_bname()
+  if not require 'f'.is(bname) then
+    return
+  end
+  vim.ui.input({ prompt = 'copy_cur_file: ', default = bname, }, function(file_path)
+    if file_path then
+      require 'f'.cmd('w %s', file_path)
+      require 'f'.cmd('e %s', file_path)
+    end
+  end)
 end
 
-function W.new_win_finc_left()
-  W.new_win_finc_do 'leftabove vnew'
-end
-
-function W.new_win_finc_right()
-  W.new_win_finc_do 'vnew'
-end
+-- function W.new_win_finc_do(new)
+--   local bname = require 'f'.rep_slash(vim.fn.bufname())
+--   local head = vim.fn.fnamemodify(bname, ':h')
+--   local col = #head + 2
+--   vim.cmd(new)
+--   vim.fn.setline(1, bname)
+--   require 'f'.cmd('norm 0%sl', col)
+--   vim.fn.setpos('.', { 0, 1, col, })
+-- end
+--
+-- function W.new_win_finc_down()
+--   W.new_win_finc_do 'new'
+-- end
+--
+-- function W.new_win_finc_up()
+--   W.new_win_finc_do 'leftabove new'
+-- end
+--
+-- function W.new_win_finc_left()
+--   W.new_win_finc_do 'leftabove vnew'
+-- end
+--
+-- function W.new_win_finc_right()
+--   W.new_win_finc_do 'vnew'
+-- end
 
 function W.win_max_height()
   if vim.api.nvim_get_option_value('winfixheight', { win = vim.fn.win_getid(), }) == true then
