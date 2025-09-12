@@ -21,6 +21,22 @@ return {
     end,
   },
 
+  {
+    'peter-lyr/vim-projectroot',
+    config = function()
+      vim.g.rootmarkers = {
+        '.cache', 'build', '.clang-format', '.clangd', 'CMakeLists.txt', 'compile_commands.json',
+        '.svn', '.git',
+        '.root',
+      }
+      require 'f'.aucmd({ 'BufEnter', 'BufWinEnter', 'WinEnter', }, 'AutoProjectRootCD', {
+        callback = function()
+          require 'f'.project_cd()
+        end,
+      })
+    end,
+  },
+
   -- leader_w
   {
     name = 'leader_w',
