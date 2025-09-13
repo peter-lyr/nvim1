@@ -38,6 +38,14 @@ function F.in_arr(item, tbl)
   return F.is(vim.tbl_contains(tbl, item))
 end
 
+function F.in_str(item, str)
+  return string.match(str, item)
+end
+
+function F.is_term(file)
+  return F.in_str('term://', file) or F.in_str('term:\\\\', file)
+end
+
 function F.inc_file_tail(bname)
   bname = F.rep_slash(bname)
   local head = vim.fn.fnamemodify(bname, ':h')
@@ -72,6 +80,10 @@ end
 
 function F.put(arr, item)
   arr[#arr + 1] = item
+end
+
+function F.lower(content)
+  return vim.fn.tolower(content)
 end
 
 function F.get_win_buf_nrs()
@@ -220,6 +232,95 @@ function F.get_all_win_buf_nrs()
     end
   end
   return buf_nrs
+end
+
+function F.get_proj(file)
+  local proj = ''
+  F.lazy_load 'vim-projectroot'
+  if file and F.in_str('diffview://', file) then
+    file = string.gsub(file, '^diffview://', '')
+  end
+  if file then
+    _, proj = pcall(vim.fn['ProjectRootGet'], file)
+  else
+    _, proj = pcall(vim.fn['ProjectRootGet'])
+  end
+  return F.rep(proj)
+end
+
+function F.new_file(file)
+  return require 'plenary.path':new(F.rep(file))
+end
+
+function F.is_file_exists(file)
+  file = vim.fn.trim(file)
+  if #file == 0 then
+    return nil
+  end
+  local fp = F.new_file(file)
+  if fp:exists() then
+    return fp
+  end
+  return nil
+end
+
+function F.is_dir(file)
+  local fp = F.is_file_exists(F.rep(file))
+  if fp and fp:is_dir() then
+    return 1
+  end
+  return nil
+end
+
+function F.jump_or_split(file, no_split)
+  if not file then
+    return
+  end
+  if type(file) == 'number' then
+    if F.is_bnr_valid(file) then
+      file = vim.g.file
+    else
+      return
+    end
+  end
+  file = F.rep(file)
+  if F.is_dir(file) then
+    F.lazy_load 'nvim-tree.lua'
+    vim.cmd 'wincmd s'
+    F.cmd('e %s', file)
+    return
+  end
+  local file_proj = F.get_proj(file)
+  local jumped = nil
+  for winnr = vim.fn.winnr '$', 1, -1 do
+    local bufnr = vim.fn.winbufnr(winnr)
+    local fname = F.rep(F.get_bnr_file(bufnr))
+    if F.lower(file) == F.lower(fname) and (F.is_file_exists(fname) or F.is_term(fname)) then
+      vim.fn.win_gotoid(vim.fn.win_getid(winnr))
+      jumped = 1
+      break
+    end
+  end
+  if not jumped then
+    for winnr = vim.fn.winnr '$', 1, -1 do
+      local bufnr = vim.fn.winbufnr(winnr)
+      local fname = F.rep(F.get_bnr_file(bufnr))
+      if F.is_file_exists(fname) then
+        local proj = F.get_proj(fname)
+        if not F.is(file_proj) or F.is(proj) and F.lower(file_proj) == F.lower(proj) then
+          vim.fn.win_gotoid(vim.fn.win_getid(winnr))
+          jumped = 1
+          break
+        end
+      end
+    end
+  end
+  if not jumped and not no_split then
+    if F.is(F.get_cur_file()) or vim.bo[vim.fn.bufnr()].modified == true then
+      vim.cmd 'wincmd s'
+    end
+  end
+  F.cmd('e %s', file)
 end
 
 return F
