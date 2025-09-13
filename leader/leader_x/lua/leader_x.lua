@@ -1,3 +1,3 @@
-local O = {}
+local X = {}
 
-return O
+return X

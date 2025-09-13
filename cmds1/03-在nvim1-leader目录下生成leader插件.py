@@ -23,10 +23,10 @@ require 'which-key'.register {{
 }}
         '''.encode('utf-8').strip())
     # print(leaderx_plugin_leaderxlua)
-    leaderx_lua_dir = os.path.join(leader_dir, 'leader_x', 'lua')
+    leaderx_lua_dir = os.path.join(leader_dir, f'leader_{i}', 'lua')
     os.makedirs(leaderx_lua_dir, exist_ok=True)
     # print(leaderx_lua_dir)
-    leaderx_lua_leaderxlua = os.path.join(leaderx_lua_dir, 'leader_x.lua')
+    leaderx_lua_leaderxlua = os.path.join(leaderx_lua_dir, f'leader_{i}.lua')
     with open(leaderx_lua_leaderxlua, 'wb') as f:
         f.write(f'''
 local {i.upper()} = {{}}
