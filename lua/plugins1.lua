@@ -174,14 +174,14 @@ return {
   --   },
   -- },
 
-  -- -- leader_r
-  -- {
-  --   name = 'leader_r',
-  --   dir = Nvim1Leader .. 'leader_r',
-  --   keys = {
-  --     { '<leader>r', desc = 'leader_r', },
-  --   },
-  -- },
+  -- leader_r
+  {
+    name = 'leader_r',
+    dir = Nvim1Leader .. 'leader_r',
+    keys = {
+      { '<leader>r', desc = 'leader_r', },
+    },
+  },
 
   -- -- leader_s
   -- {

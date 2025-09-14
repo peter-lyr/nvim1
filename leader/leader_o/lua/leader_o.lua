@@ -6,5 +6,8 @@ function O.open_work_md()
   require 'f'.jump_or_split(w .. '\\work.md')
 end
 
-return O
+function O.open_init_lua()
+  require 'f'.jump_or_split(Nvim1 .. '\\init.lua')
+end
 
+return O

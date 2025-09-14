@@ -3,3 +3,6 @@
 # 增加leader_o
 未实现功能
 <leader>ow open_work_md
+<leader>oi打开lua.init文件
+01-放到家目录下，如.ssh/，.gitignore等
+leader r .: 用系统的方式打开当前文件
