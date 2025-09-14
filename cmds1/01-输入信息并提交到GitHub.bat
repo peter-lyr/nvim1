@@ -2,6 +2,8 @@
 :: Use default encoding
 chcp 437 >nul
 
+git status
+
 :: Check if in a Git repository
 git rev-parse --is-inside-work-tree >nul 2>&1
 if not %errorlevel% equ 0 (
