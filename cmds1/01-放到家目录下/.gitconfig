@@ -1,0 +1,32 @@
+[credential "https://github.com"]
+	provider = generic
+[user]
+	name = peter-lyr
+	email = llydrp.ldp@gmail.com
+[core]
+	excludesfile = ~/.gitignore_global
+	quotepath = false
+[i18n]
+	logoutputencoding = utf-8
+	encoding = utf-8
+[gui]
+	encoding = utf-8
+[push]
+	autoSetupRemote = true
+	default = upstream
+[http]
+  sslverify = false
+  lowSpeedLimit = 100000
+	lowSpeedTime = 60000
+	postBuffer = 524288000
+[https]
+  sslVerify = false
+	lowSpeedLimit = 100000
+	lowSpeedTime = 60000
+[safe]
+	directory = *
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
