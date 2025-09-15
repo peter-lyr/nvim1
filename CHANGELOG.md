@@ -10,4 +10,4 @@ leader r .: 用系统的方式打开当前文件
 08-pip-install.py
 增加gitsigns插件
 plugins.lua里不要有require 'f'
-<leader>ga优化 修复
+<leader>ga优化 修复 测试
