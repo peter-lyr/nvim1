@@ -28,7 +28,9 @@ function G.write_TempTxt_and_quit_and_add_commit_push()
   require 'f'.write_lines_to_file({}, TempTxt)
   require 'f'.cmd('bw %s', TempTxt)
   require 'f'.cmd('silent w! %s', TempTxt)
-  vim.cmd('silent q')
+  if not require 'f'.is(require 'f'.is_cur_last_win()) then
+    vim.cmd('silent q')
+  end
   for i=1, 1000 do
     local lines = require 'f'.read_lines_from_file(TempTxt)
     if #lines > 0 then
