@@ -18,14 +18,14 @@ return {
     },
   },
 
-  -- -- leader_c
-  -- {
-  --   name = 'leader_c',
-  --   dir = Nvim1Leader .. 'leader_c',
-  --   keys = {
-  --     { '<leader>c', desc = 'leader_c', },
-  --   },
-  -- },
+  -- leader_c
+  {
+    name = 'leader_c',
+    dir = Nvim1Leader .. 'leader_c',
+    keys = {
+      { '<leader>c', desc = 'leader_c', },
+    },
+  },
 
   -- leader_d
   {

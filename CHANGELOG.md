@@ -8,3 +8,4 @@ treesitter colorscheme
 <leader>db:delete_cur_buffer
 增加多个小插件
 优化bbye插件的用法
+增加commenter插件快捷键
