@@ -77,4 +77,8 @@ function G.git_reset_buffer()
   require 'gitsigns'.reset_buffer()
 end
 
+function G.pull()
+  require 'f'.async_run('git pull')
+end
+
 return G

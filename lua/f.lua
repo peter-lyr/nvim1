@@ -58,7 +58,6 @@ function F.inc_file_tail(bname)
     local format = F.format('%%0%dd', #item)
     vim.g.temp_timestamp = item
     vim.g.temp_date = -1
-    --- print(item)
     vim.cmd [[
       try
         let g:temp_date = msgpack#strptime('%Y%m%d', g:temp_timestamp)
@@ -649,11 +648,63 @@ function F.ensure_file_exists(file_path)
   if not vim.fn.filereadable(file_path) then
     local file, err = io.open(file_path, "w")
     if file then
-      file:close()  -- 关闭文件句柄
+      file:close()
     else
       error("无法创建文件: " .. file_path .. "，错误信息: " .. (err or "未知错误"))
     end
   end
+end
+
+function F.async_run(cmd, opts)
+  opts = opts or {}
+  local title = opts.title or "Command Output"
+  local job_id = vim.fn.jobstart(cmd, {
+    on_stdout = function(_, data, _)
+      local output = {}
+      for _, line in ipairs(data) do
+        if line ~= "" then
+          table.insert(output, line)
+        end
+      end
+      if #output > 0 then
+        local message = table.concat(output, "\n")
+        vim.notify(message, vim.log.levels.INFO, { title = title })
+        if opts.on_stdout then
+          opts.on_stdout(output)
+        end
+      end
+    end,
+    on_stderr = function(_, data, _)
+      local errors = {}
+      for _, line in ipairs(data) do
+        if line ~= "" then
+          table.insert(errors, line)
+        end
+      end
+      if #errors > 0 then
+        local message = table.concat(errors, "\n")
+        vim.notify(message, vim.log.levels.ERROR, { title = title .. " (Error)" })
+        if opts.on_stderr then
+          opts.on_stderr(errors)
+        end
+      end
+    end,
+    on_exit = function(_, exit_code, _)
+      local message = "Command completed with exit code: " .. exit_code
+      local level = exit_code == 0 and vim.log.levels.INFO or vim.log.levels.WARN
+      vim.notify(message, level, { title = title .. " (Exit)" })
+      if opts.on_exit then
+        opts.on_exit(exit_code)
+      end
+    end,
+    stdout_buffered = true,
+    stderr_buffered = true,
+  })
+  if job_id <= 0 then
+    vim.notify("Failed to start command: " .. vim.inspect(cmd), 
+      vim.log.levels.ERROR, { title = "Command Error" })
+  end
+  return job_id
 end
 
 return F

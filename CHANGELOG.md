@@ -16,3 +16,4 @@ treesitter colorscheme
 10-异步执行结束后回调.lua
 11-把yy复制的文本按行拆开放到table里.lua
 增加必要的选项
+13-执行系统命令而不阻塞.lua

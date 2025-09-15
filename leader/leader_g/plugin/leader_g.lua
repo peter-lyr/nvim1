@@ -7,6 +7,7 @@ require 'which-key'.register {
   ['<leader>g<leader>ay'] = { function() G.add_commit_push_yank() end, 'add_commit_push_yank', mode = { 'n', 'v', }, },
   ['<leader>gr'] = { function() G.reset_hunk() end, 'reset_hunk', mode = { 'n', }, silent = true, },
   ['<leader>g<leader>r'] = { function() G.git_reset_buffer() end, 'git_reset_buffer', mode = { 'n', 'v', }, silent = true, },
+  ['<leader>gp'] = { function() G.pull() end, 'pull', mode = { 'n', 'v', }, },
 }
 
 require 'which-key'.register {
