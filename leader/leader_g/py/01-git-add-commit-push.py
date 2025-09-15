@@ -9,12 +9,11 @@ if __name__ == '__main__':
         lines = f.readlines()
     with open(git_commit_txt, 'wb') as f:
         for line in lines:
-            l = line.strip()
-            if l[:2] == b'# ':
+            if line[:2] == b'# ':
                 continue
-            if not l:
+            if not line.strip():
                 continue
-            f.write(line)
+            f.write(line.strip())
     os.system("cd")
     os.system("git add -A")
     os.system(f"git commit -F {git_commit_txt}")
