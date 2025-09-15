@@ -97,8 +97,8 @@ require 'lazy'.setup {
   spec = {
     { import = 'plugins', },
     { import = 'leaders', },
-    { import = 'telescope', },
-    { import = 'treesitter', },
+    { import = '_telescope', },
+    { import = '_treesitter', },
     { import = 'events', },
   },
   root = DataLazyPlugins,
