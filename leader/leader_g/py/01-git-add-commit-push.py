@@ -8,6 +8,7 @@ if __name__ == '__main__':
     with open(git_commit_txt, 'rb') as f:
         lines = f.readlines()
     push_allow = False
+    git_commit_txt = git_commit_txt + '.txt'
     with open(git_commit_txt, 'wb') as f:
         for line in lines:
             if line[:2] == b'# ':

@@ -10,4 +10,12 @@ function O.open_init_lua()
   require 'f'.jump_or_split(Nvim1 .. '\\init.lua')
 end
 
+function O.open_temp_txt()
+  require 'f'.jump_or_split(TempTxt)
+end
+
+function O.open_temp_txt_txt()
+  require 'f'.jump_or_split(TempTxt .. '.txt')
+end
+
 return O
