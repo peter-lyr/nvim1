@@ -41,15 +41,18 @@ function G.write_TempTxt_and_quit_and_add_commit_push()
 end
 
 function G.add_commit_push_edit_status()
-  vim.cmd 'new'
-  local status = vim.fn.execute '!git status'
-  status = vim.fn.split(status, '\n')
-  for i = 1, #status do
-    status[i] = '# ' .. status[i]
-  end
-  vim.fn.setline('.', status)
-  vim.cmd 'norm G'
-  vim.keymap.set({ 'n', 'v', }, '<cr><cr>', function() G.write_TempTxt_and_quit_and_add_commit_push() end, { desc = 'write_TempTxt_and_quit_and_add_commit_push', buffer = vim.fn.bufnr(), })
+  require 'f'.async_run_command("git status", TempTxt, function()
+    vim.schedule(function()
+      vim.cmd 'new'
+      local status = require 'f'.read_lines_from_file(TempTxt)
+      for i = 1, #status do
+        status[i] = '# ' .. status[i]
+      end
+      vim.fn.setline('.', status)
+      vim.cmd 'norm G'
+      vim.keymap.set({ 'n', 'v', }, '<cr><cr>', function() G.write_TempTxt_and_quit_and_add_commit_push() end, { desc = 'write_TempTxt_and_quit_and_add_commit_push', buffer = vim.fn.bufnr(), })
+    end)
+  end)
 end
 
 function G.add_commit_push_yank()

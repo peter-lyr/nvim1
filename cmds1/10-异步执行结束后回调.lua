@@ -62,8 +62,10 @@ end
 
 -- 示例用法
 local function process_result(output_file, exit_code)
-  vim.notify("命令输出已保存到: " .. output_file, vim.log.levels.INFO)
-  -- 可以打开文件查看结果：vim.cmd("edit " .. output_file)
+  vim.schedule(function()
+    vim.notify("命令输出已保存到: " .. output_file, vim.log.levels.INFO)
+    -- 可以打开文件查看结果：vim.cmd("edit " .. output_file)
+  end
 end
 
 -- 执行 git status 并在完成后调用 process_result
