@@ -589,58 +589,6 @@ function F.yank_to_lines_table()
   return lines
 end
 
-function F.async_run_command(cmd, output_file, callback)
-  F.lazy_load 'nvim-notify'
-  local dir = vim.fn.fnamemodify(output_file, ":h")
-  if not vim.fn.isdirectory(dir) then
-    vim.fn.mkdir(dir, "p")
-  end
-  local cmd_parts = {}
-  for part in string.gmatch(cmd, "%S+") do
-    table.insert(cmd_parts, part)
-  end
-  local cmd_name = table.remove(cmd_parts, 1)
-  local fd = vim.loop.fs_open(output_file, "w", 438)
-  if not fd then
-    vim.notify("无法创建输出文件: " .. output_file, vim.log.levels.ERROR)
-    return
-  end
-  local stdout = vim.loop.new_pipe(false)
-  local stderr = vim.loop.new_pipe(false)
-  local handle, pid
-  handle, pid = vim.loop.spawn(cmd_name, {
-    args = cmd_parts,
-    stdio = {nil, stdout, stderr}
-  }, function(code, signal)
-    stdout:close()
-    stderr:close()
-    vim.loop.fs_close(fd)
-    if handle then handle:close() end
-    vim.notify(string.format("命令 '%s' 已完成 (退出码: %d)", cmd, code), vim.log.levels.INFO)
-    if type(callback) == "function" then
-      callback(output_file, code, signal)
-    end
-  end)
-  if not handle then
-    stdout:close()
-    stderr:close()
-    vim.loop.fs_close(fd)
-    vim.notify("无法执行命令: " .. cmd, vim.log.levels.ERROR)
-    return
-  end
-  stdout:read_start(function(err, data)
-    if data then
-      vim.loop.fs_write(fd, data, nil, function() end)
-    end
-  end)
-  stderr:read_start(function(err, data)
-    if data then
-      vim.loop.fs_write(fd, data, nil, function() end)
-    end
-  end)
-  vim.notify("正在执行命令: " .. cmd, vim.log.levels.INFO)
-end
-
 function F.ensure_file_exists(file_path)
   local dir_path = vim.fn.fnamemodify(file_path, ":h")
   if not vim.fn.isdirectory(dir_path) then
