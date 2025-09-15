@@ -165,6 +165,13 @@ return {
       require 'notify'.setup {
         max_width = 100,
         top_down = false,
+        timeout = 8000,
+        fps = 8,
+        on_open = function(win)
+          -- local buf = vim.api.nvim_win_get_buf(win)
+          -- require 'f'.printf("buf:%s", buf)
+          -- vim.api.nvim_buf_set_option(buf, "filetype", "markdown")
+        end,
       }
     end,
   },
