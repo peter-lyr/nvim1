@@ -26,3 +26,4 @@ treesitter colorscheme
 13-执行系统命令而不阻塞.lua
 f.lua:优化+1:增加run_and_notify(...)
 notify:优化配置+1
+lazy.nvim:修复:v10.24.3,解决dir=''的插件加载不了

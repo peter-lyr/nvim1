@@ -83,8 +83,8 @@ if not vim.loop.fs_stat(LazyPath) or vim.fn.filereadable(LazyPath .. '\\README.m
     'clone',
     '--filter=blob:none',
     'https://github.com/folke/lazy.nvim.git',
-    -- '--branch=stable', -- latest stable release
-    -- '-b', 'v10.24.3',  -- v11的有的插件加载不了
+    '--branch=stable', -- latest stable release
+    '-b', 'v10.24.3',  -- v11的有的插件加载不了
     LazyPath,
   }
 end
@@ -99,6 +99,7 @@ require 'lazy'.setup {
     { import = 'leaders', },
     { import = 'telescope', },
     { import = 'treesitter', },
+    { import = 'events', },
   },
   root = DataLazyPlugins,
   readme = { enabled = false, },
