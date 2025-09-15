@@ -8,6 +8,7 @@
 <leader>ga优化+7:异步跑git status从run_and_silent换成async_run
 <leader>gr
 <leader>gl:require 'f'.async_run('git log --oneline')
+async_run:优化:stdout默认输出到TempTxt
 <leader>df:删除当前buffer所在文件
 <leader>bw:交换打开两个相关联的文件
 <leader>ow.:资源管理器打开当前路径
