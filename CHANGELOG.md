@@ -4,3 +4,4 @@
 <leader>bw:交换打开两个相关联的文件
 <leader>ow.:资源管理器打开当前路径
 treesitter colorscheme
+<leader>db:delete_cur_buffer
