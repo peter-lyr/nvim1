@@ -1,8 +1,11 @@
 return {
 
   'nvim-lua/plenary.nvim',
+  {
+    'jghauser/mkdir.nvim',
+    event = 'BufNewFile',
+  },
 
-  -- whichkey
   {
     'folke/which-key.nvim',
     event = 'VeryLazy',
@@ -93,6 +96,18 @@ return {
         numhl               = true,
         attach_to_untracked = true,
       }
+    end,
+  },
+
+  {
+    'Pocco81/auto-save.nvim',
+    event = { 'InsertLeave', 'TextChanged', 'CursorHoldI', },
+    config = function()
+      require 'auto-save'.setup {
+        execution_message = { message = function() return '' end, },
+        trigger_events = { 'TextChanged', },
+      }
+      require 'auto-save'.on()
     end,
   },
 

@@ -429,15 +429,19 @@ function F.telescope_cmd_dir(cmd, dir)
   F.cmd('Telescope %s', cmd)
 end
 
-function F.run_and_exit(cmd)
+function F.run_and_exit(cmd, ...)
+  cmd = string.format(cmd, ...)
   F.cmd([[silent !start cmd /c "%s"]], cmd)
 end
 
-function F.run_and_silent(cmd)
+function F.run_and_silent(cmd, ...)
+  cmd = string.format(cmd, ...)
   F.cmd([[silent !start /b /min cmd /c "%s"]], cmd)
 end
 
-function F.run_and_pause(cmd)
+function F.run_and_pause(...)
+  local cmd = string.format(...)
+  F.printf([[silent !start cmd /c "%s & pause"]], cmd)
   F.cmd([[silent !start cmd /c "%s & pause"]], cmd)
 end
 
@@ -455,6 +459,24 @@ function F.next_hunk()
     return
   end
   require 'gitsigns'.next_hunk()
+end
+
+function F.read_lines_from_file(file)
+  if F.is_file_exists(file) then
+    return vim.fn.readfile(file)
+  end
+  return {}
+end
+
+function F.write_lines_to_file(lines, file)
+  vim.fn.writefile(lines, file)
+end
+
+function F.to_table(any)
+  if type(any) ~= 'table' then
+    return { any, }
+  end
+  return any
 end
 
 return F
