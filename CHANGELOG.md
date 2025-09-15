@@ -7,3 +7,4 @@
 01-放到家目录下，如.ssh/，.gitignore等
 leader r .: 用系统的方式打开当前文件
 增加telescope及其他相关插件
+08-pip-install.py

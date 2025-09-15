@@ -144,14 +144,16 @@ return {
     },
   },
 
-  -- -- leader_s
-  -- {
-  --   name = 'leader_s',
-  --   dir = Nvim1Leader .. 'leader_s',
-  --   keys = {
-  --     { '<leader>s', desc = 'leader_s', },
-  --   },
-  -- },
+  -- leader_s
+  {
+    name = 'leader_s',
+    dir = Nvim1Leader .. 'leader_s',
+    keys = {
+      { '<leader>s',        desc = 'telescope', },
+      { '<leader><leader>', '<cmd>Telescope find_files<cr>',                desc = 'find_files',                mode = { 'n', 'v', }, },
+      { '<leader>/',        '<cmd>Telescope current_buffer_fuzzy_find<cr>', desc = 'current_buffer_fuzzy_find', mode = { 'n', 'v', }, },
+    },
+  },
 
   -- -- leader_t
   -- {
