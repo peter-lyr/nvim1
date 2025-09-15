@@ -4,6 +4,7 @@
 <leader>ga优化+5:异步跑git status
 <leader>ga优化+6:add_commit_push_edit,<leader>g<leader>as:add_commit_push_edit_status
 <leader>g<leader>as:修复vim.notify
+<leader>g<leader>as:修复+2:
 <leader>g<leader>as:优化+1:把async_run_command合并到async_run里去
 <leader>ga优化+7:异步跑git status从run_and_silent换成async_run
 <leader>gr

@@ -19,7 +19,7 @@ if __name__ == '__main__':
             push_allow = True
     if not push_allow:
         print(f"commit file is empty: {git_commit_txt}")
-        os._exit(2)
+        os._exit(3)
     os.system("chcp 65001>nul & git add -A")
     print(os.getcwd())
     os.system(f"git commit -F {git_commit_txt}")
