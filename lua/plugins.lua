@@ -5,6 +5,7 @@ return {
     'jghauser/mkdir.nvim',
     event = 'BufNewFile',
   },
+  'moll/vim-bbye',
 
   {
     'folke/which-key.nvim',
