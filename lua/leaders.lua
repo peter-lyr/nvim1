@@ -54,14 +54,14 @@ return {
   --   },
   -- },
 
-  -- -- leader_g
-  -- {
-  --   name = 'leader_g',
-  --   dir = Nvim1Leader .. 'leader_g',
-  --   keys = {
-  --     { '<leader>g', desc = 'leader_g', },
-  --   },
-  -- },
+  -- leader_g
+  {
+    name = 'leader_g',
+    dir = Nvim1Leader .. 'leader_g',
+    keys = {
+      { '<leader>g', desc = 'leader_g', },
+    },
+  },
 
   -- -- leader_h
   -- {

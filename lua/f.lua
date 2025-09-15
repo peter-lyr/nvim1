@@ -104,8 +104,8 @@ function F.get_win_buf_modifiable_nrs()
   return buf_nrs
 end
 
-function F.cmd(str_format, ...)
-  local cmd = string.format(str_format, ...)
+function F.cmd(...)
+  local cmd = string.format(...)
   local _sta, _ = pcall(vim.cmd, cmd)
   if _sta then
     return cmd
@@ -121,8 +121,8 @@ function F.printf(...)
   vim.print(string.format(...))
 end
 
-function F.format(str_format, ...)
-  return string.format(str_format, ...)
+function F.format(...)
+  return string.format(...)
 end
 
 function F.join(arr, sep)
@@ -190,6 +190,15 @@ function F.project_cd()
     catch
     endtry
   ]]
+end
+
+function F.getlua(luafile)
+  local loaded = string.match(F.rep(luafile), '.+lua\\(.+)%.lua')
+  if not loaded then
+    return ''
+  end
+  loaded = string.gsub(loaded, '\\', '.')
+  return loaded
 end
 
 function F.get_bnr_file(bnr)
@@ -429,19 +438,18 @@ function F.telescope_cmd_dir(cmd, dir)
   F.cmd('Telescope %s', cmd)
 end
 
-function F.run_and_exit(cmd, ...)
-  cmd = string.format(cmd, ...)
+function F.run_and_exit(...)
+  local cmd = string.format(...)
   F.cmd([[silent !start cmd /c "%s"]], cmd)
 end
 
-function F.run_and_silent(cmd, ...)
-  cmd = string.format(cmd, ...)
+function F.run_and_silent(...)
+  local cmd = string.format(...)
   F.cmd([[silent !start /b /min cmd /c "%s"]], cmd)
 end
 
 function F.run_and_pause(...)
   local cmd = string.format(...)
-  F.printf([[silent !start cmd /c "%s & pause"]], cmd)
   F.cmd([[silent !start cmd /c "%s & pause"]], cmd)
 end
 
