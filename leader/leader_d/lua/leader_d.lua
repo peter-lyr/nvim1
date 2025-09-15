@@ -28,4 +28,3 @@ function D.delete_cur_buffer()
 end
 
 return D
-
