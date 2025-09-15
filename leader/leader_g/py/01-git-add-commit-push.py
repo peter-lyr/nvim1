@@ -15,8 +15,6 @@ if __name__ == '__main__':
                 continue
             f.write(line.strip())
     os.system("cd")
-    os.system("chcp")
-    os.system("chcp 936")
-    os.system("git add -A")
+    os.system("chcp 936 & git add -A")
     os.system(f"git commit -F {git_commit_txt}")
     os.system("git push")
