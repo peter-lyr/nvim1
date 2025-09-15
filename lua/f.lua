@@ -219,7 +219,27 @@ function F.getluapy(luafile)
   if last_lua_index then
     parts[last_lua_index] = "plugin"
   end
-  return table.concat(parts, "\\")
+  return table.concat(parts, "\\"), last_lua_index
+end
+
+function F.getpylua(pyfile)
+  local parts = {}
+  for part in string.gmatch(pyfile, "[^\\]+") do
+    table.insert(parts, part)
+  end
+  local last_lua_index = nil
+  for i = #parts, 1, -1 do
+    if parts[i] == "plugin" then
+      if i < #parts then
+        last_lua_index = i
+        break
+      end
+    end
+  end
+  if last_lua_index then
+    parts[last_lua_index] = "lua"
+  end
+  return table.concat(parts, "\\"), last_lua_index
 end
 
 function F.get_bnr_file(bnr)
@@ -364,6 +384,13 @@ function F.jump_or_split(file, no_split)
     if F.is(F.get_cur_file()) or vim.bo[vim.fn.bufnr()].modified == true then
       vim.cmd 'wincmd s'
     end
+  end
+  F.cmd('e %s', file)
+end
+
+function F.edit(file)
+  if not file then
+    return
   end
   F.cmd('e %s', file)
 end
