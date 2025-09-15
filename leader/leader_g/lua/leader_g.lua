@@ -12,7 +12,7 @@ function G.add_commit_push_file(file)
     return
   end
   local git_add_commit_push_py = get_py('01-git-add-commit-push.py')
-  require 'f'.run_and_pause('python %s %s', git_add_commit_push_py, file)
+  require 'f'.run_and_silent('python %s %s', git_add_commit_push_py, file)
 end
 
 function G.add_commit_push_infos(infos)

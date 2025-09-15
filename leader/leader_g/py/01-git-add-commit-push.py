@@ -15,6 +15,6 @@ if __name__ == '__main__':
                 continue
             f.write(line.strip())
     os.system("chcp 65001>nul & git add -A")
-    os.system("cd")
+    print(os.getcwd())
     os.system(f"git commit -F {git_commit_txt}")
     os.system("git push")
