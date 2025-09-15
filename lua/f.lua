@@ -655,7 +655,7 @@ function F.ensure_file_exists(file_path)
   end
 end
 
-function F.async_run(cmd, opts)
+function F.async_run_do(cmd, opts)
   opts = opts or {}
   local title = opts.title or "Command Output"
   local job_id = vim.fn.jobstart(cmd, {
@@ -690,9 +690,9 @@ function F.async_run(cmd, opts)
       end
     end,
     on_exit = function(_, exit_code, _)
-      local message = "Command completed with exit code: " .. exit_code
-      local level = exit_code == 0 and vim.log.levels.INFO or vim.log.levels.WARN
-      vim.notify(message, level, { title = title .. " (Exit)" })
+      -- local message = "Command completed with exit code: " .. exit_code
+      -- local level = exit_code == 0 and vim.log.levels.INFO or vim.log.levels.WARN
+      -- vim.notify(message, level, { title = title .. " (Exit)" })
       if opts.on_exit then
         opts.on_exit(exit_code)
       end
@@ -707,4 +707,8 @@ function F.async_run(cmd, opts)
   return job_id
 end
 
+function F.async_run(...)
+  local cmd = string.format(...)
+  F.async_run_do(cmd)
+end
 return F
