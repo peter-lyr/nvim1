@@ -525,6 +525,7 @@ function F.read_lines_from_file(file)
 end
 
 function F.write_lines_to_file(lines, file)
+  F.ensure_file_exists(file)
   vim.fn.writefile(lines, file)
 end
 
@@ -604,11 +605,9 @@ function F.async_run_command(cmd, output_file, callback)
     vim.notify("无法创建输出文件: " .. output_file, vim.log.levels.ERROR)
     return
   end
-  print('sssssssssssss3')
   local stdout = vim.loop.new_pipe(false)
   local stderr = vim.loop.new_pipe(false)
   local handle, pid
-  print('sssssssssssss1')
   handle, pid = vim.loop.spawn(cmd_name, {
     args = cmd_parts,
     stdio = {nil, stdout, stderr}
@@ -622,7 +621,6 @@ function F.async_run_command(cmd, output_file, callback)
       callback(output_file, code, signal)
     end
   end)
-  print('sssssssssssss2')
   if not handle then
     stdout:close()
     stderr:close()
@@ -630,21 +628,32 @@ function F.async_run_command(cmd, output_file, callback)
     vim.notify("无法执行命令: " .. cmd, vim.log.levels.ERROR)
     return
   end
-  print('sssssssssssss4')
   stdout:read_start(function(err, data)
     if data then
       vim.loop.fs_write(fd, data, nil, function() end)
     end
   end)
-  print('sssssssssssss5')
   stderr:read_start(function(err, data)
     if data then
       vim.loop.fs_write(fd, data, nil, function() end)
     end
   end)
-  print('sssssssssssss6')
   vim.notify("正在执行命令: " .. cmd, vim.log.levels.INFO)
-  print('sssssssssssss7')
+end
+
+function F.ensure_file_exists(file_path)
+  local dir_path = vim.fn.fnamemodify(file_path, ":h")
+  if not vim.fn.isdirectory(dir_path) then
+    vim.fn.mkdir(dir_path, "p")
+  end
+  if not vim.fn.filereadable(file_path) then
+    local file, err = io.open(file_path, "w")
+    if file then
+      file:close()  -- 关闭文件句柄
+    else
+      error("无法创建文件: " .. file_path .. "，错误信息: " .. (err or "未知错误"))
+    end
+  end
 end
 
 return F
