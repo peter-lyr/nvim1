@@ -42,6 +42,7 @@ if not vim.loop.fs_stat(LazyPath) or vim.fn.filereadable(LazyPath .. '\\README.m
 end
 
 vim.opt.rtp:prepend(LazyPath)
+vim.opt.rtp:prepend(Nvim1)
 
 require 'lazy'.setup {
   defaults = { lazy = true, },

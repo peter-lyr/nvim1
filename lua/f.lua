@@ -195,7 +195,7 @@ end
 function F.getlua(luafile)
   local loaded = string.match(F.rep(luafile), '.+lua\\(.+)%.lua')
   if not loaded then
-    return ''
+    return nil
   end
   loaded = string.gsub(loaded, '\\', '.')
   return loaded

@@ -26,15 +26,9 @@ end
 
 function G.write_TempTxt_and_quit_and_add_commit_push()
   require 'f'.write_lines_to_file({}, TempTxt)
-  vim.cmd [[
-    try
-      g/^# /d
-      g/^$/d
-    catch
-    endtry
-  ]]
+  require 'f'.printf('w! %s', TempTxt)
   require 'f'.cmd('w! %s', TempTxt)
-  for i=1, 10000 do
+  for i=1, 1000 do
     local lines = require 'f'.read_lines_from_file(TempTxt)
     if #lines > 0 then
       break
@@ -48,7 +42,6 @@ function G.add_commit_push_edit_status()
   local status = vim.fn.execute('!git status')
   status = vim.fn.split(status, '\n')
   for i=1, #status do
-    print(status[i])
     status[i] = '# ' .. status[i]
   end
   vim.fn.setline('.', status)
