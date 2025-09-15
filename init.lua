@@ -50,6 +50,7 @@ require 'lazy'.setup {
     { import = 'plugins', },
     { import = 'leaders', },
     { import = 'telescope', },
+    { import = 'treesitter', },
   },
   root = DataLazyPlugins,
   readme = { enabled = false, },

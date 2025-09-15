@@ -111,4 +111,30 @@ return {
     end,
   },
 
+  {
+    'catppuccin/nvim',
+    name = 'catppuccin',
+    event = { 'VeryLazy', },
+    config = function()
+      vim.fn.timer_start(50, function()
+        require 'catppuccin'.setup {
+          dim_inactive = {
+            enabled = true,
+            shade = 'dark',
+            percentage = 0,
+          },
+          no_italic = true,
+          styles = {
+            comments = {},
+            conditionals = {},
+          },
+          integrations = {
+            notify = true,
+          },
+        }
+        vim.cmd.colorscheme 'catppuccin-frappe'
+      end)
+    end,
+  },
+
 }

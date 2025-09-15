@@ -3,3 +3,4 @@
 <leader>df:删除当前buffer所在文件
 <leader>bw:交换打开两个相关联的文件
 <leader>ow.:资源管理器打开当前路径
+treesitter colorscheme
