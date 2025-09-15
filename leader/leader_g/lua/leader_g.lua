@@ -60,6 +60,16 @@ function G.add_commit_push_yank()
   G.add_commit_push_file(TempTxt)
 end
 
+function G.reset_hunk()
+  require 'gitsigns'.reset_hunk()
+end
 
+function G.reset_hunk_v()
+  require 'gitsigns'.reset_hunk { vim.fn.line '.', vim.fn.line 'v', }
+end
+
+function G.git_reset_buffer()
+  require 'gitsigns'.reset_buffer()
+end
 
 return G
