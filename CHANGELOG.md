@@ -11,4 +11,4 @@ leader r .: 用系统的方式打开当前文件
 增加gitsigns插件
 plugins.lua里不要有require 'f'
 <leader>ga优化+2 修复 测试 ok+1 测试chcp+4 ok silent
-<leader>r.测试
+<leader>r.优化:连带plugin目录下的lua也source

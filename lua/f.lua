@@ -201,6 +201,27 @@ function F.getlua(luafile)
   return loaded
 end
 
+
+function F.getluapy(luafile)
+  local parts = {}
+  for part in string.gmatch(luafile, "[^\\]+") do
+    table.insert(parts, part)
+  end
+  local last_lua_index = nil
+  for i = #parts, 1, -1 do
+    if parts[i] == "lua" then
+      if i < #parts then
+        last_lua_index = i
+        break
+      end
+    end
+  end
+  if last_lua_index then
+    parts[last_lua_index] = "plugin"
+  end
+  return table.concat(parts, "\\")
+end
+
 function F.get_bnr_file(bnr)
   return F.rep(vim.api.nvim_buf_get_name(bnr))
 end

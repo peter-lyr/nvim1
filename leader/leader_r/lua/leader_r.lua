@@ -11,8 +11,10 @@ function R.run_and_pause()
     if require 'f'.is(lua) then
       package.loaded[lua] = nil
     end
-    require 'f'.cmd('source %s', cur_file)
     require 'f'.printf('source %s', cur_file)
+    require 'f'.printf('source %s', require 'f'.getluapy(cur_file))
+    require 'f'.cmd('source %s', cur_file)
+    require 'f'.cmd('source %s', require 'f'.getluapy(cur_file))
     if require 'f'.is(lua) then
       package.loaded[lua] = dofile(cur_file)
     end
