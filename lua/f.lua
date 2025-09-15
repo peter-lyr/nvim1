@@ -659,7 +659,22 @@ end
 function F.async_run(cmd, opts)
   F.lazy_load 'nvim-notify'
   opts = opts or {}
+  local output_file = opts.output_file
+  local fd = nil
+  local dir
+  if output_file then
+    dir = vim.fn.fnamemodify(output_file, ":h")
+    if not vim.fn.isdirectory(dir) then
+      vim.fn.mkdir(dir, "p")
+    end
+    fd = vim.loop.fs_open(output_file, "w", 438)
+    if not fd then
+      vim.notify("无法创建输出文件: " .. output_file, vim.log.levels.ERROR)
+      return
+    end
+  end
   local title = opts.title or "Command Output"
+  local cmd_args = type(cmd) == "string" and cmd or table.concat(cmd, " ")
   local job_id = vim.fn.jobstart(cmd, {
     on_stdout = function(_, data, _)
       local output = {}
@@ -667,6 +682,10 @@ function F.async_run(cmd, opts)
         if line ~= "" then
           table.insert(output, line)
         end
+      end
+      if fd and #output > 0 then
+        local content = table.concat(output, "\n") .. "\n"
+        vim.loop.fs_write(fd, content, nil, function() end)
       end
       if #output > 0 then
         local message = table.concat(output, "\n")
@@ -683,6 +702,10 @@ function F.async_run(cmd, opts)
           table.insert(errors, line)
         end
       end
+      if fd and #errors > 0 then
+        local content = table.concat(errors, "\n") .. "\n"
+        vim.loop.fs_write(fd, content, nil, function() end)
+      end
       if #errors > 0 then
         local message = table.concat(errors, "\n")
         vim.notify(message, vim.log.levels.ERROR, { title = title .. " (Error)" })
@@ -691,20 +714,28 @@ function F.async_run(cmd, opts)
         end
       end
     end,
-    on_exit = function(_, exit_code, _)
-      local message = "Command completed with exit code: " .. exit_code
+    on_exit = function(_, exit_code, signal)
+      if fd then
+        vim.loop.fs_close(fd)
+      end
+      local message = string.format("命令 '%s' 已完成 (退出码: %d)", cmd_args, exit_code)
       local level = exit_code == 0 and vim.log.levels.INFO or vim.log.levels.WARN
       vim.notify(message, level, { title = title .. " (Exit)" })
       if opts.on_exit then
-        opts.on_exit(exit_code)
+        opts.on_exit(exit_code, signal, output_file)
       end
     end,
-    stdout_buffered = true,
-    stderr_buffered = true,
+    stdout_buffered = opts.stdout_buffered ~= nil and opts.stdout_buffered or true,
+    stderr_buffered = opts.stderr_buffered ~= nil and opts.stderr_buffered or true,
   })
   if job_id <= 0 then
-    vim.notify("Failed to start command: " .. vim.inspect(cmd), 
+    if fd then
+      vim.loop.fs_close(fd)
+    end
+    vim.notify("无法执行命令: " .. vim.inspect(cmd), 
       vim.log.levels.ERROR, { title = "Command Error" })
+  else
+    vim.notify("正在执行命令: " .. cmd_args, vim.log.levels.INFO)
   end
   return job_id
 end

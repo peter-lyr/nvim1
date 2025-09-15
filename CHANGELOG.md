@@ -4,6 +4,7 @@
 <leader>ga优化+5:异步跑git status
 <leader>ga优化+6:add_commit_push_edit,<leader>g<leader>as:add_commit_push_edit_status
 <leader>g<leader>as:修复vim.notify
+<leader>g<leader>as:优化+1:把async_run_command合并到async_run里去
 <leader>gr
 <leader>df:删除当前buffer所在文件
 <leader>bw:交换打开两个相关联的文件
@@ -18,4 +19,3 @@ treesitter colorscheme
 11-把yy复制的文本按行拆开放到table里.lua
 增加必要的选项
 13-执行系统命令而不阻塞.lua
-todo: 把async_run_command合并到async_run里去
