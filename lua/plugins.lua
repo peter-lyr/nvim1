@@ -137,4 +137,204 @@ return {
     end,
   },
 
+  {
+    'rcarriga/nvim-notify',
+    keys = {
+      { '<bs>',   function() require 'notify'.dismiss() end, mode = { 'n', 'v', }, desc = 'notify dismiss', },
+      { '<c-bs>', function() require 'notify'.dismiss() end, mode = { 'n', 'v', }, desc = 'notify dismiss', },
+    },
+    dependencies = {
+      {
+        'stevearc/dressing.nvim',
+        config = function()
+          require 'dressing'.setup {
+            input = {
+              title_pos = 'center',
+              relative = 'editor',
+              prefer_width = 80,
+              max_width = { 140, 0.9, },
+              min_width = { 40, 0.2, },
+            },
+          }
+        end,
+      },
+    },
+    config = function()
+      vim.notify = require 'notify'
+      require 'notify'.setup {
+        max_width = 100,
+        top_down = false,
+      }
+    end,
+  },
+
+  {
+    'windwp/nvim-autopairs',
+    event = { 'InsertEnter', 'CursorMoved', },
+    dependencies = {
+      'tpope/vim-surround',
+    },
+    config = function()
+      local autopairs = require 'nvim-autopairs'
+      autopairs.setup {}
+    end,
+  },
+
+  {
+    'lukas-reineke/indent-blankline.nvim',
+    main = 'ibl',
+    event = { 'CursorMoved', 'CursorMovedI', },
+    dependencies = {
+      'echasnovski/mini.indentscope',
+    },
+    config = function()
+      -- indentscope
+      require 'mini.indentscope'.setup {
+        symbol = '│',
+        options = { try_as_border = true, },
+      }
+      -- indentblank
+      require 'ibl'.setup {
+        indent = {
+          char = '│',
+        },
+        exclude = {
+          filetypes = {
+            --- my
+            'qf',
+            'mason',
+            'notify',
+            'startuptime',
+            'NvimTree',
+            'fugitive',
+            'lazy',
+            ---
+            'lspinfo',
+            'packer',
+            'checkhealth',
+            'help',
+            'man',
+            'gitcommit',
+            'TelescopePrompt',
+            'TelescopeResults',
+            '',
+          },
+        },
+      }
+    end,
+  },
+
+  {
+    'preservim/nerdcommenter',
+    dependencies = {
+      'numToStr/Comment.nvim',
+    },
+    config = function()
+      vim.g.NERDSpaceDelims = 1
+      vim.g.NERDDefaultAlign = 'left'
+      vim.g.NERDCommentEmptyLines = 1
+      vim.g.NERDTrimTrailingWhitespace = 1
+      vim.g.NERDToggleCheckAllLines = 1
+      vim.g.NERDCustomDelimiters = {
+        dosbatch = {
+          left = 'REM',
+          right = '',
+        },
+        python = {
+          left = '#',
+          right = '',
+        },
+        markdown = {
+          left = '<!--',
+          right = '-->',
+          leftAlt = '[',
+          rightAlt = ']: #',
+        },
+        c = {
+          left = '//',
+          right = '',
+          leftAlt = '/*',
+          rightAlt = '*/',
+        },
+        lisp = {
+          left = ';;',
+          right = '',
+        },
+        conf = {
+          left = '//',
+          right = '',
+          leftAlt = '#',
+          rightAlt = '',
+        },
+      }
+      require 'Comment'.setup {}
+    end,
+  },
+
+  {
+    'phaazon/hop.nvim',
+    keys = {
+      { 's', ':HopChar1<cr>', mode = { 'n', }, silent = true, desc = 'HopChar1', },
+      -- { 't', ':HopChar2<cr>', mode = { 'n', }, silent = true, desc = 'HopChar2', },
+    },
+    config = function()
+      require 'hop'.setup {
+        keys = 'asdghklqwertyuiopzxcvbnmfj',
+      }
+    end,
+  },
+
+  {
+    'natecraddock/sessions.nvim',
+    event = { 'VeryLazy', },
+    cmd = { 'SessionsSave', 'SessionsLoad', 'SessionsStop', },
+    config = function()
+      require 'sessions'.setup {
+        events = { 'VimLeavePre', },
+        session_filepath = Dp1Temp .. '\\sessions.vim',
+        absolute = nil,
+      }
+    end,
+  },
+
+  {
+    'nvim-pack/nvim-spectre',
+    config = function()
+      require 'spectre'.setup {
+        replace_engine = {
+          ['sed'] = {
+            cmd = Nvim1 .. '\\lua\\sed.exe',
+            args = {
+              '-i',
+              '-E',
+            },
+            options = {
+              ['ignore-case'] = {
+                value = '--ignore-case',
+                icon = '[I]',
+                desc = 'ignore case',
+              },
+            },
+          },
+          ['oxi'] = {
+            cmd = 'oxi',
+            args = {},
+            options = {
+              ['ignore-case'] = {
+                value = 'i',
+                icon = '[I]',
+                desc = 'ignore case',
+              },
+            },
+          },
+        },
+      }
+    end,
+  },
+
+  {
+    'moll/vim-bbye',
+    name = 'bbye',
+  },
+
 }

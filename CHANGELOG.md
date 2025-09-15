@@ -6,3 +6,4 @@
 <leader>ow.:资源管理器打开当前路径
 treesitter colorscheme
 <leader>db:delete_cur_buffer
+增加多个小插件
