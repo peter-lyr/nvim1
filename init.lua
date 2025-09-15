@@ -21,9 +21,12 @@ Nvim1Leader          = Nvim1 .. '\\leader\\'
 
 GitFakeRemoteDir     = Home .. '\\gfrd'
 
-NvimQt = string.sub(vim.env.VIMRUNTIME, 1, #vim.env.VIMRUNTIME - 12) .. 'nvim-qt\\runtime'
+StdConfig            = vim.fn.stdpath 'config' .. '\\'
+StdData              = vim.fn.stdpath 'data' .. '\\'
 
-math.huge            = 1073741824 -- 解决gitsigns的ig无用的问题
+NvimQt               = string.sub(vim.env.VIMRUNTIME, 1, #vim.env.VIMRUNTIME - 12) .. 'nvim-qt\\runtime'
+
+-- math.huge            = 1073741824 -- 解决gitsigns的ig无用的问题
 
 if not vim.loop.fs_stat(LazyPath) or vim.fn.filereadable(LazyPath .. '\\README.md') == 0 then
   vim.fn.system('rmdir /s /q "' .. LazyPath .. '"')
@@ -43,7 +46,9 @@ vim.opt.rtp:prepend(LazyPath)
 require 'lazy'.setup {
   defaults = { lazy = true, },
   spec = {
-    { import = 'plugins1', },
+    { import = 'plugins', },
+    { import = 'leaders', },
+    { import = 'telescope', },
   },
   root = DataLazyPlugins,
   readme = { enabled = false, },

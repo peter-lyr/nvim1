@@ -252,6 +252,13 @@ function F.new_file(file)
   return require 'plenary.path':new(F.rep(file))
 end
 
+function F.get_parent(file)
+  if not file then
+    file = F.get_cur_file()
+  end
+  return F.new_file(file):parent().filename
+end
+
 function F.is_file_exists(file)
   file = vim.fn.trim(file)
   if #file == 0 then
@@ -260,6 +267,14 @@ function F.is_file_exists(file)
   local fp = F.new_file(file)
   if fp:exists() then
     return fp
+  end
+  return nil
+end
+
+function F.is_file(file)
+  local fp = F.is_file_exists(F.rep(file))
+  if fp and fp:is_file() then
+    return 1
   end
   return nil
 end
@@ -321,6 +336,109 @@ function F.jump_or_split(file, no_split)
     end
   end
   F.cmd('e %s', file)
+end
+
+function F.get_ft_bnr(ft)
+  if not ft then
+    return nil
+  end
+  for _, buf in ipairs(F.get_win_buf_nrs()) do
+    if ft == vim.bo[buf].filetype then
+      return buf
+    end
+  end
+end
+
+function F.lazy_map(tbls)
+  for _, tbl in ipairs(tbls) do
+    local opt = {}
+    for k, v in pairs(tbl) do
+      if type(k) == 'string' and k ~= 'mode' then
+        opt[k] = v
+      end
+    end
+    local lhs = tbl[1]
+    if type(lhs) == 'table' then
+      for _, l in ipairs(lhs) do
+        vim.keymap.set(tbl['mode'], l, tbl[2], opt)
+      end
+    else
+      vim.keymap.set(tbl['mode'], lhs, tbl[2], opt)
+    end
+  end
+end
+
+function F.findall(patt, str)
+  vim.g.patt = patt
+  vim.g.str = str
+  vim.g.res = {}
+  vim.cmd [[
+    python << EOF
+import re
+import vim
+try:
+  import luadata
+except:
+  import os
+  os.system('pip install -i https://pypi.tuna.tsinghua.edu.cn/simple --trusted-host mirrors.aliyun.com luadata')
+  import luadata
+patt = vim.eval('g:patt')
+string = vim.eval('g:str')
+res = re.findall(patt, string)
+if res:
+  new_res = eval(str(res).replace('(', '[').replace(')', ']'))
+  new_res = luadata.serialize(new_res, encoding='utf-8', indent=' ', indent_level=0)
+  vim.command(f"""lua vim.g.res = {new_res}""")
+EOF
+  ]]
+  return vim.g.res
+end
+
+function F.just_get_git_remote_url(proj)
+  local remote = ''
+  if proj then
+    remote = vim.fn.system(string.format('cd %s && git remote -v', proj))
+  else
+    remote = vim.fn.system 'git remote -v'
+  end
+  local res = F.findall([[\s([^\s]*git.*\.com[^\s]+)\s]], remote)
+  if #res >= 1 then
+    return res[1]
+  end
+  return ''
+end
+
+function F.copy_multiple_filenames()
+  vim.fn.setreg('w', vim.loop.cwd())
+  vim.fn.setreg('a', F.get_cur_file())
+  vim.fn.setreg('b', vim.fn.bufname())
+  vim.fn.setreg('t', vim.fn.fnamemodify(vim.fn.bufname(), ':t'))
+  vim.fn.setreg('e', vim.fn.expand '<cword>')
+  vim.fn.setreg('r', vim.fn.expand '<cWORD>')
+  vim.fn.setreg('i', vim.fn.trim(vim.fn.getline '.'))
+  vim.fn.setreg('u', F.just_get_git_remote_url())
+  vim.fn.setreg('d', vim.fn.strftime '%Y%m%d')
+end
+
+function F.telescope_cmd_dir(cmd, dir)
+  F.lazy_load 'telescope'
+  if dir then
+    F.cmd('Telescope %s cwd=%s', cmd, dir)
+    return
+  end
+  F.cmd('Telescope %s', cmd)
+end
+
+function F.run_and_exit(cmd)
+  F.cmd([[silent !start cmd /c "%s"]], cmd)
+end
+
+function F.run_and_silent(cmd)
+  F.cmd([[silent !start /b /min cmd /c "%s"]], cmd)
+end
+
+function F.run_and_pause(cmd)
+  F.cmd([[silent !start cmd /c "%s & pause"]], cmd)
 end
 
 return F
