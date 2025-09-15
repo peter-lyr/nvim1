@@ -18,3 +18,4 @@ treesitter colorscheme
 11-把yy复制的文本按行拆开放到table里.lua
 增加必要的选项
 13-执行系统命令而不阻塞.lua
+todo: 把async_run_command合并到async_run里去
