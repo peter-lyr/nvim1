@@ -55,6 +55,11 @@ function G.add_commit_push_edit_status()
   end)
 end
 
+function G.add_commit_push_edit()
+  vim.cmd 'new'
+  vim.keymap.set({ 'n', 'v', }, '<cr><cr>', function() G.write_TempTxt_and_quit_and_add_commit_push() end, { desc = 'write_TempTxt_and_quit_and_add_commit_push', buffer = vim.fn.bufnr(), })
+end
+
 function G.add_commit_push_yank()
   require 'f'.write_lines_to_file(require 'f'.yank_to_lines_table(), TempTxt)
   G.add_commit_push_file(TempTxt)
