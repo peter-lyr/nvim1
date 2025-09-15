@@ -28,9 +28,6 @@ NvimQt               = string.sub(vim.env.VIMRUNTIME, 1, #vim.env.VIMRUNTIME - 1
 
 -- math.huge            = 1073741824 -- 解决gitsigns的ig无用的问题
 
-function()
-end
-
 vim.opt.number         = true
 vim.opt.numberwidth    = 1
 vim.opt.relativenumber = false

@@ -590,6 +590,7 @@ function F.yank_to_lines_table()
 end
 
 function F.async_run_command(cmd, output_file, callback)
+  F.lazy_load 'nvim-notify'
   local dir = vim.fn.fnamemodify(output_file, ":h")
   if not vim.fn.isdirectory(dir) then
     vim.fn.mkdir(dir, "p")
@@ -656,6 +657,7 @@ function F.ensure_file_exists(file_path)
 end
 
 function F.async_run(cmd, opts)
+  F.lazy_load 'nvim-notify'
   opts = opts or {}
   local title = opts.title or "Command Output"
   local job_id = vim.fn.jobstart(cmd, {
