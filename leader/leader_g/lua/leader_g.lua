@@ -29,6 +29,7 @@ function G.write_TempTxt_and_quit_and_add_commit_push()
   vim.cmd [[
     try
       g/^# /d
+      g/^$/d
     catch
     endtry
   ]]
