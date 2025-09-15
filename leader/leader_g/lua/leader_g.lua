@@ -25,8 +25,20 @@ function G.add_commit_push_infos(infos)
 end
 
 function G.write_TempTxt_and_quit_and_add_commit_push()
-  require 'f'.cmd('w %s', TempTxt)
-  vim.cmd('q')
+  require 'f'.write_lines_to_file({}, TempTxt)
+  vim.cmd [[
+    try
+      g/^# /d
+    catch
+    endtry
+  ]]
+  require 'f'.cmd('w! %s', TempTxt)
+  for i=1, 10000 do
+    local lines = require 'f'.read_lines_from_file(TempTxt)
+    if #lines > 0 then
+      break
+    end
+  end
   G.add_commit_push_file(TempTxt)
 end
 
