@@ -26,7 +26,7 @@ end
 
 function G.write_TempTxt_and_quit_and_add_commit_push()
   require 'f'.write_lines_to_file({}, TempTxt)
-  require 'f'.printf('w! %s', TempTxt)
+  require 'f'.cmd('bw %s', TempTxt)
   require 'f'.cmd('w! %s', TempTxt)
   for i=1, 1000 do
     local lines = require 'f'.read_lines_from_file(TempTxt)

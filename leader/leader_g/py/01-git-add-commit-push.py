@@ -10,7 +10,7 @@ if __name__ == '__main__':
     with open(git_commit_txt, 'wb') as f:
         for line in lines:
             l = line.strip()
-            if l[:2] == '# ':
+            if l[:2] == b'# ':
                 continue
             if not l:
                 continue
