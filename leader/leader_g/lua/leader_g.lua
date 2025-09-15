@@ -81,4 +81,8 @@ function G.pull()
   require 'f'.async_run('git pull')
 end
 
+function G.log()
+  require 'f'.async_run('git log --oneline')
+end
+
 return G

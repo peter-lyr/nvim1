@@ -4,6 +4,7 @@
 <leader>ga优化+5:异步跑git status
 <leader>ga优化+6:add_commit_push_edit,<leader>g<leader>as:add_commit_push_edit_status
 <leader>gr
+<leader>gl:require 'f'.async_run('git log --oneline')
 <leader>df:删除当前buffer所在文件
 <leader>bw:交换打开两个相关联的文件
 <leader>ow.:资源管理器打开当前路径

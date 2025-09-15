@@ -8,6 +8,7 @@ require 'which-key'.register {
   ['<leader>gr'] = { function() G.reset_hunk() end, 'reset_hunk', mode = { 'n', }, silent = true, },
   ['<leader>g<leader>r'] = { function() G.git_reset_buffer() end, 'git_reset_buffer', mode = { 'n', 'v', }, silent = true, },
   ['<leader>gp'] = { function() G.pull() end, 'pull', mode = { 'n', 'v', }, },
+  ['<leader>gl'] = { function() G.log() end, 'log', mode = { 'n', 'v', }, },
 }
 
 require 'which-key'.register {
