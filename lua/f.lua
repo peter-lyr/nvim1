@@ -535,4 +535,26 @@ function F.to_table(any)
   return any
 end
 
+function F.delete_files(files)
+  if not files then
+    local file = F.get_cur_file()
+    if F.is_file(file) then
+      files = { file, }
+    end
+  end
+  if not files then
+    return
+  end
+  F.lazy_load 'vim-bbye'
+  for _, file in ipairs(files) do
+    local bnr = vim.fn.bufnr(file)
+    if F.is_file_exists(file) then
+      if 0 ~= vim.fn.confirm(F.format('Delete %s?', file)) then
+        F.cmd('Bwipeout! %d', bnr)
+        F.run_and_silent('del /f /s %s', file)
+      end
+    end
+  end
+end
+
 return F

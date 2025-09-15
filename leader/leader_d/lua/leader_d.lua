@@ -24,7 +24,7 @@ function D.delete_cur_file()
 end
 
 function D.delete_cur_buffer()
-  vim.cmd 'bdelete!'
+  require 'f'.delete_files()
 end
 
 return D
