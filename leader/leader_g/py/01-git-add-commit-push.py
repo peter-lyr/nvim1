@@ -7,6 +7,7 @@ if __name__ == '__main__':
     git_commit_txt = sys.argv[1]
     with open(git_commit_txt, 'rb') as f:
         lines = f.readlines()
+    push_allow = False
     with open(git_commit_txt, 'wb') as f:
         for line in lines:
             if line[:2] == b'# ':
@@ -14,6 +15,10 @@ if __name__ == '__main__':
             if not line.strip():
                 continue
             f.write(line.strip())
+            push_allow = True
+    if not push_allow:
+        print(f"commit file is empty: {git_commit_txt}")
+        os._exit(2)
     os.system("chcp 65001>nul & git add -A")
     print(os.getcwd())
     os.system(f"git commit -F {git_commit_txt}")

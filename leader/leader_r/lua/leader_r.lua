@@ -13,6 +13,9 @@ function R.run_and_pause()
     end
     require 'f'.cmd('source %s', cur_file)
     require 'f'.printf('source %s', cur_file)
+    if require 'f'.is(lua) then
+      package.loaded[lua] = dofile(cur_file)
+    end
   else
     require 'f'.cmd([[silent !start cmd /c "%s & pause"]], cur_file)
   end
