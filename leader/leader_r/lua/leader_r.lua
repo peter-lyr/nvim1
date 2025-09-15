@@ -1,6 +1,6 @@
 local R = {}
 
-function R.run_and_pause()
+function R.run_cur_file()
   local cur_file = require 'f'.get_cur_file()
   if not require 'f'.is_file_exists(cur_file) then
     return

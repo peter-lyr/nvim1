@@ -485,21 +485,6 @@ function F.telescope_cmd_dir(cmd, dir)
   F.cmd('Telescope %s', cmd)
 end
 
-function F.run_and_exit(...)
-  local cmd = string.format(...)
-  F.cmd([[silent !start cmd /c "%s"]], cmd)
-end
-
-function F.run_and_silent(...)
-  local cmd = string.format(...)
-  F.cmd([[silent !start /b /min cmd /c "%s"]], cmd)
-end
-
-function F.run_and_pause(...)
-  local cmd = string.format(...)
-  F.cmd([[silent !start cmd /c "%s & pause"]], cmd)
-end
-
 function F.prev_hunk()
   if vim.wo.diff then
     vim.cmd [[call feedkeys("[c")]]
@@ -551,7 +536,7 @@ function F.delete_files(files)
     if F.is_file_exists(file) then
       if 0 ~= vim.fn.confirm(F.format('Delete %s?', file)) then
         F.cmd('Bwipeout! %d', bnr)
-        F.run_and_silent('del /f /s %s', file)
+        F.run_and_notify('del /f /s %s', file)
       end
     end
   end
@@ -599,7 +584,7 @@ function F.ensure_file_exists(file_path)
     if file then
       file:close()
     else
-      error("无法创建文件: " .. file_path .. "，错误信息: " .. (err or "未知错误"))
+      error("failed to touch: " .. file_path .. ", error msg: " .. (err or "unknown error"))
     end
   end
 end
@@ -617,7 +602,7 @@ function F.async_run(cmd, opts)
     end
     fd = vim.loop.fs_open(output_file, "w", 438)
     if not fd then
-      vim.notify("无法创建输出文件: " .. output_file, vim.log.levels.ERROR)
+      vim.notify("failed to touch file: " .. output_file, vim.log.levels.ERROR)
       return
     end
   end
@@ -666,7 +651,7 @@ function F.async_run(cmd, opts)
       if fd then
         vim.loop.fs_close(fd)
       end
-      local message = string.format("命令 '%s' 已完成 (退出码: %d)", cmd_args, exit_code)
+      local message = string.format("cmd '%s' done (exit code: %d)", cmd_args, exit_code)
       local level = exit_code == 0 and vim.log.levels.INFO or vim.log.levels.WARN
       vim.notify(message, level, { title = title .. " (Exit)" })
       if opts.on_exit then
@@ -680,12 +665,32 @@ function F.async_run(cmd, opts)
     if fd then
       vim.loop.fs_close(fd)
     end
-    vim.notify("无法执行命令: " .. vim.inspect(cmd), 
+    vim.notify("failed to run " .. vim.inspect(cmd), 
       vim.log.levels.ERROR, { title = "Command Error" })
   else
-    vim.notify("正在执行命令: " .. cmd_args, vim.log.levels.INFO)
+    vim.notify("running: " .. cmd_args, vim.log.levels.INFO)
   end
   return job_id
+end
+
+function F.run_and_exit(...)
+  local cmd = string.format(...)
+  F.cmd([[silent !start cmd /c "%s"]], cmd)
+end
+
+function F.run_and_silent(...)
+  local cmd = string.format(...)
+  F.cmd([[silent !start /b /min cmd /c "%s"]], cmd)
+end
+
+function F.run_and_pause(...)
+  local cmd = string.format(...)
+  F.cmd([[silent !start cmd /c "%s & pause"]], cmd)
+end
+
+function F.run_and_notify(...)
+  local cmd = string.format(...)
+  F.async_run(cmd)
 end
 
 return F
