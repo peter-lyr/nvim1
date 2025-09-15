@@ -3,7 +3,6 @@ local R = {}
 function R.run_and_pause()
   local cur_file = require 'f'.get_cur_file()
   if not require 'f'.is_file_exists(cur_file) then
-    print("ccccccccccccccccccccc")
     return
   end
   if vim.o.ft == 'lua' then
@@ -15,7 +14,6 @@ function R.run_and_pause()
     require 'f'.cmd('source %s', cur_file)
     require 'f'.printf('source %s', cur_file)
   else
-    print("sssssssssssssssssssss")
     require 'f'.cmd([[silent !start cmd /c "%s & pause"]], cur_file)
   end
 end
