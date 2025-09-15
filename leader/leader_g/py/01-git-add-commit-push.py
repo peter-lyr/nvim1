@@ -14,7 +14,7 @@ if __name__ == '__main__':
             if not line.strip():
                 continue
             f.write(line.strip())
-    os.system("cd")
     os.system("chcp 65001>nul & git add -A")
+    os.system("cd")
     os.system(f"git commit -F {git_commit_txt}")
     os.system("git push")
