@@ -557,4 +557,36 @@ function F.delete_files(files)
   end
 end
 
+function F.execute_out_buffer(cmd)
+  local lines = vim.fn.split(vim.fn.trim(vim.fn.execute(cmd)), '\n')
+  if #lines == 0 then
+    F.printf('No Output cmd: %s', cmd)
+    return
+  end
+  require 'f'.jump_or_split(TempTxt)
+  vim.cmd 'norm ggdG'
+  vim.fn.append(vim.fn.line '$', lines)
+end
+
+function F.notifications_buffer()
+  F.lazy_load 'nvim-notify'
+  F.execute_out_buffer 'Notifications'
+end
+
+function F.message_buffer()
+  F.execute_out_buffer 'message'
+end
+
+function F.yank_to_lines_table()
+  local yank_content = vim.fn.getreg('"')
+  local lines = {}
+  for line in string.gmatch(yank_content, '([^\n]*)\n?') do
+    table.insert(lines, line)
+  end
+  if #lines > 0 and lines[#lines] == '' then
+    table.remove(lines)
+  end
+  return lines
+end
+
 return F

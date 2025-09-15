@@ -1,17 +1,17 @@
 local G = {}
 
 local function get_py(py)
-  local info = debug.getinfo(1, "S")
+  local info = debug.getinfo(1, 'S')
   local relative_path = info.source:sub(2)
   relative_path = require 'f'.rep(relative_path)
-  return vim.fn.fnamemodify(relative_path, ":p:h:h") .. '\\py\\' .. py
+  return vim.fn.fnamemodify(relative_path, ':p:h:h') .. '\\py\\' .. py
 end
 
 function G.add_commit_push_file(file)
   if not require 'f'.is_file_exists(file) then
     return
   end
-  local git_add_commit_push_py = get_py('01-git-add-commit-push.py')
+  local git_add_commit_push_py = get_py '01-git-add-commit-push.py'
   require 'f'.run_and_silent('python %s %s', git_add_commit_push_py, file)
 end
 
@@ -29,9 +29,9 @@ function G.write_TempTxt_and_quit_and_add_commit_push()
   require 'f'.cmd('bw %s', TempTxt)
   require 'f'.cmd('silent w! %s', TempTxt)
   if not require 'f'.is(require 'f'.is_cur_last_win()) then
-    vim.cmd('silent q')
+    vim.cmd 'silent q'
   end
-  for i=1, 1000 do
+  for _ = 1, 1000 do
     local lines = require 'f'.read_lines_from_file(TempTxt)
     if #lines > 0 then
       break
@@ -42,14 +42,21 @@ end
 
 function G.add_commit_push_edit_status()
   vim.cmd 'new'
-  local status = vim.fn.execute('!git status')
+  local status = vim.fn.execute '!git status'
   status = vim.fn.split(status, '\n')
-  for i=1, #status do
+  for i = 1, #status do
     status[i] = '# ' .. status[i]
   end
   vim.fn.setline('.', status)
   vim.cmd 'norm G'
-  vim.keymap.set({ 'n', 'v', }, '<cr><cr>', function() G.write_TempTxt_and_quit_and_add_commit_push() end, { desc = 'add_commit_push_edit_status', buffer = vim.fn.bufnr(), })
+  vim.keymap.set({ 'n', 'v', }, '<cr><cr>', function() G.write_TempTxt_and_quit_and_add_commit_push() end, { desc = 'write_TempTxt_and_quit_and_add_commit_push', buffer = vim.fn.bufnr(), })
 end
+
+function G.add_commit_push_yank()
+  require 'f'.write_lines_to_file(require 'f'.yank_to_lines_table(), TempTxt)
+  G.add_commit_push_file(TempTxt)
+end
+
+
 
 return G

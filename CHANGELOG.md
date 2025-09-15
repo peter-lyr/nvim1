@@ -9,3 +9,6 @@ treesitter colorscheme
 增加多个小插件
 优化bbye插件的用法
 增加commenter插件快捷键
+<leader>bm:message_buffer
+10-异步执行结束后回调.lua
+11-把yy复制的文本按行拆开放到table里.lua
