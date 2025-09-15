@@ -25,16 +25,26 @@ return {
 
   {
     'peter-lyr/vim-projectroot',
+    event = { 'BufReadPre', 'BufNewFile', },
     config = function()
       vim.g.rootmarkers = {
         '.cache', 'build', '.clang-format', '.clangd', 'CMakeLists.txt', 'compile_commands.json',
         '.svn', '.git',
         '.root',
       }
-      require 'f'.aucmd({ 'BufEnter', 'BufWinEnter', 'WinEnter', }, 'AutoProjectRootCD', {
+      vim.api.nvim_create_autocmd({ 'BufEnter', 'BufWinEnter', 'WinEnter', }, {
         callback = function()
-          require 'f'.project_cd()
+          vim.cmd [[
+            try
+              if &ft != 'help'
+                ProjectRootCD
+              endif
+            catch
+            endtry
+          ]]
         end,
+        group = vim.api.nvim_create_augroup('AutoProjectRootCD', {}),
+        desc = 'AutoProjectRootCD',
       })
     end,
   },
@@ -43,10 +53,30 @@ return {
     'lewis6991/gitsigns.nvim',
     event = { 'BufReadPre', 'BufNewFile', },
     keys = {
-      { '<leader>k', function() require 'f'.prev_hunk() end, desc = 'prev_hunk', },
-      { '<leader>j', function() require 'f'.next_hunk() end, desc = 'next_hunk', },
-      { 'ag',        ':<C-U>Gitsigns select_hunk<CR>',       desc = 'git.signs: select_hunk', mode = { 'o', 'x', }, silent = true, },
-      { 'ig',        ':<C-U>Gitsigns select_hunk<CR>',       desc = 'git.signs: select_hunk', mode = { 'o', 'x', }, silent = true, },
+      {
+        '<leader>k',
+        function()
+          if vim.wo.diff then
+            vim.cmd [[call feedkeys("[c")]]
+            return
+          end
+          require 'gitsigns'.prev_hunk()
+        end,
+        desc = 'prev_hunk',
+      },
+      {
+        '<leader>j',
+        function()
+          if vim.wo.diff then
+            vim.cmd [[call feedkeys("]c")]]
+            return
+          end
+          require 'gitsigns'.next_hunk()
+        end,
+        desc = 'next_hunk',
+      },
+      { 'ag', ':<C-U>Gitsigns select_hunk<CR>', desc = 'git.signs: select_hunk', mode = { 'o', 'x', }, silent = true, },
+      { 'ig', ':<C-U>Gitsigns select_hunk<CR>', desc = 'git.signs: select_hunk', mode = { 'o', 'x', }, silent = true, },
     },
     config = function()
       require 'gitsigns'.setup {
