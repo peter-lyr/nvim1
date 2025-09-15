@@ -39,4 +39,31 @@ return {
     end,
   },
 
+  {
+    'lewis6991/gitsigns.nvim',
+    event = { 'BufReadPre', 'BufNewFile', },
+    keys = {
+      { '<leader>k', function() require 'f'.prev_hunk() end, desc = 'prev_hunk', },
+      { '<leader>j', function() require 'f'.next_hunk() end, desc = 'next_hunk', },
+      { 'ag',        ':<C-U>Gitsigns select_hunk<CR>',       desc = 'git.signs: select_hunk', mode = { 'o', 'x', }, silent = true, },
+      { 'ig',        ':<C-U>Gitsigns select_hunk<CR>',       desc = 'git.signs: select_hunk', mode = { 'o', 'x', }, silent = true, },
+    },
+    config = function()
+      require 'gitsigns'.setup {
+        signs               = {
+          add = { text = '+', },
+          change = { text = '~', },
+          delete = { text = '_', },
+          topdelete = { text = '‾', },
+          changedelete = { text = '', },
+          untracked = { text = '?', },
+        },
+        signs_staged_enable = true,
+        signcolumn          = true,
+        numhl               = true,
+        attach_to_untracked = true,
+      }
+    end,
+  },
+
 }

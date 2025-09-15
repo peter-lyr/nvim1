@@ -9,6 +9,7 @@ return {
       'paopaol/telescope-git-diffs.nvim',
       'sindrets/diffview.nvim',
     },
+    cmd = { 'Telescope', },
     config = function()
       local Path = require 'plenary.path'
       local action_state = require 'telescope.actions.state'

@@ -441,4 +441,20 @@ function F.run_and_pause(cmd)
   F.cmd([[silent !start cmd /c "%s & pause"]], cmd)
 end
 
+function F.prev_hunk()
+  if vim.wo.diff then
+    vim.cmd [[call feedkeys("[c")]]
+    return
+  end
+  require 'gitsigns'.prev_hunk()
+end
+
+function F.next_hunk()
+  if vim.wo.diff then
+    vim.cmd [[call feedkeys("]c")]]
+    return
+  end
+  require 'gitsigns'.next_hunk()
+end
+
 return F

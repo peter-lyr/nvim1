@@ -8,3 +8,4 @@
 leader r .: 用系统的方式打开当前文件
 增加telescope及其他相关插件
 08-pip-install.py
+增加gitsigns插件
