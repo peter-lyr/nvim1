@@ -8,7 +8,7 @@ leader_dir = os.path.join(up_dir, 'leader')
 # leader_x\plugin\leader_x.lua
 for i in range(97, 97+26):
     i = chr(i)
-    if i != 'g':
+    if i != 'd':
         continue
     leaderx_plugin_dir = os.path.join(leader_dir, f'leader_{i}', 'plugin')
     os.makedirs(leaderx_plugin_dir, exist_ok=True)
