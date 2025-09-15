@@ -592,7 +592,7 @@ end
 function F.async_run(cmd, opts)
   F.lazy_load 'nvim-notify'
   opts = opts or {}
-  local output_file = opts.output_file or TempTxt
+  local output_file = opts.output_file or StdOutTxt
   local fd = nil
   local dir
   if output_file then

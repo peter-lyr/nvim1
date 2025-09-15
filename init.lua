@@ -9,6 +9,7 @@ Dp1                  = Home .. '\\Dp1'
 
 Dp1Temp              = Dp1 .. '\\temp'
 TempTxt              = Dp1Temp .. '\\temp.txt'
+StdOutTxt            = Dp1Temp .. '\\stdout.txt'
 
 TreeSitter           = Dp1 .. '\\TreeSitter'
 Mason                = Dp1 .. '\\Mason'

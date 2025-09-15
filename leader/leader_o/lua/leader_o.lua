@@ -18,6 +18,10 @@ function O.open_temp_txt_txt()
   require 'f'.jump_or_split(TempTxt .. '.txt')
 end
 
+function O.open_stdout_txt()
+  require 'f'.jump_or_split(StdOutTxt)
+end
+
 function O.open_cur_dir()
   require 'f'.run_and_silent('explorer "%s"', require 'f'.get_parent())
 end

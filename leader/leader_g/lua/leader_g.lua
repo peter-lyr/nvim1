@@ -12,8 +12,8 @@ function G.add_commit_push_file(file)
     return
   end
   local git_add_commit_push_py = get_py '01-git-add-commit-push.py'
-  require 'f'.run_and_pause('python %s %s', git_add_commit_push_py, file)
-  -- require 'f'.run_and_notify('python %s %s', git_add_commit_push_py, file)
+  -- require 'f'.run_and_pause('python %s %s', git_add_commit_push_py, file)
+  require 'f'.run_and_notify('python %s %s', git_add_commit_push_py, file)
 end
 
 function G.add_commit_push_infos(infos)
@@ -42,21 +42,8 @@ function G.write_TempTxt_and_quit_and_add_commit_push()
 end
 
 function G.add_commit_push_edit_status()
-  -- require 'f'.async_run_command("git status", TempTxt, function()
-  --   vim.schedule(function()
-  --     vim.cmd 'new'
-  --     local status = require 'f'.read_lines_from_file(TempTxt)
-  --     for i = 1, #status do
-  --       status[i] = '# ' .. status[i]
-  --     end
-  --     vim.fn.setline('.', status)
-  --     vim.cmd 'norm G'
-  --     vim.keymap.set({ 'n', 'v', }, '<cr><cr>', function() G.write_TempTxt_and_quit_and_add_commit_push() end, { desc = 'write_TempTxt_and_quit_and_add_commit_push', buffer = vim.fn.bufnr(), })
-  --   end)
-  -- end)
   require 'f'.async_run("git status", {
     title = "Git Status",
-    output_file = TempTxt,
     on_exit = function(exit_code, signal, file)
       print("Command exited with code: " .. exit_code .. ", output in " .. file)
       vim.cmd 'new'
