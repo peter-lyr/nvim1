@@ -191,6 +191,56 @@ function F.project_cd()
   ]]
 end
 
+function F.getlua(luafile)
+  local loaded = string.match(F.rep(luafile), '.+lua\\(.+)%.lua')
+  if not loaded then
+    return nil
+  end
+  loaded = string.gsub(loaded, '\\', '.')
+  return loaded
+end
+
+
+function F.get_lua_plugin(luafile)
+  local parts = {}
+  for part in string.gmatch(luafile, "[^\\]+") do
+    table.insert(parts, part)
+  end
+  local last_lua_index = nil
+  for i = #parts, 1, -1 do
+    if parts[i] == "lua" then
+      if i < #parts then
+        last_lua_index = i
+        break
+      end
+    end
+  end
+  if last_lua_index then
+    parts[last_lua_index] = "plugin"
+  end
+  return table.concat(parts, "\\"), last_lua_index
+end
+
+function F.get_plugin_lua(luafile)
+  local parts = {}
+  for part in string.gmatch(luafile, "[^\\]+") do
+    table.insert(parts, part)
+  end
+  local last_lua_index = nil
+  for i = #parts, 1, -1 do
+    if parts[i] == "plugin" then
+      if i < #parts then
+        last_lua_index = i
+        break
+      end
+    end
+  end
+  if last_lua_index then
+    parts[last_lua_index] = "lua"
+  end
+  return table.concat(parts, "\\"), last_lua_index
+end
+
 function F.get_bnr_file(bnr)
   return F.rep(vim.api.nvim_buf_get_name(bnr))
 end
