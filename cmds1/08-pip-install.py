@@ -9,3 +9,4 @@ def pip_install(plugin):
 
 # pip_install('neovim') # nvim-qt的依赖
 # pip_install('pyperclip') # 复制文本到系统剪贴板
+# pip_install('pynput')
