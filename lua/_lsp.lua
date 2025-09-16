@@ -87,7 +87,7 @@ return {
 					map("<leader>fc", vim.lsp.buf.code_action, "Goto Code Action", { "n", "x" })
 
 					-- Find references for the word under your cursor.
-					map("<leader>fr", require("telescope.builtin").lsp_references, "Goto References")
+					map("<leader>fe", require("telescope.builtin").lsp_references, "Goto References")
 
 					-- Jump to the implementation of the word under your cursor.
 					--  Useful when your language has ways of declaring types without an actual implementation.
