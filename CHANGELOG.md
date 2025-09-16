@@ -32,5 +32,4 @@ notify:优化配置+1
 lazy.nvim:修复:v10.24.3,解决dir=''的插件加载不了
 nvim-qt开启关闭优化
 tab用NMAC427/guess-indent.nvim
-_lsp:
-_cmp:
+_lsp:参考nvim-lua/kickstart.nvim改好一版
