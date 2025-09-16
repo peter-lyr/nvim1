@@ -15,7 +15,7 @@ return {
 	{
 		-- Main LSP Configuration
 		"neovim/nvim-lspconfig",
-		ft = { "lua", "python" },
+		ft = { "lua", "python", "c", "cpp" },
 		dependencies = {
 			-- Automatically install LSPs and related tools to stdpath for Neovim
 			-- Mason must be loaded before its dependents so we need to set it up here.
@@ -92,6 +92,8 @@ return {
 					-- Jump to the implementation of the word under your cursor.
 					--  Useful when your language has ways of declaring types without an actual implementation.
 					map("<leader>fi", require("telescope.builtin").lsp_implementations, "Goto Implementation")
+
+					map("<leader>fh", vim.lsp.buf.hover, "Hover")
 
 					-- Jump to the definition of the word under your cursor.
 					--  This is where a variable was first declared, or where a function is defined, etc.
@@ -179,7 +181,7 @@ return {
 					then
 						map("<leader>th", function()
 							vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = event.buf }))
-						end, "[T]oggle Inlay [H]ints")
+						end, "Toggle Inlay Hints")
 					end
 				end,
 			})
@@ -241,6 +243,25 @@ return {
 				-- But for many setups, the LSP (`ts_ls`) will work just fine
 				-- ts_ls = {},
 				--
+
+				-- 新增 C/C++ LSP 配置（使用 clangd，C/C++ 生态最常用的 LSP）
+				clangd = {
+					settings = {
+						clangd = {
+							-- 配置 C 标准（默认 c17，可根据需求改为 c99、c11 等）
+							fallbackFlags = { "-std=c17" },
+							-- 启用格式化（与 clang-format 联动）
+							format = {
+								enable = true,
+							},
+							-- 启用代码补全的详细信息
+							completion = {
+								detailedLabel = true,
+							},
+						},
+					},
+				},
+
 				pyright = {
 					settings = {
 						python = {
@@ -288,6 +309,9 @@ return {
 				"black", -- Python代码格式化
 				"isort", -- Python导入排序
 				"flake8", -- Python代码检查
+				"clangd", -- C/C++ LSP 服务器
+				"clang-format", -- C/C++ 代码格式化工具
+				"cpplint", -- C/C++ 代码检查工具（可选，用于静态代码分析）
 			})
 			require("mason-tool-installer").setup({ ensure_installed = ensure_installed })
 
@@ -314,12 +338,12 @@ return {
 		cmd = { "ConformInfo" },
 		keys = {
 			{
-				"<leader>f",
+				"<leader>ff",
 				function()
 					require("conform").format({ async = true, lsp_format = "fallback" })
 				end,
 				mode = "",
-				desc = "[F]ormat buffer",
+				desc = "Format buffer",
 			},
 		},
 		opts = {
@@ -343,6 +367,8 @@ return {
 				lua = { "stylua" },
 				-- Conform can also run multiple formatters sequentially
 				python = { "isort", "black" }, -- 先排序导入，再格式化代码
+				c = { "clang-format" },
+				cpp = { "clang-format" },
 				--
 				-- You can use 'stop_after_first' to run the first available formatter from the list
 				-- javascript = { "prettierd", "prettier", stop_after_first = true },

@@ -36,3 +36,4 @@ lsp:参考nvim-lua/kickstart.nvim改好一版
 lsp:python支持
 lsp:按键映射
 formatter:all
+clangd:testing
