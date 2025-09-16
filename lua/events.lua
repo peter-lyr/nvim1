@@ -22,15 +22,6 @@ return {
         group = vim.api.nvim_create_augroup(desc, {}),
         desc = desc,
         callback = function(ev)
-          if vim.tbl_contains({
-                'c', 'cpp',
-                'python',
-                'ld',
-              }, vim.opt.filetype:get()) == true then
-            vim.opt.tabstop = 4
-            vim.opt.softtabstop = 4
-            vim.opt.shiftwidth = 4
-          end
           local ext = string.match(vim.fn.bufname(ev.buf), '%.([^.]+)$')
           if ext == 'xxd' then
             vim.cmd 'setlocal ft=xxd'

@@ -6,6 +6,10 @@ return {
     event = 'BufNewFile',
   },
   'moll/vim-bbye',
+  {
+    'NMAC427/guess-indent.nvim',
+    event = { 'BufReadPre', },
+  },
 
   {
     'folke/which-key.nvim',
