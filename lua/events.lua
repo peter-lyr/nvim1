@@ -142,16 +142,6 @@ return {
       vim.fn['GuiWindowMaximized'](0)
       vim.fn['GuiWindowMaximized'](1)
       vim.fn['GuiWindowMaximized'](0)
-      -- vim.cmd 'GuiWindowOpacity 1'
-      vim.fn.timer_start(1000, function()
-        vim.cmd [[
-          try
-            e!
-            norm zz
-          catch
-          endtry
-        ]]
-      end)
     end,
   },
 
@@ -160,20 +150,9 @@ return {
     dir = '',
     event = 'VimLeavePre',
     config = function()
-      local function pretty_gui()
-        vim.fn['GuiWindowFullScreen'](0)
-        vim.fn['GuiWindowMaximized'](0)
-        vim.fn['GuiWindowFrameless'](0)
-      end
-      vim.api.nvim_create_autocmd('VimLeavePre', {
-        desc = 'vimleavepre.pretty_gui',
-        callback = function()
-          pretty_gui()
-        end,
-      })
-      if not vim.g.to_load_all or vim.g.to_load_all == 0 then
-        pretty_gui()
-      end
+      vim.fn['GuiWindowFullScreen'](0)
+      vim.fn['GuiWindowMaximized'](0)
+      vim.fn['GuiWindowFrameless'](0)
     end,
   },
 
