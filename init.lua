@@ -102,6 +102,8 @@ require 'lazy'.setup {
     { import = 'leaders', },
     { import = '_telescope', },
     { import = '_treesitter', },
+    { import = '_lsp', },
+    { import = '_cmp', },
     { import = 'events', },
   },
   root = DataLazyPlugins,
