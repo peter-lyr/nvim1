@@ -1,5 +1,4 @@
 return {
-
 	{
 		-- `lazydev` configures Lua LSP for your Neovim config, runtime and plugins
 		-- used for completion, annotations and signatures of Neovim apis
@@ -16,7 +15,7 @@ return {
 	{
 		-- Main LSP Configuration
 		"neovim/nvim-lspconfig",
-		ft = "lua",
+		ft = { "lua", "python" },
 		dependencies = {
 			-- Automatically install LSPs and related tools to stdpath for Neovim
 			-- Mason must be loaded before its dependents so we need to set it up here.
@@ -238,6 +237,17 @@ return {
 				-- But for many setups, the LSP (`ts_ls`) will work just fine
 				-- ts_ls = {},
 				--
+				pyright = {
+					settings = {
+						python = {
+							analysis = {
+								autoSearchPaths = true,
+								useLibraryCodeForTypes = true,
+								diagnosticMode = "workspace",
+							},
+						},
+					},
+				},
 
 				lua_ls = {
 					-- cmd = { ... },
@@ -271,6 +281,9 @@ return {
 			local ensure_installed = vim.tbl_keys(servers or {})
 			vim.list_extend(ensure_installed, {
 				"stylua", -- Used to format Lua code
+				"black", -- Python代码格式化
+				"isort", -- Python导入排序
+				"flake8", -- Python代码检查
 			})
 			require("mason-tool-installer").setup({ ensure_installed = ensure_installed })
 
@@ -325,7 +338,7 @@ return {
 			formatters_by_ft = {
 				lua = { "stylua" },
 				-- Conform can also run multiple formatters sequentially
-				-- python = { "isort", "black" },
+				python = { "isort", "black" }, -- 先排序导入，再格式化代码
 				--
 				-- You can use 'stop_after_first' to run the first available formatter from the list
 				-- javascript = { "prettierd", "prettier", stop_after_first = true },

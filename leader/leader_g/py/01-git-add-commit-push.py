@@ -1,17 +1,18 @@
 import os
 import sys
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     if len(sys.argv) < 2:
         os.system("echo require 1 arg like commit_info.txt")
         os._exit(1)
     git_commit_txt = sys.argv[1]
-    with open(git_commit_txt, 'rb') as f:
+    with open(git_commit_txt, "rb") as f:
         lines = f.readlines()
     push_allow = False
-    git_commit_txt = git_commit_txt + '.txt'
-    with open(git_commit_txt, 'wb') as f:
+    git_commit_txt = git_commit_txt + ".txt"
+    with open(git_commit_txt, "wb") as f:
         for line in lines:
-            if line[:2] == b'# ':
+            if line[:2] == b"# ":
                 continue
             if not line.strip():
                 continue
