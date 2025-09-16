@@ -246,6 +246,14 @@ return {
 
 				-- 新增 C/C++ LSP 配置（使用 clangd，C/C++ 生态最常用的 LSP）
 				clangd = {
+					-- cmd = {
+					-- 	"clangd", -- clangd 可执行文件路径（确保在环境变量中）
+					-- 	-- 关键参数：解决 RISC-V GCC 专属选项问题
+					-- 	-- "--query-driver=riscv32-unknown-elf-gcc", -- 适配 RISC-V 编译器
+					-- 	"--all-scopes-completion", -- 全范围补全
+					-- 	"--completion-style=detailed", -- 详细补全样式
+					-- 	"--log=verbose", -- 开启详细日志（方便调试，可选）
+					-- },
 					settings = {
 						clangd = {
 							-- 配置 C 标准（默认 c17，可根据需求改为 c99、c11 等）
@@ -313,22 +321,14 @@ return {
 				"clang-format", -- C/C++ 代码格式化工具
 				"cpplint", -- C/C++ 代码检查工具（可选，用于静态代码分析）
 			})
-			require("mason-tool-installer").setup({ ensure_installed = ensure_installed })
-
-			require("mason-lspconfig").setup({
-				ensure_installed = {}, -- explicitly set to an empty table (Kickstart populates installs via mason-tool-installer)
-				automatic_installation = false,
-				handlers = {
-					function(server_name)
-						local server = servers[server_name] or {}
-						-- This handles overriding only values explicitly passed
-						-- by the server configuration above. Useful when disabling
-						-- certain features of an LSP (for example, turning off formatting for ts_ls)
-						server.capabilities = vim.tbl_deep_extend("force", {}, capabilities, server.capabilities or {})
-						require("lspconfig")[server_name].setup(server)
-					end,
-				},
+			require("mason-tool-installer").setup({
+				ensure_installed = ensure_installed,
+				run_on_start = true, -- automatically install / update on startup.
 			})
+			for server_name, server in pairs(servers) do
+				vim.lsp.config(server_name, server)
+			end
+			require("mason-lspconfig").setup({})
 		end,
 	},
 
