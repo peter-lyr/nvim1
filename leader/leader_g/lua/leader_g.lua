@@ -68,6 +68,11 @@ function G.add_commit_push_yank()
   G.add_commit_push_file(TempTxt)
 end
 
+function G.add_commit_push_cur_line()
+  require 'f'.write_lines_to_file({ vim.fn.getline '.', }, TempTxt)
+  G.add_commit_push_file(TempTxt)
+end
+
 function G.reset_hunk()
   require 'gitsigns'.reset_hunk()
 end

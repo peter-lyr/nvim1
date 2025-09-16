@@ -6,6 +6,7 @@
 <leader>g<leader>as:修复vim.notify
 <leader>g<leader>as:修复+2:ok
 <leader>g<leader>as:优化+1:把async_run_command合并到async_run里去
+<leader>g<leader>ai:add_commit_push_cur_line
 <leader>ga优化+7:异步跑git status从run_and_silent换成async_run
 <leader>gr
 <leader>gl:require 'f'.async_run('git log --oneline')
