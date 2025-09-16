@@ -31,10 +31,13 @@ end
 function W.get_cur_bname()
   local bname = require 'f'.rep_slash(vim.fn.bufname())
   local tail = vim.fn.fnamemodify(bname, ':t')
-  vim.fn.timer_start(40, function ()
+  vim.fn.timer_start(40, function()
     local col = #tail
-    require 'f'.feed_keys([[\<c-f>]])
-    require 'f'.feed_keys(tostring(col) .. 'h')
+    require 'f'.feed_keys [[\<c-f>]]
+    if vim.fn.mode() ~= 'n' then
+      require 'f'.feed_keys [[\<esc>]]
+    end
+    require 'f'.feed_keys(tostring(col - 1) .. 'h')
   end)
   return bname
 end
