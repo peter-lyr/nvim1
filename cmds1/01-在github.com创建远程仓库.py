@@ -3,6 +3,7 @@ import os
 import stat
 import errno
 
+
 def handle_remove_readonly(func, path, exc):
     """处理只读文件的删除"""
     excvalue = exc[1]
@@ -12,6 +13,7 @@ def handle_remove_readonly(func, path, exc):
         func(path)  # 再次尝试删除
     else:
         raise
+
 
 def delete_non_empty_dir(directory):
     """
@@ -34,7 +36,8 @@ def delete_non_empty_dir(directory):
     except OSError as e:
         print(f"删除目录时出错: {e}")
 
-cmd_text = r'''
+
+cmd_text = r"""
 @echo off
 rem chcp 65001
 chcp 936
@@ -53,15 +56,15 @@ gh  repo create llovew --private --description "有一个男孩爱着一个女�
 git branch -M main
 git remote add origin git@github.com:peter-lyr/llovew.git
 git push -u origin main
-'''
-for cmd in cmd_text.split('\n'):
+"""
+for cmd in cmd_text.split("\n"):
     if not cmd.strip():
         continue
-    os.system('cd')
-    if cmd[:3] == 'cd ':
+    os.system("cd")
+    if cmd[:3] == "cd ":
         print(" **", cmd)
         os.chdir(cmd[3:])
-    elif cmd[:8] == 'python: ':
+    elif cmd[:8] == "python: ":
         print(" ##", cmd)
         exec(cmd[8:])
     else:

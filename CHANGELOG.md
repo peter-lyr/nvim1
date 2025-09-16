@@ -34,3 +34,4 @@ nvim-qt开启关闭优化
 tab用NMAC427/guess-indent.nvim
 _lsp:参考nvim-lua/kickstart.nvim改好一版
 _lsp:python支持
+formatter:all

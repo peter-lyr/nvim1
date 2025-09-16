@@ -3,6 +3,7 @@ import errno
 import shutil
 import stat
 
+
 def handle_remove_readonly(func, path, exc):
     """处理只读文件的删除"""
     excvalue = exc[1]
@@ -12,6 +13,7 @@ def handle_remove_readonly(func, path, exc):
         func(path)  # 再次尝试删除
     else:
         raise
+
 
 def delete_non_empty_dir(directory):
     """
