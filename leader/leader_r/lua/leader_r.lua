@@ -8,7 +8,9 @@ function R.source(luafile)
 	require("f").cmd("source %s", luafile)
 end
 
-function R.run_cur_file()
+function R.run_cur_file(no_console_window, auto_exit)
+	auto_exit = auto_exit and "" or " & pause"
+	no_console_window = no_console_window and " /b /min " or ""
 	local cur_file = require("f").get_cur_file()
 	if not require("f").is_file_exists(cur_file) then
 		return
@@ -31,11 +33,18 @@ function R.run_cur_file()
 			package.loaded[lua] = dofile(cur_file)
 		end
 	elseif vim.o.ft == "python" then
-		require("f").printf([[silent !start cmd /c "python "%s" & pause"]], cur_file)
-		require("f").cmd([[silent !start cmd /c "python "%s" & pause"]], cur_file)
+		require("f").cmd([[silent !start %s cmd /c "python "%s" %s"]], no_console_window, cur_file, auto_exit)
 	else
-		require("f").cmd([[silent !start cmd /c ""%s" & pause"]], cur_file)
+		require("f").cmd([[silent !start %s cmd /c ""%s" %s"]], no_console_window, cur_file, auto_exit)
 	end
+end
+
+function R.run_cur_file_silent()
+	R.run_cur_file(1)
+end
+
+function R.run_cur_file_auto_exit()
+	R.run_cur_file(nil, 1)
 end
 
 return R

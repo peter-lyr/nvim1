@@ -6,7 +6,21 @@ require("which-key").register({
 		function()
 			R.run_cur_file()
 		end,
-		"run_and_pause",
+		"run_cur_file_console_pause",
+		mode = { "n", "v" },
+	},
+	["<leader>r<leader>."] = {
+		function()
+			R.run_cur_file_silent()
+		end,
+		"run_cur_file_silent",
+		mode = { "n", "v" },
+	},
+	["<leader>r<leader><leader>."] = {
+		function()
+			R.run_cur_file_auto_exit()
+		end,
+		"run_cur_file_auto_exit",
 		mode = { "n", "v" },
 	},
 	["<leader>rf"] = {
