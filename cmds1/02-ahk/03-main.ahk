@@ -17,6 +17,7 @@ global circleWindow := ""
         circleWindow := ""
     }
 
+    CoordMode("Mouse", "Screen")
     ; 获取鼠标当前位置
     MouseGetPos(&mouseX, &mouseY)
 
