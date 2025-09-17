@@ -1,6 +1,7 @@
 # python用pynput时时刻刻监测鼠标，当鼠标右键按下时，用tkinter库以按下的位置为圆心画一个圆圈，当鼠标右键松开时关掉该圆圈
 # 按住右键当移动到圆圈外后，在鼠标上方实时显示相对于圆心的位置，共8个：上，下，左，右，右上，右下，左下，左上，松开右键后结束显示
 # 按住右键且鼠标保持在圆圈内时，监测鼠标左键，中键和滚轮的状态，分别用3个变量表示，默认值为0，检测到有动作时分别加1，当它们有不为0时，实时在鼠标上方显示出来它们的值，这3个变量当分别加到6,4,5时，不再往上加而变为0
+# 圆圈换成实心圆，鼠标不可穿透
 
 # 解决缩放非100%屏幕圆心位置不对的问题
 
@@ -26,9 +27,12 @@ class MouseCircleDrawer:
         self.root.attributes("-alpha", 0.5)  # 半透明
         self.root.attributes("-topmost", True)  # 窗口置顶
 
-        # 设置透明色
+        # 设置透明色和鼠标穿透
         self.transparent_color = "#000001"
         self.root.attributes("-transparentcolor", self.transparent_color)
+
+        # 实现鼠标不可穿透（点击穿透）
+        self.set_click_through()
 
         # 根据缩放比例调整屏幕尺寸
         self.screen_width = int(self.root.winfo_screenwidth() * self.scale_factor)
@@ -78,6 +82,27 @@ class MouseCircleDrawer:
 
         # 处理队列消息
         self.process_queue()
+
+    # 设置窗口为点击穿透（鼠标不可穿透窗口）
+    def set_click_through(self):
+        """设置窗口为点击穿透模式，允许鼠标事件穿过窗口"""
+        try:
+            # 获取窗口句柄
+            hwnd = ctypes.windll.user32.GetParent(self.root.winfo_id())
+
+            # 设置窗口扩展样式
+            GWL_EXSTYLE = -20
+            WS_EX_TRANSPARENT = 0x00000020
+            WS_EX_LAYERED = 0x00080000
+
+            # 获取当前扩展样式
+            current_exstyle = ctypes.windll.user32.GetWindowLongW(hwnd, GWL_EXSTYLE)
+
+            # 添加穿透和分层样式
+            new_exstyle = current_exstyle | WS_EX_TRANSPARENT | WS_EX_LAYERED
+            ctypes.windll.user32.SetWindowLongW(hwnd, GWL_EXSTYLE, new_exstyle)
+        except Exception as e:
+            print(f"设置点击穿透失败: {e}")
 
     # 获取系统DPI缩放比例
     def get_scale_factor(self):
@@ -239,16 +264,18 @@ class MouseCircleDrawer:
         while not self.queue.empty():
             command = self.queue.get()
             if command[0] == "draw":
-                # 绘制圆圈
+                # 绘制实心圆（添加fill参数）
                 x, y = command[1], command[2]
                 if self.circle_id:
                     self.canvas.delete(self.circle_id)
+                # 绘制实心圆，设置fill属性为红色，outline可以保留或去掉
                 self.circle_id = self.canvas.create_oval(
                     x - self.radius,
                     y - self.radius,
                     x + self.radius,
                     y + self.radius,
-                    outline="red",
+                    fill="red",  # 填充颜色，实现实心圆
+                    outline="red",  # 边框颜色
                     width=2,
                 )
             elif command[0] == "clear":
