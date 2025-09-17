@@ -2,15 +2,21 @@
 # 按住右键当移动到圆圈外后，在鼠标上方实时显示相对于圆心的位置，共8个：上，下，左，右，右上，右下，左下，左上，松开右键后结束显示
 # 按住右键且鼠标保持在圆圈内时，监测鼠标左键，中键和滚轮的状态，分别用3个变量表示，默认值为0，检测到有动作时分别加1，当它们有不为0时，实时在鼠标上方显示出来它们的值，这3个变量当分别加到6,4,5时，不再往上加而变为0
 
+# 解决缩放非100%屏幕圆心位置不对的问题
+
 import tkinter as tk
 from pynput import mouse
 import threading
 from queue import Queue
 import math
+import ctypes
 
 
 class MouseCircleDrawer:
     def __init__(self):
+        # 获取DPI缩放比例
+        self.scale_factor = self.get_scale_factor()
+
         # 创建消息队列用于线程间通信
         self.queue = Queue()
 
@@ -24,8 +30,9 @@ class MouseCircleDrawer:
         self.transparent_color = "#000001"
         self.root.attributes("-transparentcolor", self.transparent_color)
 
-        self.screen_width = self.root.winfo_screenwidth()
-        self.screen_height = self.root.winfo_screenheight()
+        # 根据缩放比例调整屏幕尺寸
+        self.screen_width = int(self.root.winfo_screenwidth() * self.scale_factor)
+        self.screen_height = int(self.root.winfo_screenheight() * self.scale_factor)
         self.root.geometry(f"{self.screen_width}x{self.screen_height}+0+0")
 
         # 创建画布
@@ -72,6 +79,23 @@ class MouseCircleDrawer:
         # 处理队列消息
         self.process_queue()
 
+    # 获取系统DPI缩放比例
+    def get_scale_factor(self):
+        """获取当前屏幕的DPI缩放比例"""
+        try:
+            user32 = ctypes.windll.user32
+            user32.SetProcessDPIAware()  # 设置进程为DPI感知
+            # dpi = user32.GetDpiForSystem()
+            user32.GetDpiForSystem()
+            return 1.0  # dpi / 96.0  # 96是默认DPI
+        except:
+            return 1.0  # 出错时默认使用1.0缩放比例
+
+    # 将原始坐标转换为缩放后的坐标
+    def convert_coordinates(self, x, y):
+        """根据缩放比例转换坐标"""
+        return int(x * self.scale_factor), int(y * self.scale_factor)
+
     def start_listener(self):
         """启动鼠标监听器，包括点击、移动和滚轮事件"""
         with mouse.Listener(
@@ -83,12 +107,15 @@ class MouseCircleDrawer:
 
     def on_click(self, x, y, button, pressed):
         """处理鼠标点击事件"""
+        # 转换坐标以适应DPI缩放
+        scaled_x, scaled_y = self.convert_coordinates(x, y)
+
         if button == mouse.Button.right:
             self.right_pressed = pressed
             if pressed:
                 # 右键按下，记录圆心位置并发送绘制命令
-                self.center_x, self.center_y = x, y
-                self.queue.put(("draw", x, y))
+                self.center_x, self.center_y = scaled_x, scaled_y
+                self.queue.put(("draw", scaled_x, scaled_y))
                 # 重置计数
                 self.left_count = 0
                 self.middle_count = 0
@@ -110,11 +137,11 @@ class MouseCircleDrawer:
             and self.right_pressed
             and self.circle_id
         ):
-            if self._is_inside_circle(x, y):
+            if self._is_inside_circle(scaled_x, scaled_y):
                 self.left_count += 1
                 if self.left_count >= 6:  # 左键计数到6重置
                     self.left_count = 0
-                self.queue.put(("update_status", x, y))
+                self.queue.put(("update_status", scaled_x, scaled_y))
 
         # 处理中键点击（仅在右键按住且鼠标在圈内时）
         elif (
@@ -123,36 +150,48 @@ class MouseCircleDrawer:
             and self.right_pressed
             and self.circle_id
         ):
-            if self._is_inside_circle(x, y):
+            if self._is_inside_circle(scaled_x, scaled_y):
                 self.middle_count += 1
                 if self.middle_count >= 4:  # 中键计数到4重置
                     self.middle_count = 0
-                self.queue.put(("update_status", x, y))
+                self.queue.put(("update_status", scaled_x, scaled_y))
 
     def on_scroll(self, x, y, dx, dy):
         """处理鼠标滚轮事件"""
+        # 转换坐标以适应DPI缩放
+        scaled_x, scaled_y = self.convert_coordinates(x, y)
+
         # 仅在右键按住且鼠标在圈内时计数
-        if self.right_pressed and self.circle_id and self._is_inside_circle(x, y):
+        if (
+            self.right_pressed
+            and self.circle_id
+            and self._is_inside_circle(scaled_x, scaled_y)
+        ):
             self.wheel_count += 1
             if self.wheel_count >= 5:  # 滚轮计数到5重置
                 self.wheel_count = 0
-            self.queue.put(("update_status", x, y))
+            self.queue.put(("update_status", scaled_x, scaled_y))
 
     def on_move(self, x, y):
         """处理鼠标移动事件"""
+        # 转换坐标以适应DPI缩放
+        scaled_x, scaled_y = self.convert_coordinates(x, y)
+
         if self.right_pressed and self.circle_id:
             # 计算鼠标与圆心的距离
-            distance = self._get_distance(x, y)
+            distance = self._get_distance(scaled_x, scaled_y)
 
             # 如果鼠标在圆圈外，显示方向标签，隐藏状态标签
             if distance > self.radius:
-                direction = self.get_direction(x - self.center_x, y - self.center_y)
-                self.queue.put(("show_direction", x, y, direction))
+                direction = self.get_direction(
+                    scaled_x - self.center_x, scaled_y - self.center_y
+                )
+                self.queue.put(("show_direction", scaled_x, scaled_y, direction))
                 self.queue.put(("hide_status",))
             else:
                 # 鼠标在圆圈内，隐藏方向标签，更新状态标签
                 self.queue.put(("hide_direction",))
-                self.queue.put(("update_status", x, y))
+                self.queue.put(("update_status", scaled_x, scaled_y))
 
     def _is_inside_circle(self, x, y):
         """判断点是否在圆圈内"""
