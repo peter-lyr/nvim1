@@ -1,6 +1,7 @@
 ; 画一个圆
 ; 把标题栏去掉，半透明度，不在任务栏显示图标
 ; 把它弄成一个函数，参数：圆心的x坐标，y坐标，宽度，高度，透明度，背景色
+; 加载另一个ahk
 #Requires AutoHotkey v2.0
 
 ; 创建圆形窗口的函数
@@ -42,18 +43,3 @@ CreateCircleWindow(centerX, centerY, width, height, transparency, bgColor) {
     ; 返回窗口对象，方便后续操作
     return myGui
 }
-
-; 示例用法
-try {
-    ; 创建一个圆心在(500, 300)，宽高200，透明度180，红色背景的圆形窗口
-    circleWindow := CreateCircleWindow(500, 300, 200, 200, 180, "FF0000")
-
-    ; 可以再创建一个不同属性的圆形窗口
-    circleWindow2 := CreateCircleWindow(800, 300, 150, 150, 200, "00FF00")
-}
-catch as e {  ; 修正异常捕获语法
-    MsgBox("创建窗口失败: " e.Message)
-}
-
-; 按ESC键退出程序
-Esc::ExitApp
