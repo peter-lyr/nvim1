@@ -43,7 +43,7 @@ function R.run_cur_file_silent()
 	R.run_cur_file(1)
 end
 
-function R.run_cur_file_auto_exit()
+function R.run_cur_file_exit()
 	R.run_cur_file(nil, 1)
 end
 

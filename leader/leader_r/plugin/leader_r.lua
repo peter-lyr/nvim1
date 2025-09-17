@@ -2,25 +2,25 @@ local R = require("leader_r")
 
 require("which-key").register({
 	["<leader>r"] = { name = "leader_r" },
-	["<leader>r."] = {
+	["<leader>rp"] = {
 		function()
 			R.run_cur_file()
 		end,
 		"run_cur_file_console_pause",
 		mode = { "n", "v" },
 	},
-	["<leader>r<leader>."] = {
+	["<leader>rs"] = {
 		function()
 			R.run_cur_file_silent()
 		end,
 		"run_cur_file_silent",
 		mode = { "n", "v" },
 	},
-	["<leader>r<leader><leader>."] = {
+	["<leader>re"] = {
 		function()
-			R.run_cur_file_auto_exit()
+			R.run_cur_file_exit()
 		end,
-		"run_cur_file_auto_exit",
+		"run_cur_file_exit",
 		mode = { "n", "v" },
 	},
 	["<leader>rf"] = {
