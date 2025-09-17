@@ -1,6 +1,7 @@
 <leader>r.优化:连带plugin目录下的lua也source
 <leader>r.优化+2:先lua后plugin目录下的lua
 <leader>r.优化+3:不存在的lua不source
+<leader>r.优化+4:python文件单独处理
 <leader>ga优化+3:提交信息删除无用信息后写到另一个文件
 <leader>ga优化+4:最后一个buffer不quit
 <leader>ga优化+5:异步跑git status

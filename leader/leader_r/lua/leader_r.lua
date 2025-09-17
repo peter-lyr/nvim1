@@ -30,8 +30,11 @@ function R.run_cur_file()
 		if require("f").is(lua) then
 			package.loaded[lua] = dofile(cur_file)
 		end
+	elseif vim.o.ft == "python" then
+		require("f").printf([[silent !start cmd /c "python "%s" & pause"]], cur_file)
+		require("f").cmd([[silent !start cmd /c "python "%s" & pause"]], cur_file)
 	else
-		require("f").cmd([[silent !start cmd /c "%s & pause"]], cur_file)
+		require("f").cmd([[silent !start cmd /c ""%s" & pause"]], cur_file)
 	end
 end
 
