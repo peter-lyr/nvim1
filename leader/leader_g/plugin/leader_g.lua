@@ -23,6 +23,20 @@ require("which-key").register({
 		"add_commit_push_yank",
 		mode = { "n", "v" },
 	},
+	["<leader>g<leader>aw"] = {
+		function()
+			G.add_commit_push_cword()
+		end,
+		"add_commit_push_cword",
+		mode = { "n", "v" },
+	},
+	["<leader>g<leader>a<leader>w"] = {
+		function()
+			G.add_commit_push_cWORD()
+		end,
+		"add_commit_push_cWORD",
+		mode = { "n", "v" },
+	},
 	["<leader>g<leader>ai"] = {
 		function()
 			G.add_commit_push_cur_line()

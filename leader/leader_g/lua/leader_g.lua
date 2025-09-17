@@ -72,6 +72,14 @@ function G.add_commit_push_yank()
 	G.add_commit_push_infos(require("f").yank_to_lines_table())
 end
 
+function G.add_commit_push_cword()
+	G.add_commit_push_infos(vim.fn.expand("<cword"))
+end
+
+function G.add_commit_push_cWORD()
+	G.add_commit_push_infos(vim.fn.expand("<cWORD"))
+end
+
 function G.add_commit_push_cur_line()
 	G.add_commit_push_infos(vim.fn.getline("."))
 end
