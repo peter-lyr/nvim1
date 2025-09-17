@@ -1,19 +1,21 @@
 ; 画一个圆
-
-; 创建圆形窗口示例（不使用Gdip）
+; 把标题栏去掉，半透明度，不在任务栏显示图标
 #Requires AutoHotkey v2.0
 
-; 创建主窗口 - 使用正确的语法
-myGui := Gui()
-myGui.Title := "圆形示例"
+; 创建主窗口 - 去掉标题栏并设置为工具窗口（不在任务栏显示）
+myGui := Gui("-Caption +ToolWindow")
+; myGui.Title := "圆形示例"
 myGui.BackColor := "FF0000" ; 红色背景
-myGui.SetFont("s10", "Segoe UI")
-myGui.Add("Text", "cWhite Center", "这是一个圆形")
+; myGui.SetFont("s10", "Segoe UI")
+; myGui.Add("Text", "cWhite Center", "这是一个圆形")
 
 ; 设置窗口大小
 width := 200
 height := 200
 myGui.Show("x300 y200 w" width " h" height " NoActivate")
+
+; 设置窗口透明度（0-255，这里设置为180半透明）
+WinSetTransparent(180, myGui.Hwnd)
 
 ; 获取窗口句柄
 hwnd := myGui.Hwnd
