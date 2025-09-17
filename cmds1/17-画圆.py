@@ -1,15 +1,12 @@
-# 分析以下题目，并给出对应的答案解析，要求：
-# 1. 分析题目，给出简要的解题思路
-# 2. 提供最终答案或示例代码
-# 3. 必要时对答案进行解释或补充。
-# 以下是待解析的题目：
 # python用pynput时时刻刻监测鼠标，当鼠标右键按下时，用tkinter库以按下的位置为圆心画一个圆圈，当鼠标右键松开时关掉该圆圈
 # 按住右键当移动到圆圈外后，在鼠标上方实时显示相对于圆心的位置，共8个：上，下，左，右，右上，右下，左下，左上，松开右键后结束显示
+# 按住右键且鼠标保持在圆圈内时，监测鼠标左键，中键和滚轮的状态，分别用3个变量表示，默认值为0，检测到有动作时分别加1，当它们有不为0时，实时在鼠标上方显示出来它们的值，这3个变量当分别加到6,4,5时，不再往上加而变为0
 
 import tkinter as tk
 from pynput import mouse
 import threading
 from queue import Queue
+import math
 
 
 class MouseCircleDrawer:
@@ -47,11 +44,26 @@ class MouseCircleDrawer:
             pady=2,
         )
 
+        # 创建状态显示标签（用于显示左键、中键、滚轮计数）
+        self.status_label = tk.Label(
+            self.root,
+            bg="black",
+            fg="yellow",
+            font=("Arial", 12, "bold"),
+            padx=5,
+            pady=2,
+        )
+
         self.circle_id = None  # 用于存储圆圈的ID
         self.center_x = 0  # 圆心X坐标
         self.center_y = 0  # 圆心Y坐标
         self.radius = 30  # 圆圈半径
         self.right_pressed = False  # 右键是否按下
+
+        # 初始化计数变量（左键、中键、滚轮）
+        self.left_count = 0
+        self.middle_count = 0
+        self.wheel_count = 0
 
         # 启动鼠标监听线程
         self.listener_thread = threading.Thread(target=self.start_listener, daemon=True)
@@ -61,8 +73,12 @@ class MouseCircleDrawer:
         self.process_queue()
 
     def start_listener(self):
-        """启动鼠标监听器，包括点击和移动事件"""
-        with mouse.Listener(on_click=self.on_click, on_move=self.on_move) as listener:
+        """启动鼠标监听器，包括点击、移动和滚轮事件"""
+        with mouse.Listener(
+            on_click=self.on_click,
+            on_move=self.on_move,
+            on_scroll=self.on_scroll,  # 添加滚轮事件监听
+        ) as listener:
             listener.join()
 
     def on_click(self, x, y, button, pressed):
@@ -73,32 +89,84 @@ class MouseCircleDrawer:
                 # 右键按下，记录圆心位置并发送绘制命令
                 self.center_x, self.center_y = x, y
                 self.queue.put(("draw", x, y))
+                # 重置计数
+                self.left_count = 0
+                self.middle_count = 0
+                self.wheel_count = 0
             else:
-                # 右键松开，发送清除命令并隐藏方向标签
+                # 右键松开，发送清除命令并隐藏标签
                 self.queue.put(("clear",))
                 self.queue.put(("hide_direction",))
+                self.queue.put(("hide_status",))
+                # 重置计数
+                self.left_count = 0
+                self.middle_count = 0
+                self.wheel_count = 0
+
+        # 处理左键点击（仅在右键按住且鼠标在圈内时）
+        elif (
+            button == mouse.Button.left
+            and pressed
+            and self.right_pressed
+            and self.circle_id
+        ):
+            if self._is_inside_circle(x, y):
+                self.left_count += 1
+                if self.left_count >= 6:  # 左键计数到6重置
+                    self.left_count = 0
+                self.queue.put(("update_status", x, y))
+
+        # 处理中键点击（仅在右键按住且鼠标在圈内时）
+        elif (
+            button == mouse.Button.middle
+            and pressed
+            and self.right_pressed
+            and self.circle_id
+        ):
+            if self._is_inside_circle(x, y):
+                self.middle_count += 1
+                if self.middle_count >= 4:  # 中键计数到4重置
+                    self.middle_count = 0
+                self.queue.put(("update_status", x, y))
+
+    def on_scroll(self, x, y, dx, dy):
+        """处理鼠标滚轮事件"""
+        # 仅在右键按住且鼠标在圈内时计数
+        if self.right_pressed and self.circle_id and self._is_inside_circle(x, y):
+            self.wheel_count += 1
+            if self.wheel_count >= 5:  # 滚轮计数到5重置
+                self.wheel_count = 0
+            self.queue.put(("update_status", x, y))
 
     def on_move(self, x, y):
         """处理鼠标移动事件"""
         if self.right_pressed and self.circle_id:
             # 计算鼠标与圆心的距离
-            dx = x - self.center_x
-            dy = y - self.center_y
-            distance = (dx**2 + dy**2) ** 0.5
+            distance = self._get_distance(x, y)
 
-            # 如果鼠标在圆圈外，计算方向并显示
+            # 如果鼠标在圆圈外，显示方向标签，隐藏状态标签
             if distance > self.radius:
-                direction = self.get_direction(dx, dy)
+                direction = self.get_direction(x - self.center_x, y - self.center_y)
                 self.queue.put(("show_direction", x, y, direction))
+                self.queue.put(("hide_status",))
             else:
-                # 鼠标在圆圈内，隐藏方向标签
+                # 鼠标在圆圈内，隐藏方向标签，更新状态标签
                 self.queue.put(("hide_direction",))
+                self.queue.put(("update_status", x, y))
+
+    def _is_inside_circle(self, x, y):
+        """判断点是否在圆圈内"""
+        return self._get_distance(x, y) <= self.radius
+
+    def _get_distance(self, x, y):
+        """计算点到圆心的距离"""
+        dx = x - self.center_x
+        dy = y - self.center_y
+        return math.hypot(dx, dy)  # 使用math库的hypot计算距离
 
     def get_direction(self, dx, dy):
         """根据相对坐标计算方向"""
         # 计算角度（弧度）
-        import math
-
         angle = math.atan2(dy, dx) * 180 / math.pi
 
         # 调整角度，使其以向上为0度
@@ -160,6 +228,22 @@ class MouseCircleDrawer:
             elif command[0] == "hide_direction":
                 # 隐藏方向标签
                 self.direction_label.place_forget()
+            elif command[0] == "update_status":
+                # 更新并显示状态标签（左键、中键、滚轮计数）
+                x, y = command[1], command[2]
+                # 只有当计数不为0时才显示
+                if self.left_count > 0 or self.middle_count > 0 or self.wheel_count > 0:
+                    status_text = f"左: {self.left_count}, 中: {self.middle_count}, 滚: {self.wheel_count}"
+                    # 确保标签显示在鼠标上方且不超出屏幕
+                    label_x = min(max(x - 80, 0), self.screen_width - 160)
+                    label_y = max(y - 30, 0)
+                    self.status_label.config(text=status_text)
+                    self.status_label.place(x=label_x, y=label_y)
+                else:
+                    self.status_label.place_forget()
+            elif command[0] == "hide_status":
+                # 隐藏状态标签
+                self.status_label.place_forget()
 
         # 定期检查队列
         self.root.after(10, self.process_queue)
