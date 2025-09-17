@@ -6,6 +6,9 @@
 
 # 解决缩放非100%屏幕圆心位置不对的问题
 # 圆圈半径30像素改成50
+# 如果有两块或多个屏幕，那只有一个屏幕上可以画圆，其他屏幕上画不了圆了
+
+# todo: 不管掉不调用set_click_through，实心圆鼠标都可穿透，我需要它不能穿透
 
 import tkinter as tk
 from pynput import mouse

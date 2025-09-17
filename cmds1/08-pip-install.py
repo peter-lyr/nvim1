@@ -11,3 +11,4 @@ def pip_install(plugin):
 # pip_install('pyperclip') # 复制文本到系统剪贴板
 # pip_install('pynput')
 # pip_install('ipython')
+# pip_install("pywin32")
