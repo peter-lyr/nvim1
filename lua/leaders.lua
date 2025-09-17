@@ -117,14 +117,14 @@ return {
 		},
 	},
 
-	-- -- leader_p
-	-- {
-	--   name = 'leader_p',
-	--   dir = Nvim1Leader .. 'leader_p',
-	--   keys = {
-	--     { '<leader>p', desc = 'leader_p', },
-	--   },
-	-- },
+	-- leader_p
+	{
+		name = 'leader_p',
+		dir = Nvim1Leader .. 'leader_p',
+		keys = {
+			{ '<leader>p', desc = 'leader_p', },
+		},
+	},
 
 	-- -- leader_q
 	-- {
