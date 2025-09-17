@@ -340,7 +340,7 @@ return {
 			{
 				"<leader>ff",
 				function()
-					require("conform").format({ async = true, lsp_format = "fallback" })
+					require("conform").format({ async = true })
 				end,
 				mode = "",
 				desc = "Format buffer",
@@ -372,6 +372,14 @@ return {
 				--
 				-- You can use 'stop_after_first' to run the first available formatter from the list
 				-- javascript = { "prettierd", "prettier", stop_after_first = true },
+				-- Use the "*" filetype to run formatters on all filetypes.
+				["*"] = { "codespell" },
+				-- Use the "_" filetype to run formatters on filetypes that don't
+				-- have other formatters configured.
+				["_"] = { "trim_whitespace" },
+			},
+			format_after_save = {
+				lsp_format = "fallback",
 			},
 		},
 	},
@@ -434,7 +442,9 @@ return {
 				-- <c-k>: Toggle signature help
 				--
 				-- See :h blink-cmp-config-keymap for defining your own keymap
-				preset = "default",
+				preset = "enter",
+				["<S-Tab>"] = { "select_prev", "fallback" },
+				["<Tab>"] = { "select_next", "fallback" },
 
 				-- For more advanced Luasnip keymaps (e.g. selecting choice nodes, expansion) see:
 				--    https://github.com/L3MON4D3/LuaSnip?tab=readme-ov-file#keymaps

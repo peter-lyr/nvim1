@@ -37,6 +37,7 @@ lsp:参考nvim-lua/kickstart.nvim改好一版
 lsp:python支持
 lsp:按键映射
 lsp:修复:Setup没调用
+lsp:优化:blink.cmp
 formatter:all
 clangd:testing
 17-画圆.py:优化+1
