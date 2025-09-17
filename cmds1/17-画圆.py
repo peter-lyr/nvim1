@@ -2,8 +2,10 @@
 # 按住右键当移动到圆圈外后，在鼠标上方实时显示相对于圆心的位置，共8个：上，下，左，右，右上，右下，左下，左上，松开右键后结束显示
 # 按住右键且鼠标保持在圆圈内时，监测鼠标左键，中键和滚轮的状态，分别用3个变量表示，默认值为0，检测到有动作时分别加1，当它们有不为0时，实时在鼠标上方显示出来它们的值，这3个变量当分别加到6,4,5时，不再往上加而变为0
 # 圆圈换成实心圆，鼠标不可穿透
+# 实心圆只有在右键移动到20个像素以外时，或者当右键按下超过2秒时，才去画
 
 # 解决缩放非100%屏幕圆心位置不对的问题
+# 圆圈半径30像素改成50
 
 import tkinter as tk
 from pynput import mouse
@@ -11,6 +13,7 @@ import threading
 from queue import Queue
 import math
 import ctypes
+import time
 
 
 class MouseCircleDrawer:
@@ -68,8 +71,15 @@ class MouseCircleDrawer:
         self.circle_id = None  # 用于存储圆圈的ID
         self.center_x = 0  # 圆心X坐标
         self.center_y = 0  # 圆心Y坐标
-        self.radius = 30  # 圆圈半径
+        self.radius = 50  # 圆圈半径
         self.right_pressed = False  # 右键是否按下
+
+        # 右键按下初始信息
+        self.right_press_start_time = None  # 右键按下的起始时间
+        self.right_press_start_x = 0  # 右键按下的初始X坐标
+        self.right_press_start_y = 0  # 右键按下的初始Y坐标
+        self.circle_drawn = False  # 实心圆是否已绘制
+        self.timer_id = None  # 计时定时器ID
 
         # 初始化计数变量（左键、中键、滚轮）
         self.left_count = 0
@@ -138,18 +148,29 @@ class MouseCircleDrawer:
         if button == mouse.Button.right:
             self.right_pressed = pressed
             if pressed:
-                # 右键按下，记录圆心位置并发送绘制命令
+                # 右键按下，记录初始信息（不立即绘制）
                 self.center_x, self.center_y = scaled_x, scaled_y
-                self.queue.put(("draw", scaled_x, scaled_y))
+                self.right_press_start_x, self.right_press_start_y = scaled_x, scaled_y
+                self.right_press_start_time = time.time()  # 记录按下时间
+                self.circle_drawn = False  # 重置绘制状态
                 # 重置计数
                 self.left_count = 0
                 self.middle_count = 0
                 self.wheel_count = 0
+                # 启动2秒定时器，到期后检查是否需要绘制
+                self.timer_id = self.root.after(2000, self.check_draw_after_delay)
             else:
-                # 右键松开，发送清除命令并隐藏标签
+                # 右键松开，清除圆和标签，取消定时器
                 self.queue.put(("clear",))
                 self.queue.put(("hide_direction",))
                 self.queue.put(("hide_status",))
+                # 取消未执行的定时器
+                if self.timer_id:
+                    self.root.after_cancel(self.timer_id)
+                    self.timer_id = None
+                # 重置状态变量
+                self.right_press_start_time = None
+                self.circle_drawn = False
                 # 重置计数
                 self.left_count = 0
                 self.middle_count = 0
@@ -181,6 +202,13 @@ class MouseCircleDrawer:
                     self.middle_count = 0
                 self.queue.put(("update_status", scaled_x, scaled_y))
 
+    def check_draw_after_delay(self):
+        """定时检查：如果2秒后还没绘制圆则绘制"""
+        if self.right_pressed and not self.circle_drawn:
+            self.queue.put(("draw", self.center_x, self.center_y))
+            self.circle_drawn = True
+        self.timer_id = None
+
     def on_scroll(self, x, y, dx, dy):
         """处理鼠标滚轮事件"""
         # 转换坐标以适应DPI缩放
@@ -201,6 +229,21 @@ class MouseCircleDrawer:
         """处理鼠标移动事件"""
         # 转换坐标以适应DPI缩放
         scaled_x, scaled_y = self.convert_coordinates(x, y)
+
+        if self.right_pressed and not self.circle_drawn:
+            # 计算与初始位置的距离
+            dx = scaled_x - self.right_press_start_x
+            dy = scaled_y - self.right_press_start_y
+            distance = math.hypot(dx, dy)
+
+            # 如果移动超过20像素，绘制圆
+            if distance > 20:
+                self.queue.put(("draw", self.center_x, self.center_y))
+                self.circle_drawn = True
+                # 取消定时器
+                if self.timer_id:
+                    self.root.after_cancel(self.timer_id)
+                    self.timer_id = None
 
         if self.right_pressed and self.circle_id:
             # 计算鼠标与圆心的距离
