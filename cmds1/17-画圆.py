@@ -1,128 +1,98 @@
+# 分析以下题目，并给出对应的答案解析，要求：
+# 1. 分析题目，给出简要的解题思路
+# 2. 提供最终答案或示例代码
+# 3. 必要时对答案进行解释或补充。
+# 以下是待解析的题目：
+# python用pynput时时刻刻监测鼠标，当鼠标右键按下时，用tkinter库以按下的位置为圆心画一个圆圈，当鼠标右键松开时关掉该圆圈
+
 import tkinter as tk
-from tkinter import Canvas
 from pynput import mouse
-import ctypes
 import threading
-
-# import os
-# def pip_install(plugin):
-#     os.system(
-#         f"pip install -i https://pypi.tuna.tsinghua.edu.cn/simple --trusted-host mirrors.aliyun.com {plugin}"
-#     )
-# pip_install('pynput')
+from queue import Queue
 
 
-# 获取Windows系统缩放比例
-def get_scaling_factor():
-    user32 = ctypes.windll.user32
-    user32.SetProcessDPIAware()
-    return user32.GetDpiForSystem() / 96  # 96是100%缩放时的DPI
+class MouseCircleDrawer:
+    def __init__(self):
+        # 创建消息队列用于线程间通信
+        self.queue = Queue()
 
+        # 创建主窗口
+        self.root = tk.Tk()
+        self.root.overrideredirect(True)  # 无边框窗口
+        self.root.attributes("-alpha", 0.5)  # 半透明
+        self.root.attributes("-topmost", True)  # 窗口置顶
 
-# 全局变量
-circle_window = None
-scaling_factor = (
-    get_scaling_factor()
-)  # 调用之后就手动给1，没调用就手动给实际的缩放比例，如1.25
-scaling_factor = 1
-root = None  # 主窗口引用
-circle_radius = 100  # 圆形半径（逻辑像素）
+        # 修复：设置透明色
+        # 使用一个特殊颜色作为透明标记
+        self.transparent_color = "#000001"
+        self.root.attributes("-transparentcolor", self.transparent_color)
 
+        self.root.geometry(
+            f"{self.root.winfo_screenwidth()}x{self.root.winfo_screenheight()}+0+0"
+        )
 
-# 绘制圆形的函数
-def draw_circle(x, y):
-    global circle_window
+        # 修复：使用透明色作为画布背景，替代不兼容的systemTransparent
+        self.canvas = tk.Canvas(
+            self.root, bg=self.transparent_color, highlightthickness=0
+        )
+        self.canvas.pack(fill=tk.BOTH, expand=True)
 
-    # 关闭已存在的窗口
-    close_circle()
+        self.circle_id = None  # 用于存储圆圈的ID
 
-    # 创建顶层窗口
-    circle_window = tk.Toplevel(root)
-    circle_window.overrideredirect(True)  # 无边框
-    circle_window.attributes("-alpha", 0.5)  # 半透明
-    circle_window.attributes("-topmost", True)  # 置顶
+        # 启动鼠标监听线程
+        self.listener_thread = threading.Thread(target=self.start_listener, daemon=True)
+        self.listener_thread.start()
 
-    # 设置透明色
-    transparent_color = "#fffffe"
-    circle_window.attributes("-transparentcolor", transparent_color)
+        # 处理队列消息
+        self.process_queue()
 
-    # 窗口大小为直径的2倍（半径*2）
-    window_size = circle_radius * 2
-    # 创建画布
-    canvas = Canvas(
-        circle_window,
-        width=window_size,
-        height=window_size,
-        bg=transparent_color,
-        highlightthickness=0,
-    )
-    canvas.pack()
-
-    # 绘制圆形
-    canvas.create_oval(5, 5, window_size - 5, window_size - 5, outline="red", width=2)
-
-    # 精确计算窗口位置：
-    # 1. 将pynput获取的物理坐标转换为Tkinter使用的逻辑坐标
-    logical_x = x / scaling_factor
-    logical_y = y / scaling_factor
-
-    # 2. 计算窗口左上角位置，使鼠标位置位于圆心
-    window_x = int(logical_x - circle_radius)
-    window_y = int(logical_y - circle_radius)
-
-    circle_window.geometry(f"{window_size}x{window_size}+{window_x}+{window_y}")
-    # 调试信息，方便查看坐标转换是否正确
-    # print(f"物理坐标: ({x}, {y}), 逻辑坐标: ({logical_x:.0f}, {logical_y:.0f}), 窗口位置: ({window_x}, {window_y})")
-
-
-# 关闭圆形窗口
-def close_circle():
-    global circle_window
-    if circle_window is not None and isinstance(circle_window, tk.Toplevel):
-        circle_window.destroy()
-        circle_window = None
-
-
-# 线程安全的UI操作包装函数
-def safe_draw_circle(x, y):
-    if root:
-        root.after(0, lambda: draw_circle(x, y))
-
-
-def safe_close_circle():
-    if root:
-        root.after(0, close_circle)
-
-
-# 鼠标事件处理
-def on_click(x, y, button, pressed):
-    if button == mouse.Button.right:
-        if pressed:
-            # 右键按下，线程安全地绘制圆形
-            safe_draw_circle(x, y)
-        else:
-            # 右键松开，线程安全地关闭圆形
-            safe_close_circle()
-
-
-# 启动监听
-def main():
-    global root
-    # 创建主窗口
-    root = tk.Tk()
-    root.withdraw()  # 隐藏主窗口
-
-    # 在单独线程中启动鼠标监听
-    def start_listener():
-        with mouse.Listener(on_click=on_click) as listener:
+    def start_listener(self):
+        """启动鼠标监听器"""
+        with mouse.Listener(on_click=self.on_click) as listener:
             listener.join()
 
-    listener_thread = threading.Thread(target=start_listener, daemon=True)
-    listener_thread.start()
+    def on_click(self, x, y, button, pressed):
+        """处理鼠标点击事件"""
+        if button == mouse.Button.right:
+            if pressed:
+                # 右键按下，发送绘制命令和位置
+                self.queue.put(("draw", x, y))
+            else:
+                # 右键松开，发送清除命令
+                self.queue.put(("clear",))
 
-    # 启动Tkinter事件循环
-    root.mainloop()
+    def process_queue(self):
+        """处理队列中的消息"""
+        while not self.queue.empty():
+            command = self.queue.get()
+            if command[0] == "draw":
+                # 绘制圆圈
+                x, y = command[1], command[2]
+                radius = 30  # 圆圈半径
+                if self.circle_id:
+                    self.canvas.delete(self.circle_id)
+                self.circle_id = self.canvas.create_oval(
+                    x - radius,
+                    y - radius,
+                    x + radius,
+                    y + radius,
+                    outline="red",
+                    width=2,
+                )
+            elif command[0] == "clear":
+                # 清除圆圈
+                if self.circle_id:
+                    self.canvas.delete(self.circle_id)
+                    self.circle_id = None
+
+        # 定期检查队列
+        self.root.after(10, self.process_queue)
+
+    def run(self):
+        """运行主循环"""
+        self.root.mainloop()
 
 
 if __name__ == "__main__":
-    main()
+    drawer = MouseCircleDrawer()
+    drawer.run()
