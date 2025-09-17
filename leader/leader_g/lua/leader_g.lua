@@ -69,13 +69,15 @@ function G.add_commit_push_edit()
 end
 
 function G.add_commit_push_yank()
-	require("f").write_lines_to_file(require("f").yank_to_lines_table(), TempTxt)
-	G.add_commit_push_file(TempTxt)
+	G.add_commit_push_infos(require("f").yank_to_lines_table())
 end
 
 function G.add_commit_push_cur_line()
-	require("f").write_lines_to_file({ vim.fn.getline(".") }, TempTxt)
-	G.add_commit_push_file(TempTxt)
+	G.add_commit_push_infos(vim.fn.getline("."))
+end
+
+function G.add_commit_push_bufname()
+	G.add_commit_push_infos(vim.fn.bufname())
 end
 
 function G.reset_hunk()

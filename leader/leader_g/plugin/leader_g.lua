@@ -30,6 +30,13 @@ require("which-key").register({
 		"add_commit_push_cur_line",
 		mode = { "n", "v" },
 	},
+	["<leader>g<leader>ab"] = {
+		function()
+			G.add_commit_push_bufname()
+		end,
+		"add_commit_push_bufname",
+		mode = { "n", "v" },
+	},
 	["<leader>gr"] = {
 		function()
 			G.reset_hunk()
