@@ -67,6 +67,23 @@ require("which-key").register({
 		mode = { "n", "v" },
 		silent = true,
 	},
+	["<leader>gx"] = { name = "git reset" },
+	["<leader>gxh"] = {
+		function()
+			G.git_reset_hard()
+		end,
+		"git_reset_hard",
+		mode = { "n", "v" },
+		silent = true,
+	},
+	["<leader>gxc"] = {
+		function()
+			G.git_reset_clean_fd()
+		end,
+		"git_reset_clean_fd",
+		mode = { "n", "v" },
+		silent = true,
+	},
 	["<leader>gp"] = {
 		function()
 			G.pull()

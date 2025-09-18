@@ -100,6 +100,14 @@ function G.git_reset_buffer()
 	require("gitsigns").reset_buffer()
 end
 
+function G.git_reset_hard()
+	require("f").run_and_notify("git reset --hard")
+end
+
+function G.git_reset_clean_fd()
+	require("f").run_and_notify("git clean -fd")
+end
+
 function G.pull()
 	require("f").async_run("git pull")
 end
