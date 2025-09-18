@@ -23,6 +23,13 @@ require("which-key").register({
 		"run_cur_file_exit",
 		mode = { "n", "v" },
 	},
+	["<leader>rt"] = {
+		function()
+			R.stop_cur_file()
+		end,
+		"stop_cur_file",
+		mode = { "n", "v" },
+	},
 	["<leader>rf"] = {
 		function()
 			require("spectre").open_file_search({ select_word = true })

@@ -47,4 +47,6 @@ function R.run_cur_file_exit()
 	R.run_cur_file(nil, 1)
 end
 
+function R.stop_cur_file() end
+
 return R
