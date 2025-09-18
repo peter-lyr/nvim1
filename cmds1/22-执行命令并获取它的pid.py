@@ -92,7 +92,7 @@ def main():
     #    - cd 路径：切换到git仓库目录
     #    - git status：查询git仓库状态
     #    - pause：暂停控制台（防止进程执行完立即关闭，便于查看结果）
-    target_command = '''wmic process call create "cmd /c chcp 65001 & cd C:\\Users\\depei_liu\\Dp1\\lazy\\nvim1 & git status & pause"'''
+    target_command = '''wmic process call create "cmd /c chcp 65001 & cd ""C:\\Users\\depei_liu\\Dp1\\lazy\\nvim1"" & git status & pause"'''
 
     # 1. 执行命令，获取输出和返回码
     stdout, stderr, returncode = execute_command(target_command)
