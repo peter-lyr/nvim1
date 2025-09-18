@@ -23,11 +23,15 @@ function R.run_cur_file(no_console_window, auto_exit)
 		local lua_plugin, sta = require("f").get_lua_plugin(cur_file)
 		if sta then
 			R.source(cur_file)
-			R.source(lua_plugin)
+			if cur_file ~= lua_plugin then
+				R.source(lua_plugin)
+			end
 		else
 			local _pluginlua, _ = require("f").get_plugin_lua(cur_file)
 			R.source(_pluginlua)
-			R.source(cur_file)
+			if cur_file ~= cur_file then
+				R.source(cur_file)
+			end
 		end
 		if require("f").is(lua) then
 			package.loaded[lua] = dofile(cur_file)
