@@ -153,6 +153,7 @@ def kill_processes(pids: list[int]) -> bool:
 
 
 def main():
+    print("ssssssssss")
     if len(sys.argv) < 2:
         print('用法: python 22-执行命令并获取它的pid.py "需要执行的命令"')
         print('示例1: python 22-执行命令并获取它的pid.py "calc"')

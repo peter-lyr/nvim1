@@ -1,5 +1,14 @@
 local R = {}
 
+local function get_py(py)
+	local info = debug.getinfo(1, "S")
+	local relative_path = info.source:sub(2)
+	relative_path = require("f").rep(relative_path)
+	return vim.fn.fnamemodify(relative_path, ":p:h:h") .. "\\py\\" .. py
+end
+
+local run_and_get_pid = get_py("01-run-and-get-pid.py")
+
 function R.source(luafile)
 	if not require("f").is_file_exists(luafile) then
 		return
