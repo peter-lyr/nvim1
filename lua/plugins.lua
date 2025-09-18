@@ -13,6 +13,7 @@ return {
 			require("guess-indent").setup({})
 		end,
 	},
+	"google/vim-searchindex",
 
 	{
 		"folke/which-key.nvim",
