@@ -31,8 +31,20 @@ require("which-key").register({
 	["<leader>sa"] = { "<cmd>Telescope builtin<cr>", "builtin", mode = { "n", "v" } },
 
 	-- file_browser
-	-- ['<leader>sw'] = { function() require 'f'.cmd('Telescope file_browser cwd=%s', require 'f'.escape_space(require 'f'.get_parent())) end, 'file_browser cur', mode = { 'n', 'v', }, },
-	-- ['<leader>s<leader>w'] = { function() require 'f'.telescope_sel(require 'f'.get_file_more_dirs(), 'file_browser') end, 'file_browser sel', mode = { 'n', 'v', }, },
+	["<leader>sw"] = {
+		function()
+			require("f").cmd("Telescope file_browser cwd=%s", require("f").escape_space(require("f").get_parent()))
+		end,
+		"file_browser cur",
+		mode = { "n", "v" },
+	},
+	["<leader>s<leader>w"] = {
+		function()
+			vim.cmd("Telescope file_browser")
+		end,
+		"file_browser",
+		mode = { "n", "v" },
+	},
 	-- ['<leader>s<leader>f'] = { function() require 'f'.telescope_sel(require 'f'.get_file_more_dirs(), 'fd') end, 'fd_sel', mode = { 'n', 'v', }, },
 	-- ['<leader>sj'] = { function() require 'f'.opened_proj_sel() end, 'opened_proj_sel', mode = { 'n', 'v', }, },
 	["<leader>sp"] = { "<cmd>Telescope project<cr>", "project", mode = { "n", "v" } },

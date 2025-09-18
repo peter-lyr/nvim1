@@ -300,6 +300,11 @@ function F.new_file(file)
 	return require("plenary.path"):new(F.rep(file))
 end
 
+function F.escape_space(text)
+	text = string.gsub(text, " ", "\\ ")
+	return text
+end
+
 function F.get_parent(file)
 	if not file then
 		file = F.get_cur_file()
