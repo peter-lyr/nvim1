@@ -1,4 +1,5 @@
 -- lua如何根据窗口名获取它的pid？
+-- 废弃，不好用
 
 local function get_pid_by_window_title(window_title_pattern)
 	-- 转义窗口标题中的特殊字符（如引号、反斜杠等），避免PowerShell解析错误
