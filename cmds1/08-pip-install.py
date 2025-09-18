@@ -12,3 +12,4 @@ def pip_install(plugin):
 # pip_install('pynput')
 # pip_install('ipython')
 # pip_install("pywin32")
+# pip_install("psutil")
