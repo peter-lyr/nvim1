@@ -166,11 +166,11 @@ require("which-key").register({
 		mode = { "n", "v" },
 	},
 
-	["<leader>wgn"] = {
+	["<leader>wo"] = {
 		function()
-			W.go_notify_window()
+			W.cycle_notify_windows()
 		end,
-		"go_notify_window",
+		"cycle_notify_windows",
 		mode = { "n", "v" },
 	},
 })

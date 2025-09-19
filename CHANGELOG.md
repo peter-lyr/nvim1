@@ -46,3 +46,4 @@ clangd:testing
 <leader>pg:粘贴系统剪贴板文本
 <leader>s<leader>f:Telescope fidget
 <leader>s<leader>n:Telescope notify
+<leader>wo:cycle_notify_windows

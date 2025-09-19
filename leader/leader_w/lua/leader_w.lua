@@ -197,14 +197,33 @@ function W.bw_all_unseen_buffer_other_tab()
 	require("f").printf("%d buffers bw!: %s", cnt, s)
 end
 
-function W.go_notify_window()
+function W.cycle_notify_windows()
+	if not _G.notify_win_index then
+		_G.notify_win_index = 0
+	end
+	local notify_wins = {}
 	for _, win in ipairs(vim.api.nvim_list_wins()) do
 		local buf = vim.api.nvim_win_get_buf(win)
 		if vim.api.nvim_buf_get_option(buf, "filetype") == "notify" then
-			vim.api.nvim_set_current_win(win)
-			return
+			table.insert(notify_wins, win)
 		end
 	end
+	if #notify_wins == 0 then
+		vim.notify("No notify windows found")
+		return false
+	end
+	if #notify_wins == 1 then
+		vim.api.nvim_set_current_win(notify_wins[1])
+		_G.notify_win_index = 1
+		return true
+	end
+	if _G.notify_win_index <= 0 or _G.notify_win_index > #notify_wins then
+		_G.notify_win_index = 1
+	else
+		_G.notify_win_index = _G.notify_win_index % #notify_wins + 1
+	end
+	vim.api.nvim_set_current_win(notify_wins[_G.notify_win_index])
+	return true
 end
 
 return W
