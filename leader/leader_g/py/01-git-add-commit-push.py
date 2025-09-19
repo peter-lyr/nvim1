@@ -16,7 +16,7 @@ if __name__ == "__main__":
                 continue
             if not line.strip():
                 continue
-            f.write(line.strip())
+            f.write(line.strip()+b'\n')
             push_allow = True
     if not push_allow:
         os.system(f"echo commit file is empty: {git_commit_txt}")
