@@ -37,4 +37,18 @@ require("which-key").register({
 		"NotificationsClear",
 		mode = { "n", "v" },
 	},
+	["<leader>bf"] = {
+		function()
+			require("f").fidget_buffer()
+		end,
+		"fidget_buffer",
+		mode = { "n", "v" },
+	},
+	["<leader>b<leader>f"] = {
+		function()
+			vim.cmd("Fidget clear_history")
+		end,
+		"Fidget clear_history",
+		mode = { "n", "v" },
+	},
 })

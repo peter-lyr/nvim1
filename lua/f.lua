@@ -566,6 +566,10 @@ function F.message_buffer()
 	F.execute_out_buffer("message")
 end
 
+function F.fidget_buffer()
+	F.execute_out_buffer("Fidget history")
+end
+
 function F.notify(...)
 	F.lazy_load("nvim-notify")
 	local info = string.format(...)
