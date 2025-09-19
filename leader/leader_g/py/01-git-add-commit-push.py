@@ -3,7 +3,7 @@ import sys
 
 
 def echo(text):
-    os.system(f"echo {text}")
+    os.system(f"echo {text}".strip())
 
 
 if __name__ == "__main__":
