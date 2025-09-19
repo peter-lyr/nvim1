@@ -165,4 +165,12 @@ require("which-key").register({
 		"only cur window",
 		mode = { "n", "v" },
 	},
+
+	["<leader>wgn"] = {
+		function()
+			W.go_notify_window()
+		end,
+		"go_notify_window",
+		mode = { "n", "v" },
+	},
 })

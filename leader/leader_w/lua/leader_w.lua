@@ -197,4 +197,14 @@ function W.bw_all_unseen_buffer_other_tab()
 	require("f").printf("%d buffers bw!: %s", cnt, s)
 end
 
+function W.go_notify_window()
+	for _, win in ipairs(vim.api.nvim_list_wins()) do
+		local buf = vim.api.nvim_win_get_buf(win)
+		if vim.api.nvim_buf_get_option(buf, "filetype") == "notify" then
+			vim.api.nvim_set_current_win(win)
+			return
+		end
+	end
+end
+
 return W
