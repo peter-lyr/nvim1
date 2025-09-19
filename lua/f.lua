@@ -572,6 +572,12 @@ function F.notify(...)
 	vim.notify(info)
 end
 
+function F.fidget_notify(...)
+	F.lazy_load("fidget.nvim")
+	local info = string.format(...)
+	require("fidget").notify(info)
+end
+
 function F.yank_to_lines_table()
 	local yank_content = vim.fn.getreg('"')
 	local lines = {}
@@ -660,9 +666,9 @@ function F.async_run(cmd, opts)
 			if fd then
 				vim.loop.fs_close(fd)
 			end
-			local message = string.format("cmd done: '%s'", cmd)
-			local level = exit_code == 0 and vim.log.levels.INFO or vim.log.levels.WARN
-			vim.notify(message, level, { title = F.format("%s (Exit: %d)", title, exit_code) })
+			-- local message = string.format("cmd done: '%s'", cmd)
+			-- local level = exit_code == 0 and vim.log.levels.INFO or vim.log.levels.WARN
+			-- vim.notify(message, level, { title = F.format("%s (Exit: %d)", title, exit_code) })
 			if opts.on_exit then
 				opts.on_exit(exit_code, signal, output_file)
 			end
@@ -676,7 +682,7 @@ function F.async_run(cmd, opts)
 		end
 		vim.notify("failed to run " .. vim.inspect(cmd), vim.log.levels.ERROR, { title = "Command Error" })
 	else
-		vim.notify("running: " .. cmd, vim.log.levels.INFO)
+		F.fidget_notify("running: " .. cmd, vim.log.levels.INFO)
 	end
 	return job_id
 end
