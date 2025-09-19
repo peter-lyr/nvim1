@@ -2,10 +2,6 @@ import os
 import sys
 
 
-def echo(text):
-    os.system(f"chcp 65001>nul&echo {text}".strip() + "\r")
-
-
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         os.system("echo require 1 arg like commit_info.txt")
@@ -15,7 +11,7 @@ if __name__ == "__main__":
         lines = f.readlines()
     push_allow = False
     git_commit_txt = git_commit_txt + ".txt"
-    echo("=========commit info:=========")
+    print("=========commit info:=========")
     with open(git_commit_txt, "wb") as f:
         for line in lines:
             if line[:2] == b"# ":
@@ -23,10 +19,10 @@ if __name__ == "__main__":
             if not line.strip():
                 continue
             f.write(line.strip() + b"\n")
-            echo(line.strip().decode("utf-8"))
+            print(line.strip().decode("utf-8"))
             push_allow = True
-    echo("==============================")
-    echo(os.getcwd())
+    print("==============================")
+    print(os.getcwd())
     if not push_allow:
         os.system(f"echo commit file is empty: {git_commit_txt}")
         os._exit(2)
