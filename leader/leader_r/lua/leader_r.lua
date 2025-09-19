@@ -13,7 +13,7 @@ function R.source(luafile)
 	if not require("f").is_file_exists(luafile) then
 		return
 	end
-	require("f").printf("source %s", luafile)
+	require("f").notify(string.format("source %s", luafile))
 	require("f").cmd("source %s", luafile)
 end
 

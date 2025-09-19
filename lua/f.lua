@@ -566,6 +566,12 @@ function F.message_buffer()
 	F.execute_out_buffer("message")
 end
 
+function F.notify(...)
+	F.lazy_load("nvim-notify")
+	local info = string.format(...)
+	vim.notify(info)
+end
+
 function F.yank_to_lines_table()
 	local yank_content = vim.fn.getreg('"')
 	local lines = {}
