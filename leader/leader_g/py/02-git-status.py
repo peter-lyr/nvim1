@@ -2,7 +2,7 @@ import os
 
 
 def echo(text):
-    os.system(f"chcp 65001>nul&echo {text}".strip())
+    os.system(f"chcp 65001>nul&echo {text}".strip() + "\r")
 
 
 if __name__ == "__main__":
