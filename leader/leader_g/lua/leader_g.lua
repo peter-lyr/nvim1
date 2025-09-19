@@ -11,8 +11,10 @@ function G.add_commit_push_file(file)
 	if not require("f").is_file_exists(file) then
 		return
 	end
+	local git_status_py = get_py("02-git-status.py")
 	local git_add_commit_push_py = get_py("01-git-add-commit-push.py")
 	-- require 'f'.run_and_pause('python %s %s', git_add_commit_push_py, file)
+	require("f").run_and_notify("python %s", git_status_py)
 	require("f").run_and_notify("python %s %s", git_add_commit_push_py, file)
 end
 
