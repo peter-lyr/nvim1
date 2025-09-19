@@ -23,7 +23,7 @@ if __name__ == "__main__":
             if not line.strip():
                 continue
             f.write(line.strip() + b"\n")
-            print(line.strip().decode("utf-8"))
+            echo(line.strip().decode("utf-8"))
             push_allow = True
     echo("==============================")
     echo(os.getcwd())
