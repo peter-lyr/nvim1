@@ -44,3 +44,5 @@ formatter:all
 clangd:testing
 17-画圆.py:优化+1
 <leader>pg:粘贴系统剪贴板文本
+<leader>s<leader>f:Telescope fidget
+<leader>s<leader>n:Telescope notify

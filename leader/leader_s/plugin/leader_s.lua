@@ -74,4 +74,6 @@ require("which-key").register({
 		"oldfiles",
 		mode = { "n", "v" },
 	},
+	["<leader>s<leader>n"] = { "<cmd>Telescope notify<cr>", "Telescope notify", mode = { "n", "v" } },
+	["<leader>s<leader>f"] = { "<cmd>Telescope fidget<cr>", "Telescope fidget", mode = { "n", "v" } },
 })

@@ -8,6 +8,19 @@ return {
 			"nvim-telescope/telescope-ui-select.nvim",
 			"paopaol/telescope-git-diffs.nvim",
 			"sindrets/diffview.nvim",
+			{
+				"j-hui/fidget.nvim", -- 有两处
+				opts = {
+					notification = {
+						view = {
+							stack_upwards = false,
+						},
+						window = {
+							align = "top",
+						},
+					},
+				},
+			},
 		},
 		cmd = { "Telescope" },
 		config = function()
@@ -193,6 +206,8 @@ return {
 			require("telescope").load_extension("file_browser")
 			require("telescope").load_extension("ui-select")
 			require("telescope").load_extension("git_diffs")
+			require("telescope").load_extension("notify")
+			require("telescope").load_extension("fidget")
 		end,
 	},
 }
