@@ -1,6 +1,11 @@
 import os
 import sys
 
+
+def echo(text):
+    os.system(f"echo {text}")
+
+
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         os.system("echo require 1 arg like commit_info.txt")
@@ -10,7 +15,7 @@ if __name__ == "__main__":
         lines = f.readlines()
     push_allow = False
     git_commit_txt = git_commit_txt + ".txt"
-    print("=========commit info:=========", end="\r\n", flush=True)
+    echo("=========commit info:=========")
     with open(git_commit_txt, "wb") as f:
         for line in lines:
             if line[:2] == b"# ":
@@ -20,8 +25,8 @@ if __name__ == "__main__":
             f.write(line.strip() + b"\n")
             print(line.strip().decode("utf-8"))
             push_allow = True
-    print("==============================", end="\r\n", flush=True)
-    print(os.getcwd(), end="\r\n", flush=True)
+    echo("==============================")
+    echo(os.getcwd())
     if not push_allow:
         os.system(f"echo commit file is empty: {git_commit_txt}")
         os._exit(2)
