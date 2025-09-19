@@ -209,7 +209,7 @@ function W.cycle_notify_windows()
 		end
 	end
 	if #notify_wins == 0 then
-		vim.notify("No notify windows found")
+		require("f").fidget_notify("No notify windows found")
 		return false
 	end
 	if #notify_wins == 1 then

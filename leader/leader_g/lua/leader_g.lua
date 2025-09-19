@@ -83,7 +83,7 @@ function G.add_commit_push_cWORD()
 end
 
 function G.add_commit_push_cur_line()
-	G.add_commit_push_infos(vim.fn.getline("."))
+	G.add_commit_push_infos(require("f").trim(vim.fn.getline(".")))
 end
 
 function G.add_commit_push_bufname()

@@ -312,6 +312,10 @@ function F.get_parent(file)
 	return F.new_file(file):parent().filename
 end
 
+function F.trim(text)
+	return vim.fn.trim(text)
+end
+
 function F.is_file_exists(file)
 	file = vim.fn.trim(file)
 	if #file == 0 then
