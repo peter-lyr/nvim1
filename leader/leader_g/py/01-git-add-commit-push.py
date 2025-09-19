@@ -22,7 +22,6 @@ if __name__ == "__main__":
             print(line.strip().decode("utf-8"))
             push_allow = True
     print("==============================")
-    print(os.getcwd())
     if not push_allow:
         os.system(f"echo commit file is empty: {git_commit_txt}")
         os._exit(2)
