@@ -19,7 +19,7 @@ if __name__ == "__main__":
             if not line.strip():
                 continue
             f.write(line.strip() + b"\n")
-            print(line.strip().decode("utf-8"))
+            print(line.strip().decode("gbk"))
             push_allow = True
     print("==============================")
     if not push_allow:
