@@ -68,31 +68,18 @@ IsMouseInCircle() {
     return distance <= circleRadius
 }
 
-CheckAndActivateCircle() {
-    global circleHwnd
-    if (!circleHwnd) {
-        return
-    }
-    if (IsMouseInCircle() && WinExist("A") != circleHwnd) {
-        try {
-            WinActivate(circleHwnd)
-        }
-    }
-}
-
 Print(message) {
     ToolTip(message)
     SetTimer(() => ToolTip(), 2000, -1)
 }
 
-~RButton:: {
+RButton:: {
     CreateCircleWindow()
-    SetTimer(CheckAndActivateCircle, 10)
 }
 
-~RButton Up:: {
-    SetTimer(CheckAndActivateCircle, 0)
+RButton Up:: {
     DestroyCircleWindow()
+    Click "Right"
 }
 
 CreateCircleWindow()
