@@ -98,4 +98,4 @@ Print(message) {
 CreateCircleWindow()
 DestroyCircleWindow()
 
-Esc::ExitApp
+^Ins::ExitApp

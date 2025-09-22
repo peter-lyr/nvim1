@@ -17,4 +17,4 @@
 ; CreateCircleWindow()
 ; DestroyCircleWindow()
 ;
-; Esc::ExitApp
+; ^Ins::ExitApp
