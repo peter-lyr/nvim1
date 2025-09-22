@@ -8,6 +8,9 @@ global g_CircleCenterX := 0
 global g_CircleCenterY := 0
 global g_TargetWindowHwnd := 0
 
+global g_Counter1 := 0, g_Counter2 := 0, g_Counter3 := 0
+global g_Max1 := 6, g_Max2 := 4, g_Max3 := 5
+
 CreateCircleGui(centerX, centerY, width, height, transparency, bgColor) {
     if (width <= 0 || height <= 0)
         throw Error("宽度和高度必须为正数（当前宽：" width "，高：" height "）")
@@ -97,16 +100,28 @@ GetDirectionFromCircle() {
         return "右上"
 }
 
-UpdateDirectionToolTip() {
-    global g_CircleHwnd
+UpdateCounterToolTip() {
+    global g_CircleHwnd, g_Counter1, g_Counter2, g_Counter3
     if (!g_CircleHwnd)
         return
 
-    if (!IsMouseInsideCircle()) {
+    if (IsMouseInsideCircle()) {
+        ToolTip("计数器: " g_Counter1 ", " g_Counter2 ", " g_Counter3)
+    } else {
         direction := GetDirectionFromCircle()
         ToolTip("方向: " direction)
-    } else {
-        ToolTip()
+    }
+}
+
+IncrementCounter(counterNum) {
+    global g_Counter1, g_Counter2, g_Counter3, g_Max1, g_Max2, g_Max3
+
+    if (counterNum = 1) {
+        g_Counter1 := Mod(g_Counter1 + 1, g_Max1 + 1)
+    } else if (counterNum = 2) {
+        g_Counter2 := Mod(g_Counter2 + 1, g_Max2 + 1)
+    } else if (counterNum = 3) {
+        g_Counter3 := Mod(g_Counter3 + 1, g_Max3 + 1)
     }
 }
 
@@ -138,17 +153,42 @@ HandleWindowByDirection() {
 RButton:: {
     CaptureWindowUnderMouse()
     ShowCircleAtMouse()
-    SetTimer(UpdateDirectionToolTip, 100)
+    SetTimer(UpdateCounterToolTip, 100)
 }
 
 RButton Up:: {
-    SetTimer(UpdateDirectionToolTip, 0)
+    SetTimer(UpdateCounterToolTip, 0)
     ToolTip()
     HideCircle()
     if (IsMouseInsideCircle()) {
         Click "Right"
     } else {
         HandleWindowByDirection()
+    }
+}
+
+~LButton:: {
+    if (IsMouseInsideCircle() && GetKeyState("RButton", "P")) {
+        IncrementCounter(1)
+        UpdateCounterToolTip()
+        return
+    }
+}
+
+~MButton:: {
+    if (IsMouseInsideCircle() && GetKeyState("RButton", "P")) {
+        IncrementCounter(2)
+        UpdateCounterToolTip()
+        return
+    }
+}
+
+~WheelUp::
+~WheelDown:: {
+    if (IsMouseInsideCircle() && GetKeyState("RButton", "P")) {
+        IncrementCounter(3)
+        UpdateCounterToolTip()
+        return
     }
 }
 
