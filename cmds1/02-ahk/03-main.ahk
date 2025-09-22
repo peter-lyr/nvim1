@@ -46,6 +46,7 @@
 ;     }
 ; }
 ;
+; InitActionMap()
 ; ShowCircleAtMouse()
 ; HideCircle()
 ;

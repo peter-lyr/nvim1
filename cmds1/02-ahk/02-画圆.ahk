@@ -22,6 +22,88 @@ global g_DirectionMap := Map(
     "RU", "右上"
 )
 
+global g_ActionMap := Map()
+
+InitActionMap() {
+    global g_ActionMap
+    g_ActionMap["0_0_0_R"] := "MoveRight"
+    g_ActionMap["0_0_0_RD"] := "MinimizeWindow"
+    g_ActionMap["0_0_0_RU"] := "ToggleMaximizeWindow"
+    g_ActionMap["0_0_0_D"] := "MoveDown"
+    g_ActionMap["0_0_0_L"] := "MoveLeft"
+    g_ActionMap["0_0_0_U"] := "MoveUp"
+    g_ActionMap["0_0_0_LU"] := "ExampleAction1"
+    g_ActionMap["0_0_0_LD"] := "ExampleAction2"
+    g_ActionMap["1_0_0_R"] := "IncreaseVolume"
+    g_ActionMap["1_0_0_L"] := "DecreaseVolume"
+    g_ActionMap["0_1_0_U"] := "NextTab"
+    g_ActionMap["0_1_0_D"] := "PreviousTab"
+    g_ActionMap["0_0_1_R"] := "NextMedia"
+    g_ActionMap["0_0_1_L"] := "PreviousMedia"
+}
+
+MoveRight() {
+    Send "{Right}"
+}
+
+MoveLeft() {
+    Send "{Left}"
+}
+
+MoveUp() {
+    Send "{Up}"
+}
+
+MoveDown() {
+    Send "{Down}"
+}
+
+MinimizeWindow() {
+    global g_TargetWindowHwnd
+    WinMinimize(g_TargetWindowHwnd)
+}
+
+ToggleMaximizeWindow() {
+    global g_TargetWindowHwnd
+    if (WinGetMinMax(g_TargetWindowHwnd) == 1) {
+        WinRestore(g_TargetWindowHwnd)
+    } else {
+        WinMaximize(g_TargetWindowHwnd)
+    }
+}
+
+IncreaseVolume() {
+    Send "{Volume_Up}"
+}
+
+DecreaseVolume() {
+    Send "{Volume_Down}"
+}
+
+NextTab() {
+    Send "^Tab"
+}
+
+PreviousTab() {
+    Send "^+Tab"
+}
+
+NextMedia() {
+    Send "{Media_Next}"
+}
+
+PreviousMedia() {
+    Send "{Media_Prev}"
+}
+
+ExampleAction1() {
+    MsgBox "执行示例操作1"
+}
+
+ExampleAction2() {
+    MsgBox "执行示例操作2"
+}
+
 CreateCircleGui(centerX, centerY, width, height, transparency, bgColor) {
     if (width <= 0 || height <= 0)
         throw Error("宽度和高度必须为正数（当前宽：" width "，高：" height "）")
@@ -116,21 +198,38 @@ GetDirectionChineseName(direction) {
     return g_DirectionMap.Has(direction) ? g_DirectionMap[direction] : direction
 }
 
-GetCurrentActionFunctionName() {
+GetCurrentStateKey() {
     global g_Counter1, g_Counter2, g_Counter3
     direction := GetDirectionFromCircle()
-    return "Action_" g_Counter1 "_" g_Counter2 "_" g_Counter3 "_" direction
+    return g_Counter1 "_" g_Counter2 "_" g_Counter3 "_" direction
+}
+
+GetCurrentActionFunctionName() {
+    global g_ActionMap
+    stateKey := GetCurrentStateKey()
+
+    if (g_ActionMap.Has(stateKey)) {
+        return g_ActionMap[stateKey]
+    } else {
+        return "未定义操作"
+    }
 }
 
 GetAllDirectionFunctionNames() {
-    global g_Counter1, g_Counter2, g_Counter3, g_DirectionMap
+    global g_Counter1, g_Counter2, g_Counter3, g_ActionMap, g_DirectionMap
     directions := ["R", "RD", "D", "LD", "L", "LU", "U", "RU"]
     result := ""
 
     for direction in directions {
-        funcName := "Action_" g_Counter1 "_" g_Counter2 "_" g_Counter3 "_" direction
+        stateKey := g_Counter1 "_" g_Counter2 "_" g_Counter3 "_" direction
         chineseDirection := GetDirectionChineseName(direction)
-        result .= chineseDirection " (" direction "): " funcName "`n"
+
+        if (g_ActionMap.Has(stateKey)) {
+            funcName := g_ActionMap[stateKey]
+            result .= chineseDirection " (" direction "): " funcName "`n"
+        } else {
+            result .= chineseDirection " (" direction "): 未定义操作`n"
+        }
     }
 
     return result
@@ -149,7 +248,7 @@ UpdateCounterToolTip() {
         actionFuncName := GetCurrentActionFunctionName()
         direction := GetDirectionFromCircle()
         chineseDirection := GetDirectionChineseName(direction)
-        ToolTip("当松开右键时执行的操作函数名: " actionFuncName "`n方向: " chineseDirection)
+        ToolTip("当松开右键时执行的操作: " actionFuncName "`n方向: " chineseDirection)
     }
 }
 
@@ -177,62 +276,19 @@ CaptureWindowUnderMouse() {
 }
 
 ExecuteCurrentAction() {
-    actionFuncName := GetCurrentActionFunctionName()
-    try {
-        %actionFuncName%()
-    } catch as e {
-        if (e.Message ~= "Call to nonexistent function") {
-            ShowTempToolTip("未定义的操作: " actionFuncName)
-        } else {
+    global g_ActionMap
+    stateKey := GetCurrentStateKey()
+
+    if (g_ActionMap.Has(stateKey)) {
+        actionFuncName := g_ActionMap[stateKey]
+        try {
+            %actionFuncName%()
+        } catch as e {
             ShowTempToolTip("执行操作时出错: " e.Message)
         }
-    }
-}
-
-Action_0_0_0_R() {
-    MsgBox "执行操作: 计数器1=0, 计数器2=0, 计数器3=0, 方向=右"
-}
-
-Action_0_0_0_RD() {
-    global g_TargetWindowHwnd
-    WinMinimize(g_TargetWindowHwnd)
-}
-
-Action_0_0_0_RU() {
-    global g_TargetWindowHwnd
-    if (WinGetMinMax(g_TargetWindowHwnd) == 1) {
-        WinRestore(g_TargetWindowHwnd)
     } else {
-        WinMaximize(g_TargetWindowHwnd)
+        ShowTempToolTip("未定义的操作: " stateKey)
     }
-}
-
-Action_0_0_0_D() {
-    Send "{Down}"
-}
-
-Action_0_0_0_L() {
-    Send "{Left}"
-}
-
-Action_0_0_0_U() {
-    Send "{Up}"
-}
-
-Action_0_0_0_LU() {
-    MsgBox "左上方向操作示例"
-}
-
-Action_0_0_0_LD() {
-    MsgBox "左下方向操作示例"
-}
-
-Action_1_0_0_R() {
-    MsgBox "计数器1=1, 计数器2=0, 计数器3=0, 方向=右"
-}
-
-Action_0_1_0_R() {
-    MsgBox "计数器1=0, 计数器2=1, 计数器3=0, 方向=右"
 }
 
 RButton:: {
@@ -277,6 +333,7 @@ RButton Up:: {
     }
 }
 
+InitActionMap()
 ShowCircleAtMouse()
 HideCircle()
 
