@@ -37,11 +37,10 @@ CreateCircleWindow() {
     diameter := circleRadius * 2
     try {
         circleWindow := CreateCircleWindowDo(mouseX, mouseY, diameter, diameter, 180, "FF0000")
-        WinActivate(circleWindow.Hwnd)
         circleHwnd := circleWindow.Hwnd
     }
     catch as e {
-        MsgBox("创建圆形失败: " e.Message, "错误", "Icon!")
+        Print("failed to create circle: " . e.Message)
         circleWindow := ""
         circleHwnd := 0
     }
@@ -79,6 +78,11 @@ CheckAndActivateCircle() {
             WinActivate(circleHwnd)
         }
     }
+}
+
+Print(message) {
+    ToolTip(message)
+    SetTimer(() => ToolTip(), 2000, -1)
 }
 
 ~RButton:: {
