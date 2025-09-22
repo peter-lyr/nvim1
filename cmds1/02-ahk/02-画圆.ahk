@@ -8,10 +8,10 @@ global g_CircleCenterX := 0
 global g_CircleCenterY := 0
 global g_TargetWindowHwnd := 0
 
-global g_Counter1 := 0, g_Counter2 := 0, g_Counter3 := 0
-global g_Max1 := 6, g_Max2 := 4, g_Max3 := 5
+global g_LeftClickState := 0, g_MiddleClickState := 0, g_WheelState := 0
+global g_MaxLeftClickStates := 1, g_MaxMiddleClickStates := 1, g_MaxWheelStates := 1
 
-global g_DirectionMap := Map(
+global g_DirectionArrowMap := Map(
     "R", "→",
     "RD", "↘",
     "D", "↓",
@@ -22,7 +22,7 @@ global g_DirectionMap := Map(
     "RU", "↗"
 )
 
-global g_DirectionChineseMap := Map(
+global g_DirectionNameMap := Map(
     "R", "右",
     "RD", "右下",
     "D", "下",
@@ -33,43 +33,43 @@ global g_DirectionChineseMap := Map(
     "RU", "右上"
 )
 
-global g_ActionMap := Map()
+global g_ActionFunctionMap := Map()
 
-InitActionMap() {
-    global g_ActionMap
-    g_ActionMap["0_0_0_R"] := "MoveRight"
-    g_ActionMap["0_0_0_RD"] := "MinimizeWindow"
-    g_ActionMap["0_0_0_RU"] := "ToggleMaximizeWindow"
-    g_ActionMap["0_0_0_D"] := "MoveDown"
-    g_ActionMap["0_0_0_L"] := "MoveLeft"
-    g_ActionMap["0_0_0_U"] := "MoveUp"
-    g_ActionMap["0_0_0_LU"] := "ExampleAction1"
-    g_ActionMap["0_0_0_LD"] := "ExampleAction2"
-    g_ActionMap["1_0_0_R"] := "IncreaseVolume"
-    g_ActionMap["1_0_0_L"] := "DecreaseVolume"
-    g_ActionMap["0_1_0_U"] := "NextTab"
-    g_ActionMap["0_1_0_D"] := "PreviousTab"
-    g_ActionMap["0_0_1_R"] := "NextMedia"
-    g_ActionMap["0_0_1_L"] := "PreviousMedia"
+InitializeActionMappings() {
+    global g_ActionFunctionMap
+    g_ActionFunctionMap["0_0_0_R"] := "MoveCursorRight"
+    g_ActionFunctionMap["0_0_0_RD"] := "MinimizeTargetWindow"
+    g_ActionFunctionMap["0_0_0_RU"] := "ToggleMaximizeWindow"
+    g_ActionFunctionMap["0_0_0_D"] := "MoveCursorDown"
+    g_ActionFunctionMap["0_0_0_L"] := "MoveCursorLeft"
+    g_ActionFunctionMap["0_0_0_U"] := "MoveCursorUp"
+    g_ActionFunctionMap["0_0_0_LU"] := "ExampleFunction1"
+    g_ActionFunctionMap["0_0_0_LD"] := "ExampleFunction2"
+    g_ActionFunctionMap["1_0_0_R"] := "IncreaseSystemVolume"
+    g_ActionFunctionMap["1_0_0_L"] := "DecreaseSystemVolume"
+    g_ActionFunctionMap["0_1_0_U"] := "SwitchToNextTab"
+    g_ActionFunctionMap["0_1_0_D"] := "SwitchToPreviousTab"
+    g_ActionFunctionMap["0_0_1_R"] := "PlayNextMedia"
+    g_ActionFunctionMap["0_0_1_L"] := "PlayPreviousMedia"
 }
 
-MoveRight() {
+MoveCursorRight() {
     Send "{Right}"
 }
 
-MoveLeft() {
+MoveCursorLeft() {
     Send "{Left}"
 }
 
-MoveUp() {
+MoveCursorUp() {
     Send "{Up}"
 }
 
-MoveDown() {
+MoveCursorDown() {
     Send "{Down}"
 }
 
-MinimizeWindow() {
+MinimizeTargetWindow() {
     global g_TargetWindowHwnd
     WinMinimize(g_TargetWindowHwnd)
 }
@@ -83,59 +83,59 @@ ToggleMaximizeWindow() {
     }
 }
 
-IncreaseVolume() {
+IncreaseSystemVolume() {
     Send "{Volume_Up}"
 }
 
-DecreaseVolume() {
+DecreaseSystemVolume() {
     Send "{Volume_Down}"
 }
 
-NextTab() {
+SwitchToNextTab() {
     Send "^Tab"
 }
 
-PreviousTab() {
+SwitchToPreviousTab() {
     Send "^+Tab"
 }
 
-NextMedia() {
+PlayNextMedia() {
     Send "{Media_Next}"
 }
 
-PreviousMedia() {
+PlayPreviousMedia() {
     Send "{Media_Prev}"
 }
 
-ExampleAction1() {
+ExampleFunction1() {
     MsgBox "执行示例操作1"
 }
 
-ExampleAction2() {
+ExampleFunction2() {
     MsgBox "执行示例操作2"
 }
 
-CreateCircleGui(centerX, centerY, width, height, transparency, bgColor) {
+CreateCircleInterface(centerX, centerY, width, height, transparency, bgColor) {
     if (width <= 0 || height <= 0)
         throw Error("宽度和高度必须为正数（当前宽：" width "，高：" height "）")
     if (transparency < 0 || transparency > 255)
         throw Error("透明度必须在0-255之间（当前值：" transparency "）")
     posX := centerX - width / 2
     posY := centerY - height / 2
-    myGui := Gui("-Caption +ToolWindow +AlwaysOnTop")
-    myGui.BackColor := bgColor
-    myGui.Show("x" posX " y" posY " w" width " h" height " NoActivate")
-    WinSetTransparent(transparency, myGui.Hwnd)
+    circleGui := Gui("-Caption +ToolWindow +AlwaysOnTop")
+    circleGui.BackColor := bgColor
+    circleGui.Show("x" posX " y" posY " w" width " h" height " NoActivate")
+    WinSetTransparent(transparency, circleGui.Hwnd)
     hRgn := DllCall("gdi32.dll\CreateEllipticRgn",
         "Int", 0,
         "Int", 0,
         "Int", width,
         "Int", height, "Ptr")
-    DllCall("user32.dll\SetWindowRgn", "Ptr", myGui.Hwnd, "Ptr", hRgn, "Int", 1)
-    return myGui
+    DllCall("user32.dll\SetWindowRgn", "Ptr", circleGui.Hwnd, "Ptr", hRgn, "Int", 1)
+    return circleGui
 }
 
-ShowCircleAtMouse() {
+ShowCircleAtMousePosition() {
     global g_CircleGui, g_CircleHwnd, g_CircleRadius, g_CircleCenterX, g_CircleCenterY
     CoordMode("Mouse", "Screen")
     MouseGetPos(&mouseX, &mouseY)
@@ -149,25 +149,25 @@ ShowCircleAtMouse() {
         g_CircleHwnd := g_CircleGui.Hwnd
     } else {
         try {
-            g_CircleGui := CreateCircleGui(mouseX, mouseY, diameter, diameter, 180, "FF0000")
+            g_CircleGui := CreateCircleInterface(mouseX, mouseY, diameter, diameter, 180, "FF0000")
             g_CircleHwnd := g_CircleGui.Hwnd
         }
         catch as e {
-            ShowTempToolTip("创建圆形失败: " . e.Message)
+            ShowTemporaryTooltip("创建圆形界面失败: " . e.Message)
             g_CircleGui := ""
             g_CircleHwnd := 0
         }
     }
 }
 
-HideCircle() {
+HideCircleInterface() {
     global g_CircleGui
     if (g_CircleGui && IsObject(g_CircleGui)) {
         g_CircleGui.Hide()
     }
 }
 
-IsMouseInsideCircle() {
+IsMouseWithinCircle() {
     global g_CircleHwnd, g_CircleRadius, g_CircleCenterX, g_CircleCenterY
     if (!g_CircleHwnd)
         return false
@@ -177,7 +177,7 @@ IsMouseInsideCircle() {
     return distance <= g_CircleRadius
 }
 
-GetDirectionFromCircle() {
+CalculateDirectionFromCenter() {
     global g_CircleCenterX, g_CircleCenterY
     CoordMode("Mouse", "Screen")
     MouseGetPos(&mouseX, &mouseY)
@@ -204,190 +204,196 @@ GetDirectionFromCircle() {
         return "RU"
 }
 
-GetDirectionChineseName(direction) {
-    global g_DirectionChineseMap
-    return g_DirectionChineseMap.Has(direction) ? g_DirectionChineseMap[direction] : direction
+GetDirectionDisplayName(directionCode) {
+    global g_DirectionNameMap
+    return g_DirectionNameMap.Has(directionCode) ? g_DirectionNameMap[directionCode] : directionCode
 }
 
-GetDirectionArrow(direction) {
-    global g_DirectionMap
-    return g_DirectionMap.Has(direction) ? g_DirectionMap[direction] : "•"
+GetDirectionArrowSymbol(directionCode) {
+    global g_DirectionArrowMap
+    return g_DirectionArrowMap.Has(directionCode) ? g_DirectionArrowMap[directionCode] : "•"
 }
 
-GetCurrentStateKey() {
-    global g_Counter1, g_Counter2, g_Counter3
-    direction := GetDirectionFromCircle()
-    return g_Counter1 "_" g_Counter2 "_" g_Counter3 "_" direction
+GetCurrentStateCombination() {
+    global g_LeftClickState, g_MiddleClickState, g_WheelState
+    direction := CalculateDirectionFromCenter()
+    return g_LeftClickState "_" g_MiddleClickState "_" g_WheelState "_" direction
 }
 
-GetCurrentActionFunctionName() {
-    global g_ActionMap
-    stateKey := GetCurrentStateKey()
-    if (g_ActionMap.Has(stateKey)) {
-        return g_ActionMap[stateKey]
+GetFunctionForCurrentState() {
+    global g_ActionFunctionMap
+    stateKey := GetCurrentStateCombination()
+    if (g_ActionFunctionMap.Has(stateKey)) {
+        return g_ActionFunctionMap[stateKey]
     } else {
         return "未定义操作"
     }
 }
 
-CreateIntuitiveDirectionDisplay() {
-    global g_Counter1, g_Counter2, g_Counter3, g_ActionMap, g_DirectionMap, g_DirectionChineseMap
-    directionsGrid := [
+CreateDirectionalOperationDisplay() {
+    global g_LeftClickState, g_MiddleClickState, g_WheelState, g_ActionFunctionMap
+    directionLayout := [
         ["", "U", ""],
         ["LU", "", "RU"],
         ["L", "", "R"],
         ["LD", "", "RD"],
         ["", "D", ""]
     ]
-    gridWithActions := []
-    for row in directionsGrid {
+    displayGrid := []
+    for row in directionLayout {
         newRow := []
-        for direction in row {
-            if (direction = "") {
+        for directionCode in row {
+            if (directionCode = "") {
                 newRow.Push("")
                 continue
             }
-            stateKey := g_Counter1 "_" g_Counter2 "_" g_Counter3 "_" direction
-            actionName := g_ActionMap.Has(stateKey) ? g_ActionMap[stateKey] : "未定义"
-            arrow := GetDirectionArrow(direction)
-            chineseName := GetDirectionChineseName(direction)
-            displayText := arrow " " chineseName ":" actionName
+            stateKey := g_LeftClickState "_" g_MiddleClickState "_" g_WheelState "_" directionCode
+            operationName := g_ActionFunctionMap.Has(stateKey) ? g_ActionFunctionMap[stateKey] : "未定义"
+            arrowSymbol := GetDirectionArrowSymbol(directionCode)
+            directionName := GetDirectionDisplayName(directionCode)
+            displayText := arrowSymbol " " directionName ":" operationName
             newRow.Push(displayText)
         }
-        gridWithActions.Push(newRow)
+        displayGrid.Push(newRow)
     }
-    tipText := "计数器: " g_Counter1 ", " g_Counter2 ", " g_Counter3 "`n`n"
-    for row in gridWithActions {
+    displayText := "状态: 左键=" g_LeftClickState ", 中键=" g_MiddleClickState ", 滚轮=" g_WheelState "`n`n"
+    for row in displayGrid {
         line := ""
-        for col in row {
-            if (col = "") {
+        for column in row {
+            if (column = "") {
                 line .= "        "
             } else {
-                targetLength := 20
-                currentLength := StrLen(col)
-                if (currentLength >= targetLength) {
-                    line .= col
+                targetWidth := 20
+                currentWidth := StrLen(column)
+                if (currentWidth >= targetWidth) {
+                    line .= column
                 } else {
-                    spacesNeeded := targetLength - currentLength
+                    spacesNeeded := targetWidth - currentWidth
                     leftSpaces := spacesNeeded // 2
                     rightSpaces := spacesNeeded - leftSpaces
                     Loop leftSpaces {
                         line .= " "
                     }
-                    line .= col
+                    line .= column
                     Loop rightSpaces {
                         line .= " "
                     }
                 }
             }
         }
-        tipText .= line "`n"
+        displayText .= line "`n"
     }
-    return tipText
+    return displayText
 }
 
-CreateDirectionIndicator() {
-    direction := GetDirectionFromCircle()
-    arrow := GetDirectionArrow(direction)
-    chineseDirection := GetDirectionChineseName(direction)
-    actionName := GetCurrentActionFunctionName()
-    return "方向: " arrow " " chineseDirection "`n操作: " actionName
+CreateCurrentDirectionIndicator() {
+    directionCode := CalculateDirectionFromCenter()
+    arrowSymbol := GetDirectionArrowSymbol(directionCode)
+    directionName := GetDirectionDisplayName(directionCode)
+    operationName := GetFunctionForCurrentState()
+    return "方向: " arrowSymbol " " directionName "`n操作: " operationName
 }
 
-UpdateDisplay() {
-    global g_LastDisplayText
-    if (IsMouseInsideCircle()) {
-        newText := CreateIntuitiveDirectionDisplay()
+UpdateOperationDisplay() {
+    global g_LastDisplayContent
+    if (IsMouseWithinCircle()) {
+        newContent := CreateDirectionalOperationDisplay()
     } else {
-        newText := CreateDirectionIndicator()
+        newContent := CreateCurrentDirectionIndicator()
     }
-    if (newText != g_LastDisplayText) {
-        ToolTip(newText)
-        g_LastDisplayText := newText
-    }
-}
-
-IncrementCounter(counterNum) {
-    global g_Counter1, g_Counter2, g_Counter3, g_Max1, g_Max2, g_Max3
-    if (counterNum = 1) {
-        g_Counter1 := Mod(g_Counter1 + 1, g_Max1 + 1)
-    } else if (counterNum = 2) {
-        g_Counter2 := Mod(g_Counter2 + 1, g_Max2 + 1)
-    } else if (counterNum = 3) {
-        g_Counter3 := Mod(g_Counter3 + 1, g_Max3 + 1)
+    if (newContent != g_LastDisplayContent) {
+        ToolTip(newContent)
+        g_LastDisplayContent := newContent
     }
 }
 
-ShowTempToolTip(message) {
+ChangeLeftClickState() {
+    global g_LeftClickState, g_MaxLeftClickStates
+    g_LeftClickState := Mod(g_LeftClickState + 1, g_MaxLeftClickStates + 1)
+}
+
+ChangeMiddleClickState() {
+    global g_MiddleClickState, g_MaxMiddleClickStates
+    g_MiddleClickState := Mod(g_MiddleClickState + 1, g_MaxMiddleClickStates + 1)
+}
+
+ChangeWheelState() {
+    global g_WheelState, g_MaxWheelStates
+    g_WheelState := Mod(g_WheelState + 1, g_MaxWheelStates + 1)
+}
+
+ShowTemporaryTooltip(message) {
     ToolTip(message)
     SetTimer(() => ToolTip(), 2000, -1)
 }
 
-CaptureWindowUnderMouse() {
+CaptureWindowUnderCursor() {
     global g_TargetWindowHwnd
     CoordMode("Mouse", "Screen")
     MouseGetPos(, , &g_TargetWindowHwnd)
 }
 
-ExecuteCurrentAction() {
-    global g_ActionMap
-    stateKey := GetCurrentStateKey()
-    if (g_ActionMap.Has(stateKey)) {
-        actionFuncName := g_ActionMap[stateKey]
+ExecuteCurrentOperation() {
+    global g_ActionFunctionMap
+    stateKey := GetCurrentStateCombination()
+
+    if (g_ActionFunctionMap.Has(stateKey)) {
+        functionName := g_ActionFunctionMap[stateKey]
         try {
-            %actionFuncName%()
+            %functionName%()
         } catch as e {
-            ShowTempToolTip("执行操作时出错: " e.Message)
+            ShowTemporaryTooltip("执行操作时出错: " e.Message)
         }
     } else {
-        ShowTempToolTip("未定义的操作: " stateKey)
+        ShowTemporaryTooltip("未定义的操作: " stateKey)
     }
 }
 
 RButton:: {
-    global g_LastDisplayText := ""
-    CaptureWindowUnderMouse()
-    ShowCircleAtMouse()
-    SetTimer(UpdateDisplay, 150)
+    global g_LastDisplayContent := ""
+    CaptureWindowUnderCursor()
+    ShowCircleAtMousePosition()
+    SetTimer(UpdateOperationDisplay, 150)
 }
 
 RButton Up:: {
-    SetTimer(UpdateDisplay, 0)
+    SetTimer(UpdateOperationDisplay, 0)
     ToolTip()
-    global g_LastDisplayText := ""
-    HideCircle()
-    if (IsMouseInsideCircle()) {
+    global g_LastDisplayContent := ""
+    HideCircleInterface()
+
+    if (IsMouseWithinCircle()) {
         Click "Right"
     } else {
-        ExecuteCurrentAction()
+        ExecuteCurrentOperation()
     }
 }
 
 ~LButton:: {
-    if (IsMouseInsideCircle() && GetKeyState("RButton", "P")) {
-        IncrementCounter(1)
+    if (IsMouseWithinCircle() && GetKeyState("RButton", "P")) {
+        ChangeLeftClickState()
         return
     }
 }
 
 ~MButton:: {
-    if (IsMouseInsideCircle() && GetKeyState("RButton", "P")) {
-        IncrementCounter(2)
+    if (IsMouseWithinCircle() && GetKeyState("RButton", "P")) {
+        ChangeMiddleClickState()
         return
     }
 }
 
 ~WheelUp::
 ~WheelDown:: {
-    if (IsMouseInsideCircle() && GetKeyState("RButton", "P")) {
-        IncrementCounter(3)
+    if (IsMouseWithinCircle() && GetKeyState("RButton", "P")) {
+        ChangeWheelState()
         return
     }
 }
 
-InitActionMap()
+InitializeActionMappings()
 
-ShowCircleAtMouse()
-HideCircle()
+ShowCircleAtMousePosition()
+HideCircleInterface()
 
 ^Ins::ExitApp
