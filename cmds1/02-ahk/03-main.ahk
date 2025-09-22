@@ -5,49 +5,50 @@
 #Include 02-画圆.ahk
 
 ; RButton:: {
-;     global g_LastDisplayText := ""
-;     CaptureWindowUnderMouse()
-;     ShowCircleAtMouse()
-;     SetTimer(UpdateDisplay, 150)
+;     global g_LastDisplayContent := ""
+;     CaptureWindowUnderCursor()
+;     ShowCircleAtMousePosition()
+;     SetTimer(UpdateOperationDisplay, 150)
 ; }
 ;
 ; RButton Up:: {
-;     SetTimer(UpdateDisplay, 0)
+;     SetTimer(UpdateOperationDisplay, 0)
 ;     ToolTip()
-;     global g_LastDisplayText := ""
-;     HideCircle()
-;     if (IsMouseInsideCircle()) {
+;     global g_LastDisplayContent := ""
+;     HideCircleInterface()
+;
+;     if (IsMouseWithinCircle()) {
 ;         Click "Right"
 ;     } else {
-;         ExecuteCurrentAction()
+;         ExecuteCurrentOperation()
 ;     }
 ; }
 ;
 ; ~LButton:: {
-;     if (IsMouseInsideCircle() && GetKeyState("RButton", "P")) {
-;         IncrementCounter(1)
+;     if (IsMouseWithinCircle() && GetKeyState("RButton", "P")) {
+;         ChangeLeftClickState()
 ;         return
 ;     }
 ; }
 ;
 ; ~MButton:: {
-;     if (IsMouseInsideCircle() && GetKeyState("RButton", "P")) {
-;         IncrementCounter(2)
+;     if (IsMouseWithinCircle() && GetKeyState("RButton", "P")) {
+;         ChangeMiddleClickState()
 ;         return
 ;     }
 ; }
 ;
 ; ~WheelUp::
 ; ~WheelDown:: {
-;     if (IsMouseInsideCircle() && GetKeyState("RButton", "P")) {
-;         IncrementCounter(3)
+;     if (IsMouseWithinCircle() && GetKeyState("RButton", "P")) {
+;         ChangeWheelState()
 ;         return
 ;     }
 ; }
 ;
-; InitActionMap()
+; InitializeActionMappings()
 ;
-; ShowCircleAtMouse()
-; HideCircle()
+; ShowCircleAtMousePosition()
+; HideCircleInterface()
 ;
 ; ^Ins::ExitApp
