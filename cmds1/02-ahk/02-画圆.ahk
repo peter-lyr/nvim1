@@ -342,7 +342,7 @@ ExecuteCurrentOperation() {
         try {
             %functionName%()
         } catch as e {
-            ShowTemporaryTooltip("执行操作时出错: " e.Message)
+            ShowTemporaryTooltip("执行操作时出错: " e.Message " [" functionName "]")
         }
     } else {
         ShowTemporaryTooltip("未定义的操作: " stateKey)
