@@ -4,6 +4,8 @@ DetectHiddenWindows True
 global circleWindow := ""
 global circleHwnd := 0
 global circleRadius := 50
+global circleCenterX := 0
+global circleCenterY := 0
 
 CreateOrShowCircleWindowDo(centerX, centerY, width, height, transparency, bgColor) {
     if (width <= 0 || height <= 0)
@@ -26,9 +28,11 @@ CreateOrShowCircleWindowDo(centerX, centerY, width, height, transparency, bgColo
 }
 
 CreateOrShowCircleWindow() {
-    global circleWindow, circleHwnd, circleRadius
+    global circleWindow, circleHwnd, circleRadius, circleCenterX, circleCenterY
     CoordMode("Mouse", "Screen")
     MouseGetPos(&mouseX, &mouseY)
+    circleCenterX := mouseX
+    circleCenterY := mouseY
     diameter := circleRadius * 2
     if (circleWindow && IsObject(circleWindow)) {
         posX := mouseX - circleRadius
@@ -56,16 +60,53 @@ HideCircleWindow() {
 }
 
 IsMouseInCircle() {
-    global circleHwnd, circleRadius
+    global circleHwnd, circleRadius, circleCenterX, circleCenterY
     if (!circleHwnd)
         return false
-    WinGetPos(&winX, &winY, &winW, &winH, circleHwnd)
-    centerX := winX + circleRadius
-    centerY := winY + circleRadius
     CoordMode("Mouse", "Screen")
     MouseGetPos(&mouseX, &mouseY)
-    distance := Sqrt((mouseX - centerX)**2 + (mouseY - centerY)**2)
+    distance := Sqrt((mouseX - circleCenterX)**2 + (mouseY - circleCenterY)**2)
     return distance <= circleRadius
+}
+
+GetMouseDirection() {
+    global circleCenterX, circleCenterY
+    CoordMode("Mouse", "Screen")
+    MouseGetPos(&mouseX, &mouseY)
+    dx := mouseX - circleCenterX
+    dy := mouseY - circleCenterY
+    angle := DllCall("msvcrt.dll\atan2", "Double", dy, "Double", dx, "Double") * 57.29577951308232
+    if (angle < 0)
+        angle += 360
+    if (angle >= 337.5 || angle < 22.5)
+        return "右"
+    else if (angle >= 22.5 && angle < 67.5)
+        return "右下"
+    else if (angle >= 67.5 && angle < 112.5)
+        return "下"
+    else if (angle >= 112.5 && angle < 157.5)
+        return "左下"
+    else if (angle >= 157.5 && angle < 202.5)
+        return "左"
+    else if (angle >= 202.5 && angle < 247.5)
+        return "左上"
+    else if (angle >= 247.5 && angle < 292.5)
+        return "上"
+    else if (angle >= 292.5 && angle < 337.5)
+        return "右上"
+}
+
+UpdateToolTip() {
+    global circleHwnd
+    if (!circleHwnd)
+        return
+
+    if (!IsMouseInCircle()) {
+        direction := GetMouseDirection()
+        ToolTip("方向: " direction)
+    } else {
+        ToolTip()
+    }
 }
 
 Print(message) {
@@ -75,9 +116,12 @@ Print(message) {
 
 RButton:: {
     CreateOrShowCircleWindow()
+    SetTimer(UpdateToolTip, 10)
 }
 
 RButton Up:: {
+    SetTimer(UpdateToolTip, 0)
+    ToolTip()
     HideCircleWindow()
     if (IsMouseInCircle()) {
         Click "Right"

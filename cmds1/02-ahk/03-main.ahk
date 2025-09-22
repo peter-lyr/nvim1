@@ -6,9 +6,12 @@
 
 ; RButton:: {
 ;     CreateOrShowCircleWindow()
+;     SetTimer(UpdateToolTip, 10)
 ; }
 ;
 ; RButton Up:: {
+;     SetTimer(UpdateToolTip, 0)
+;     ToolTip()
 ;     HideCircleWindow()
 ;     if (IsMouseInCircle()) {
 ;         Click "Right"
