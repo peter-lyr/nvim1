@@ -5,7 +5,7 @@ global circleWindow := ""
 global circleHwnd := 0
 global circleRadius := 50
 
-CreateCircleWindowDo(centerX, centerY, width, height, transparency, bgColor) {
+CreateOrShowCircleWindowDo(centerX, centerY, width, height, transparency, bgColor) {
     if (width <= 0 || height <= 0)
         throw Error("宽度和高度必须为正数（当前宽：" width "，高：" height "）")
     if (transparency < 0 || transparency > 255)
@@ -25,33 +25,33 @@ CreateCircleWindowDo(centerX, centerY, width, height, transparency, bgColor) {
     return myGui
 }
 
-CreateCircleWindow() {
+CreateOrShowCircleWindow() {
     global circleWindow, circleHwnd, circleRadius
-    if (circleWindow && IsObject(circleWindow)) {
-        circleWindow.Destroy()
-        circleWindow := ""
-        circleHwnd := 0
-    }
     CoordMode("Mouse", "Screen")
     MouseGetPos(&mouseX, &mouseY)
     diameter := circleRadius * 2
-    try {
-        circleWindow := CreateCircleWindowDo(mouseX, mouseY, diameter, diameter, 180, "FF0000")
+    if (circleWindow && IsObject(circleWindow)) {
+        posX := mouseX - circleRadius
+        posY := mouseY - circleRadius
+        circleWindow.Show("x" posX " y" posY " w" diameter " h" diameter " NoActivate")
         circleHwnd := circleWindow.Hwnd
-    }
-    catch as e {
-        Print("failed to create circle: " . e.Message)
-        circleWindow := ""
-        circleHwnd := 0
+    } else {
+        try {
+            circleWindow := CreateOrShowCircleWindowDo(mouseX, mouseY, diameter, diameter, 180, "FF0000")
+            circleHwnd := circleWindow.Hwnd
+        }
+        catch as e {
+            Print("failed to create circle: " . e.Message)
+            circleWindow := ""
+            circleHwnd := 0
+        }
     }
 }
 
-DestroyCircleWindow() {
-    global circleWindow, circleHwnd
+HideCircleWindow() {
+    global circleWindow
     if (circleWindow && IsObject(circleWindow)) {
-        circleWindow.Destroy()
-        circleWindow := ""
-        circleHwnd := 0
+        circleWindow.Hide()
     }
 }
 
@@ -74,15 +74,17 @@ Print(message) {
 }
 
 RButton:: {
-    CreateCircleWindow()
+    CreateOrShowCircleWindow()
 }
 
 RButton Up:: {
-    DestroyCircleWindow()
-    Click "Right"
+    HideCircleWindow()
+    if (IsMouseInCircle()) {
+        Click "Right"
+    }
 }
 
-CreateCircleWindow()
-DestroyCircleWindow()
+CreateOrShowCircleWindow()
+HideCircleWindow()
 
 ^Ins::ExitApp

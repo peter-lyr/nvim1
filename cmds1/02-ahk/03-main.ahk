@@ -4,17 +4,18 @@
 ; 加载包含圆形窗口函数的脚本
 #Include 02-画圆.ahk
 
-; ~RButton:: {
-;     CreateCircleWindow()
-;     SetTimer(CheckAndActivateCircle, 10)
+; RButton:: {
+;     CreateOrShowCircleWindow()
 ; }
 ;
-; ~RButton Up:: {
-;     SetTimer(CheckAndActivateCircle, 0)
-;     DestroyCircleWindow()
+; RButton Up:: {
+;     HideCircleWindow()
+;     if (IsMouseInCircle()) {
+;         Click "Right"
+;     }
 ; }
 ;
-; CreateCircleWindow()
-; DestroyCircleWindow()
+; CreateOrShowCircleWindow()
+; HideCircleWindow()
 ;
 ; ^Ins::ExitApp
