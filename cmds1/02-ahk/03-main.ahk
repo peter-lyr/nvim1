@@ -7,17 +7,42 @@
 ; RButton:: {
 ;     CaptureWindowUnderMouse()
 ;     ShowCircleAtMouse()
-;     SetTimer(UpdateDirectionToolTip, 100)
+;     SetTimer(UpdateCounterToolTip, 100)
 ; }
 ;
 ; RButton Up:: {
-;     SetTimer(UpdateDirectionToolTip, 0)
+;     SetTimer(UpdateCounterToolTip, 0)
 ;     ToolTip()
 ;     HideCircle()
 ;     if (IsMouseInsideCircle()) {
 ;         Click "Right"
 ;     } else {
 ;         HandleWindowByDirection()
+;     }
+; }
+;
+; ~LButton:: {
+;     if (IsMouseInsideCircle() && GetKeyState("RButton", "P")) {
+;         IncrementCounter(1)
+;         UpdateCounterToolTip()
+;         return
+;     }
+; }
+;
+; ~MButton:: {
+;     if (IsMouseInsideCircle() && GetKeyState("RButton", "P")) {
+;         IncrementCounter(2)
+;         UpdateCounterToolTip()
+;         return
+;     }
+; }
+;
+; ~WheelUp::
+; ~WheelDown:: {
+;     if (IsMouseInsideCircle() && GetKeyState("RButton", "P")) {
+;         IncrementCounter(3)
+;         UpdateCounterToolTip()
+;         return
 ;     }
 ; }
 ;
