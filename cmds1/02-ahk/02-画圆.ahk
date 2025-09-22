@@ -1,8 +1,9 @@
 #Requires AutoHotkey v2.0
-
 DetectHiddenWindows True
 
 global circleWindow := ""
+global circleHwnd := 0
+global circleRadius := 50
 
 CreateCircleWindowDo(centerX, centerY, width, height, transparency, bgColor) {
     if (width <= 0 || height <= 0)
@@ -19,61 +20,78 @@ CreateCircleWindowDo(centerX, centerY, width, height, transparency, bgColor) {
         "Int", 0,
         "Int", 0,
         "Int", width,
-        "Int", height,"Ptr")
+        "Int", height, "Ptr")
     DllCall("user32.dll\SetWindowRgn", "Ptr", myGui.Hwnd, "Ptr", hRgn, "Int", 1)
     return myGui
 }
 
 CreateCircleWindow() {
-    global circleWindow
+    global circleWindow, circleHwnd, circleRadius
     if (circleWindow && IsObject(circleWindow)) {
         circleWindow.Destroy()
         circleWindow := ""
+        circleHwnd := 0
     }
     CoordMode("Mouse", "Screen")
     MouseGetPos(&mouseX, &mouseY)
-    diameter := 100
+    diameter := circleRadius * 2
     try {
         circleWindow := CreateCircleWindowDo(mouseX, mouseY, diameter, diameter, 180, "FF0000")
         WinActivate(circleWindow.Hwnd)
+        circleHwnd := circleWindow.Hwnd
     }
     catch as e {
         MsgBox("创建圆形失败: " e.Message, "错误", "Icon!")
         circleWindow := ""
+        circleHwnd := 0
     }
 }
 
-DestroyCricleWindow() {
-    global circleWindow
+DestroyCircleWindow() {
+    global circleWindow, circleHwnd
     if (circleWindow && IsObject(circleWindow)) {
         circleWindow.Destroy()
         circleWindow := ""
+        circleHwnd := 0
+    }
+}
+
+IsMouseInCircle() {
+    global circleHwnd, circleRadius
+    if (!circleHwnd)
+        return false
+    WinGetPos(&winX, &winY, &winW, &winH, circleHwnd)
+    centerX := winX + circleRadius
+    centerY := winY + circleRadius
+    CoordMode("Mouse", "Screen")
+    MouseGetPos(&mouseX, &mouseY)
+    distance := Sqrt((mouseX - centerX)**2 + (mouseY - centerY)**2)
+    return distance <= circleRadius
+}
+
+CheckAndActivateCircle() {
+    global circleHwnd
+    if (!circleHwnd) {
+        return
+    }
+    if (IsMouseInCircle() && WinExist("A") != circleHwnd) {
+        try {
+            WinActivate(circleHwnd)
+        }
     }
 }
 
 ~RButton:: {
     CreateCircleWindow()
+    SetTimer(CheckAndActivateCircle, 10)
 }
 
 ~RButton Up:: {
-    DestroyCricleWindow()
+    SetTimer(CheckAndActivateCircle, 0)
+    DestroyCircleWindow()
 }
 
 CreateCircleWindow()
-DestroyCricleWindow()
-
-; 测试查看当前激活窗口
-; SetTimer(CheckActiveWindow, 10)
-; lastTitle := ""
-; CheckActiveWindow() {
-;     global lastTitle
-;     Try {
-;         currentTitle := WinGetTitle("A")  ; "A" 表示当前激活的窗口
-;         if (currentTitle != lastTitle) {
-;             lastTitle := currentTitle
-;             ToolTip("当前窗口: " currentTitle)
-;         }
-;     }
-; }
+DestroyCircleWindow()
 
 Esc::ExitApp

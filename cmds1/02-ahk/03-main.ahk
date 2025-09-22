@@ -4,15 +4,17 @@
 ; 加载包含圆形窗口函数的脚本
 #Include 02-画圆.ahk
 
-; ; 右键按下时创建圆形窗口
 ; ~RButton:: {
 ;     CreateCircleWindow()
+;     SetTimer(CheckAndActivateCircle, 10)
 ; }
 ;
-; ; 右键松开时关闭圆形窗口
 ; ~RButton Up:: {
-;     DestroyCricleWindow()
+;     SetTimer(CheckAndActivateCircle, 0)
+;     DestroyCircleWindow()
 ; }
 ;
-; ; 按ESC键退出程序
+; CreateCircleWindow()
+; DestroyCircleWindow()
+;
 ; Esc::ExitApp
