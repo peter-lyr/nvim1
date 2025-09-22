@@ -17,7 +17,7 @@
 ;     if (IsMouseInsideCircle()) {
 ;         Click "Right"
 ;     } else {
-;         HandleWindowByDirection()
+;         ExecuteCurrentAction()
 ;     }
 ; }
 ;

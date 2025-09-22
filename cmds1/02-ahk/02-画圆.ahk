@@ -11,6 +11,17 @@ global g_TargetWindowHwnd := 0
 global g_Counter1 := 0, g_Counter2 := 0, g_Counter3 := 0
 global g_Max1 := 6, g_Max2 := 4, g_Max3 := 5
 
+global g_DirectionMap := Map(
+    "R", "右",
+    "RD", "右下",
+    "D", "下",
+    "LD", "左下",
+    "L", "左",
+    "LU", "左上",
+    "U", "上",
+    "RU", "右上"
+)
+
 CreateCircleGui(centerX, centerY, width, height, transparency, bgColor) {
     if (width <= 0 || height <= 0)
         throw Error("宽度和高度必须为正数（当前宽：" width "，高：" height "）")
@@ -83,21 +94,46 @@ GetDirectionFromCircle() {
     if (angle < 0)
         angle += 360
     if (angle >= 337.5 || angle < 22.5)
-        return "右"
+        return "R"
     else if (angle >= 22.5 && angle < 67.5)
-        return "右下"
+        return "RD"
     else if (angle >= 67.5 && angle < 112.5)
-        return "下"
+        return "D"
     else if (angle >= 112.5 && angle < 157.5)
-        return "左下"
+        return "LD"
     else if (angle >= 157.5 && angle < 202.5)
-        return "左"
+        return "L"
     else if (angle >= 202.5 && angle < 247.5)
-        return "左上"
+        return "LU"
     else if (angle >= 247.5 && angle < 292.5)
-        return "上"
+        return "U"
     else if (angle >= 292.5 && angle < 337.5)
-        return "右上"
+        return "RU"
+}
+
+GetDirectionChineseName(direction) {
+    global g_DirectionMap
+    return g_DirectionMap.Has(direction) ? g_DirectionMap[direction] : direction
+}
+
+GetCurrentActionFunctionName() {
+    global g_Counter1, g_Counter2, g_Counter3
+    direction := GetDirectionFromCircle()
+    return "Action_" g_Counter1 "_" g_Counter2 "_" g_Counter3 "_" direction
+}
+
+GetAllDirectionFunctionNames() {
+    global g_Counter1, g_Counter2, g_Counter3, g_DirectionMap
+    directions := ["R", "RD", "D", "LD", "L", "LU", "U", "RU"]
+    result := ""
+
+    for direction in directions {
+        funcName := "Action_" g_Counter1 "_" g_Counter2 "_" g_Counter3 "_" direction
+        chineseDirection := GetDirectionChineseName(direction)
+        result .= chineseDirection " (" direction "): " funcName "`n"
+    }
+
+    return result
 }
 
 UpdateCounterToolTip() {
@@ -106,10 +142,14 @@ UpdateCounterToolTip() {
         return
 
     if (IsMouseInsideCircle()) {
-        ToolTip("计数器: " g_Counter1 ", " g_Counter2 ", " g_Counter3)
+        tipText := "计数器: " g_Counter1 ", " g_Counter2 ", " g_Counter3 "`n`n"
+        tipText .= GetAllDirectionFunctionNames()
+        ToolTip(tipText)
     } else {
+        actionFuncName := GetCurrentActionFunctionName()
         direction := GetDirectionFromCircle()
-        ToolTip("方向: " direction)
+        chineseDirection := GetDirectionChineseName(direction)
+        ToolTip("当松开右键时执行的操作函数名: " actionFuncName "`n方向: " chineseDirection)
     }
 }
 
@@ -136,18 +176,63 @@ CaptureWindowUnderMouse() {
     MouseGetPos(, , &g_TargetWindowHwnd)
 }
 
-HandleWindowByDirection() {
-    global g_TargetWindowHwnd
-    direction := GetDirectionFromCircle()
-    if (direction == "右上") {
-        if (WinGetMinMax(g_TargetWindowHwnd) == 1) {
-            WinRestore(g_TargetWindowHwnd)
+ExecuteCurrentAction() {
+    actionFuncName := GetCurrentActionFunctionName()
+    try {
+        %actionFuncName%()
+    } catch as e {
+        if (e.Message ~= "Call to nonexistent function") {
+            ShowTempToolTip("未定义的操作: " actionFuncName)
         } else {
-            WinMaximize(g_TargetWindowHwnd)
+            ShowTempToolTip("执行操作时出错: " e.Message)
         }
-    } else if (direction == "右下") {
-        WinMinimize(g_TargetWindowHwnd)
     }
+}
+
+Action_0_0_0_R() {
+    MsgBox "执行操作: 计数器1=0, 计数器2=0, 计数器3=0, 方向=右"
+}
+
+Action_0_0_0_RD() {
+    global g_TargetWindowHwnd
+    WinMinimize(g_TargetWindowHwnd)
+}
+
+Action_0_0_0_RU() {
+    global g_TargetWindowHwnd
+    if (WinGetMinMax(g_TargetWindowHwnd) == 1) {
+        WinRestore(g_TargetWindowHwnd)
+    } else {
+        WinMaximize(g_TargetWindowHwnd)
+    }
+}
+
+Action_0_0_0_D() {
+    Send "{Down}"
+}
+
+Action_0_0_0_L() {
+    Send "{Left}"
+}
+
+Action_0_0_0_U() {
+    Send "{Up}"
+}
+
+Action_0_0_0_LU() {
+    MsgBox "左上方向操作示例"
+}
+
+Action_0_0_0_LD() {
+    MsgBox "左下方向操作示例"
+}
+
+Action_1_0_0_R() {
+    MsgBox "计数器1=1, 计数器2=0, 计数器3=0, 方向=右"
+}
+
+Action_0_1_0_R() {
+    MsgBox "计数器1=0, 计数器2=1, 计数器3=0, 方向=右"
 }
 
 RButton:: {
@@ -163,7 +248,7 @@ RButton Up:: {
     if (IsMouseInsideCircle()) {
         Click "Right"
     } else {
-        HandleWindowByDirection()
+        ExecuteCurrentAction()
     }
 }
 
