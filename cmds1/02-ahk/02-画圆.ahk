@@ -37,20 +37,20 @@ global g_ActionFunctionMap := Map()
 
 InitializeActionMappings() {
     global g_ActionFunctionMap
-    g_ActionFunctionMap["0_0_0_R"] := "MoveCursorRight"
-    g_ActionFunctionMap["0_0_0_RD"] := "MinimizeTargetWindow"
-    g_ActionFunctionMap["0_0_0_RU"] := "ToggleMaximizeWindow"
-    g_ActionFunctionMap["0_0_0_D"] := "MoveCursorDown"
-    g_ActionFunctionMap["0_0_0_L"] := "MoveCursorLeft"
-    g_ActionFunctionMap["0_0_0_U"] := "MoveCursorUp"
-    g_ActionFunctionMap["0_0_0_LU"] := "ExampleFunction1"
-    g_ActionFunctionMap["0_0_0_LD"] := "ExampleFunction2"
-    g_ActionFunctionMap["1_0_0_R"] := "IncreaseSystemVolume"
-    g_ActionFunctionMap["1_0_0_L"] := "DecreaseSystemVolume"
-    g_ActionFunctionMap["0_1_0_U"] := "SwitchToNextTab"
-    g_ActionFunctionMap["0_1_0_D"] := "SwitchToPreviousTab"
-    g_ActionFunctionMap["0_0_1_R"] := "PlayNextMedia"
-    g_ActionFunctionMap["0_0_1_L"] := "PlayPreviousMedia"
+    g_ActionFunctionMap["000R"] := "MoveCursorRight"
+    g_ActionFunctionMap["000RD"] := "MinimizeTargetWindow"
+    g_ActionFunctionMap["000RU"] := "ToggleMaximizeWindow"
+    g_ActionFunctionMap["000D"] := "MoveCursorDown"
+    g_ActionFunctionMap["000L"] := "MoveCursorLeft"
+    g_ActionFunctionMap["000U"] := "MoveCursorUp"
+    g_ActionFunctionMap["000LU"] := "ExampleFunction1"
+    g_ActionFunctionMap["000LD"] := "ExampleFunction2"
+    g_ActionFunctionMap["100R"] := "IncreaseSystemVolume"
+    g_ActionFunctionMap["100L"] := "DecreaseSystemVolume"
+    g_ActionFunctionMap["010U"] := "SwitchToNextTab"
+    g_ActionFunctionMap["010D"] := "SwitchToPreviousTab"
+    g_ActionFunctionMap["001R"] := "PlayNextMedia"
+    g_ActionFunctionMap["001L"] := "PlayPreviousMedia"
 }
 
 MoveCursorRight() {
@@ -217,7 +217,7 @@ GetDirectionArrowSymbol(directionCode) {
 GetCurrentStateCombination() {
     global g_LeftClickState, g_MiddleClickState, g_WheelState
     direction := CalculateDirectionFromCenter()
-    return g_LeftClickState "_" g_MiddleClickState "_" g_WheelState "_" direction
+    return g_LeftClickState "" g_MiddleClickState "" g_WheelState "" direction
 }
 
 GetFunctionForCurrentState() {
@@ -247,7 +247,7 @@ CreateDirectionalOperationDisplay() {
                 newRow.Push("")
                 continue
             }
-            stateKey := g_LeftClickState "_" g_MiddleClickState "_" g_WheelState "_" directionCode
+            stateKey := g_LeftClickState "" g_MiddleClickState "" g_WheelState "" directionCode
             operationName := g_ActionFunctionMap.Has(stateKey) ? g_ActionFunctionMap[stateKey] : "未定义"
             arrowSymbol := GetDirectionArrowSymbol(directionCode)
             directionName := GetDirectionDisplayName(directionCode)
