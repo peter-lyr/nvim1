@@ -1,14 +1,14 @@
 #Requires AutoHotkey v2.0
 DetectHiddenWindows True
 
-global circleWindow := ""
-global circleHwnd := 0
-global circleRadius := 50
-global circleCenterX := 0
-global circleCenterY := 0
-global rButtonWindowHwnd := 0
+global g_CircleGui := ""
+global g_CircleHwnd := 0
+global g_CircleRadius := 50
+global g_CircleCenterX := 0
+global g_CircleCenterY := 0
+global g_TargetWindowHwnd := 0
 
-CreateOrShowCircleWindowDo(centerX, centerY, width, height, transparency, bgColor) {
+CreateCircleGui(centerX, centerY, width, height, transparency, bgColor) {
     if (width <= 0 || height <= 0)
         throw Error("宽度和高度必须为正数（当前宽：" width "，高：" height "）")
     if (transparency < 0 || transparency > 255)
@@ -28,54 +28,54 @@ CreateOrShowCircleWindowDo(centerX, centerY, width, height, transparency, bgColo
     return myGui
 }
 
-CreateOrShowCircleWindow() {
-    global circleWindow, circleHwnd, circleRadius, circleCenterX, circleCenterY
+ShowCircleAtMouse() {
+    global g_CircleGui, g_CircleHwnd, g_CircleRadius, g_CircleCenterX, g_CircleCenterY
     CoordMode("Mouse", "Screen")
     MouseGetPos(&mouseX, &mouseY)
-    circleCenterX := mouseX
-    circleCenterY := mouseY
-    diameter := circleRadius * 2
-    if (circleWindow && IsObject(circleWindow)) {
-        posX := mouseX - circleRadius
-        posY := mouseY - circleRadius
-        circleWindow.Show("x" posX " y" posY " w" diameter " h" diameter " NoActivate")
-        circleHwnd := circleWindow.Hwnd
+    g_CircleCenterX := mouseX
+    g_CircleCenterY := mouseY
+    diameter := g_CircleRadius * 2
+    if (g_CircleGui && IsObject(g_CircleGui)) {
+        posX := mouseX - g_CircleRadius
+        posY := mouseY - g_CircleRadius
+        g_CircleGui.Show("x" posX " y" posY " w" diameter " h" diameter " NoActivate")
+        g_CircleHwnd := g_CircleGui.Hwnd
     } else {
         try {
-            circleWindow := CreateOrShowCircleWindowDo(mouseX, mouseY, diameter, diameter, 180, "FF0000")
-            circleHwnd := circleWindow.Hwnd
+            g_CircleGui := CreateCircleGui(mouseX, mouseY, diameter, diameter, 180, "FF0000")
+            g_CircleHwnd := g_CircleGui.Hwnd
         }
         catch as e {
-            Print("failed to create circle: " . e.Message)
-            circleWindow := ""
-            circleHwnd := 0
+            ShowTempToolTip("创建圆形失败: " . e.Message)
+            g_CircleGui := ""
+            g_CircleHwnd := 0
         }
     }
 }
 
-HideCircleWindow() {
-    global circleWindow
-    if (circleWindow && IsObject(circleWindow)) {
-        circleWindow.Hide()
+HideCircle() {
+    global g_CircleGui
+    if (g_CircleGui && IsObject(g_CircleGui)) {
+        g_CircleGui.Hide()
     }
 }
 
-IsMouseInCircle() {
-    global circleHwnd, circleRadius, circleCenterX, circleCenterY
-    if (!circleHwnd)
+IsMouseInsideCircle() {
+    global g_CircleHwnd, g_CircleRadius, g_CircleCenterX, g_CircleCenterY
+    if (!g_CircleHwnd)
         return false
     CoordMode("Mouse", "Screen")
     MouseGetPos(&mouseX, &mouseY)
-    distance := Sqrt((mouseX - circleCenterX)**2 + (mouseY - circleCenterY)**2)
-    return distance <= circleRadius
+    distance := Sqrt((mouseX - g_CircleCenterX)**2 + (mouseY - g_CircleCenterY)**2)
+    return distance <= g_CircleRadius
 }
 
-GetMouseDirection() {
-    global circleCenterX, circleCenterY
+GetDirectionFromCircle() {
+    global g_CircleCenterX, g_CircleCenterY
     CoordMode("Mouse", "Screen")
     MouseGetPos(&mouseX, &mouseY)
-    dx := mouseX - circleCenterX
-    dy := mouseY - circleCenterY
+    dx := mouseX - g_CircleCenterX
+    dy := mouseY - g_CircleCenterY
     angle := DllCall("msvcrt.dll\atan2", "Double", dy, "Double", dx, "Double") * 57.29577951308232
     if (angle < 0)
         angle += 360
@@ -97,62 +97,62 @@ GetMouseDirection() {
         return "右上"
 }
 
-UpdateToolTip() {
-    global circleHwnd
-    if (!circleHwnd)
+UpdateDirectionToolTip() {
+    global g_CircleHwnd
+    if (!g_CircleHwnd)
         return
 
-    if (!IsMouseInCircle()) {
-        direction := GetMouseDirection()
+    if (!IsMouseInsideCircle()) {
+        direction := GetDirectionFromCircle()
         ToolTip("方向: " direction)
     } else {
         ToolTip()
     }
 }
 
-Print(message) {
+ShowTempToolTip(message) {
     ToolTip(message)
     SetTimer(() => ToolTip(), 2000, -1)
 }
 
-GetrButtonWindowHwnd() {
-    global rButtonWindowHwnd
+CaptureWindowUnderMouse() {
+    global g_TargetWindowHwnd
     CoordMode("Mouse", "Screen")
-    MouseGetPos(, , &rButtonWindowHwnd)
+    MouseGetPos(, , &g_TargetWindowHwnd)
 }
 
-HandleProcess() {
-    global rButtonWindowHwnd
-    direction := GetMouseDirection()
+HandleWindowByDirection() {
+    global g_TargetWindowHwnd
+    direction := GetDirectionFromCircle()
     if (direction == "右上") {
-        if (WinGetMinMax(rButtonWindowHwnd) == 1) {
-            WinRestore(rButtonWindowHwnd)
+        if (WinGetMinMax(g_TargetWindowHwnd) == 1) {
+            WinRestore(g_TargetWindowHwnd)
         } else {
-            WinMaximize(rButtonWindowHwnd)
+            WinMaximize(g_TargetWindowHwnd)
         }
     } else if (direction == "右下") {
-        WinMinimize(rButtonWindowHwnd)
+        WinMinimize(g_TargetWindowHwnd)
     }
 }
 
 RButton:: {
-    GetrButtonWindowHwnd()
-    CreateOrShowCircleWindow()
-    SetTimer(UpdateToolTip, 100)
+    CaptureWindowUnderMouse()
+    ShowCircleAtMouse()
+    SetTimer(UpdateDirectionToolTip, 100)
 }
 
 RButton Up:: {
-    SetTimer(UpdateToolTip, 0)
+    SetTimer(UpdateDirectionToolTip, 0)
     ToolTip()
-    HideCircleWindow()
-    if (IsMouseInCircle()) {
+    HideCircle()
+    if (IsMouseInsideCircle()) {
         Click "Right"
     } else {
-        HandleProcess()
+        HandleWindowByDirection()
     }
 }
 
-CreateOrShowCircleWindow()
-HideCircleWindow()
+ShowCircleAtMouse()
+HideCircle()
 
 ^Ins::ExitApp

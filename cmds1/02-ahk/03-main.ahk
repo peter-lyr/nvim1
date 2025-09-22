@@ -5,23 +5,23 @@
 #Include 02-画圆.ahk
 
 ; RButton:: {
-;     GetrButtonWindowHwnd()
-;     CreateOrShowCircleWindow()
-;     SetTimer(UpdateToolTip, 100)
+;     CaptureWindowUnderMouse()
+;     ShowCircleAtMouse()
+;     SetTimer(UpdateDirectionToolTip, 100)
 ; }
 ;
 ; RButton Up:: {
-;     SetTimer(UpdateToolTip, 0)
+;     SetTimer(UpdateDirectionToolTip, 0)
 ;     ToolTip()
-;     HideCircleWindow()
-;     if (IsMouseInCircle()) {
+;     HideCircle()
+;     if (IsMouseInsideCircle()) {
 ;         Click "Right"
 ;     } else {
-;         HandleProcess()
+;         HandleWindowByDirection()
 ;     }
 ; }
 ;
-; CreateOrShowCircleWindow()
-; HideCircleWindow()
+; ShowCircleAtMouse()
+; HideCircle()
 ;
 ; ^Ins::ExitApp
