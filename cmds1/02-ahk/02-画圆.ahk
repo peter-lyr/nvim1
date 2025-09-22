@@ -5,6 +5,9 @@
 ; 窗口置顶
 #Requires AutoHotkey v2.0
 
+; 全局变量存储圆形窗口对象
+global circleWindow := ""
+
 ; 创建圆形窗口的函数
 ; 参数:
 ;   centerX - 圆心X坐标
@@ -13,27 +16,23 @@
 ;   height  - 窗口高度
 ;   transparency - 透明度(0-255)
 ;   bgColor - 背景色(十六进制，如"FF0000"表示红色)
-CreateCircleWindow(centerX, centerY, width, height, transparency, bgColor) {
+CreateCircleWindowDo(centerX, centerY, width, height, transparency, bgColor) {
     ; 1. 参数验证（避免无效输入）
     if (width <= 0 || height <= 0)
         throw Error("宽度和高度必须为正数（当前宽：" width "，高：" height "）")
     if (transparency < 0 || transparency > 255)
         throw Error("透明度必须在0-255之间（当前值：" transparency "）")
-
     ; 2. 计算窗口左上角坐标（从圆心定位到窗口左上角）
     posX := centerX - width / 2  ; 左上角X = 圆心X - 宽度的一半
     posY := centerY - height / 2 ; 左上角Y = 圆心Y - 高度的一半
-
     ; 3. 创建Gui窗口（关键：添加+AlwaysOnTop实现置顶）
     ; 样式说明：
     ; -Caption：去掉标题栏；+ToolWindow：不在任务栏显示；+E0x20：鼠标穿透透明区域；+AlwaysOnTop：窗口置顶
     myGui := Gui("-Caption +ToolWindow +E0x20 +AlwaysOnTop")
     myGui.BackColor := bgColor  ; 设置圆形背景色
     myGui.Show("x" posX " y" posY " w" width " h" height " NoActivate")  ; 显示窗口（NoActivate：不抢占焦点）
-
     ; 4. 设置窗口透明度
     WinSetTransparent(transparency, myGui.Hwnd)
-
     ; 5. 用GDI创建圆形区域，将窗口裁剪为圆形
     hRgn := DllCall("gdi32.dll\CreateEllipticRgn",
         "Int", 0,     ; 圆形区域左上角X（相对于窗口内部，0即窗口左边界）
@@ -41,7 +40,52 @@ CreateCircleWindow(centerX, centerY, width, height, transparency, bgColor) {
         "Int", width, ; 圆形区域右下角X（窗口宽度，即圆形右边界）
         "Int", height,"Ptr") ; 圆形区域右下角Y（窗口高度，即圆形下边界）
     DllCall("user32.dll\SetWindowRgn", "Ptr", myGui.Hwnd, "Ptr", hRgn, "Int", 1)  ; 应用圆形区域到窗口
-
     ; 6. 返回窗口对象（方便后续销毁/修改窗口）
     return myGui
 }
+
+CreateCircleWindow() {
+    global circleWindow  ; 明确引用全局变量
+    ; 先销毁已存在的圆形窗口（如果有）
+    if (circleWindow && IsObject(circleWindow)) {
+        circleWindow.Destroy()
+        circleWindow := ""
+    }
+    CoordMode("Mouse", "Screen")
+    ; 获取鼠标当前位置
+    MouseGetPos(&mouseX, &mouseY)
+    ; 直径100像素
+    diameter := 100
+    try {
+        ; 创建圆形窗口，以鼠标位置为圆心
+        circleWindow := CreateCircleWindowDo(mouseX, mouseY, diameter, diameter, 180, "FF0000")
+    }
+    catch as e {
+        MsgBox("创建圆形失败: " e.Message, "错误", "Icon!")
+        circleWindow := ""  ; 重置变量
+    }
+}
+
+DestroyCricleWindow() {
+    global circleWindow  ; 明确引用全局变量
+    ; 关闭并释放窗口对象
+    if (circleWindow && IsObject(circleWindow)) {
+        circleWindow.Destroy()
+        circleWindow := ""  ; 重置为非对象
+    }
+}
+
+; test
+
+; 右键按下时创建圆形窗口
+~RButton:: {
+    CreateCircleWindow()
+}
+
+; 右键松开时关闭圆形窗口
+~RButton Up:: {
+    DestroyCricleWindow()
+}
+
+; 按ESC键退出程序
+Esc::ExitApp
