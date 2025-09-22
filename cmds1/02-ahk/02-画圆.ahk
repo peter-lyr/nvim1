@@ -33,6 +33,7 @@ CreateCircleWindow() {
     diameter := 100
     try {
         circleWindow := CreateCircleWindowDo(mouseX, mouseY, diameter, diameter, 180, "FF0000")
+        WinActivate(circleWindow.Hwnd)
     }
     catch as e {
         MsgBox("创建圆形失败: " e.Message, "错误", "Icon!")
@@ -55,5 +56,8 @@ DestroyCricleWindow() {
 ~RButton Up:: {
     DestroyCricleWindow()
 }
+
+CreateCircleWindow()
+DestroyCricleWindow()
 
 Esc::ExitApp
