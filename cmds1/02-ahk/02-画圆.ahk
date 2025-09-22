@@ -12,6 +12,17 @@ global g_Counter1 := 0, g_Counter2 := 0, g_Counter3 := 0
 global g_Max1 := 6, g_Max2 := 4, g_Max3 := 5
 
 global g_DirectionMap := Map(
+    "R", "→",
+    "RD", "↘",
+    "D", "↓",
+    "LD", "↙",
+    "L", "←",
+    "LU", "↖",
+    "U", "↑",
+    "RU", "↗"
+)
+
+global g_DirectionChineseMap := Map(
     "R", "右",
     "RD", "右下",
     "D", "下",
@@ -194,8 +205,13 @@ GetDirectionFromCircle() {
 }
 
 GetDirectionChineseName(direction) {
+    global g_DirectionChineseMap
+    return g_DirectionChineseMap.Has(direction) ? g_DirectionChineseMap[direction] : direction
+}
+
+GetDirectionArrow(direction) {
     global g_DirectionMap
-    return g_DirectionMap.Has(direction) ? g_DirectionMap[direction] : direction
+    return g_DirectionMap.Has(direction) ? g_DirectionMap[direction] : "•"
 }
 
 GetCurrentStateKey() {
@@ -215,13 +231,13 @@ GetCurrentActionFunctionName() {
 }
 
 CreateIntuitiveDirectionDisplay() {
-    global g_Counter1, g_Counter2, g_Counter3, g_ActionMap, g_DirectionMap
+    global g_Counter1, g_Counter2, g_Counter3, g_ActionMap, g_DirectionMap, g_DirectionChineseMap
     directionsGrid := [
-        ["", "上", ""],
-        ["左上", "", "右上"],
-        ["左", "", "右"],
-        ["左下", "", "右下"],
-        ["", "下", ""]
+        ["", "U", ""],
+        ["LU", "", "RU"],
+        ["L", "", "R"],
+        ["LD", "", "RD"],
+        ["", "D", ""]
     ]
     gridWithActions := []
     for row in directionsGrid {
@@ -231,20 +247,12 @@ CreateIntuitiveDirectionDisplay() {
                 newRow.Push("")
                 continue
             }
-            dirAbbr := ""
-            for abbr, name in g_DirectionMap {
-                if (name = direction) {
-                    dirAbbr := abbr
-                    break
-                }
-            }
-            if (dirAbbr = "") {
-                newRow.Push(direction)
-                continue
-            }
-            stateKey := g_Counter1 "_" g_Counter2 "_" g_Counter3 "_" dirAbbr
+            stateKey := g_Counter1 "_" g_Counter2 "_" g_Counter3 "_" direction
             actionName := g_ActionMap.Has(stateKey) ? g_ActionMap[stateKey] : "未定义"
-            newRow.Push(direction ":" actionName)
+            arrow := GetDirectionArrow(direction)
+            chineseName := GetDirectionChineseName(direction)
+            displayText := arrow " " chineseName ":" actionName
+            newRow.Push(displayText)
         }
         gridWithActions.Push(newRow)
     }
@@ -255,7 +263,7 @@ CreateIntuitiveDirectionDisplay() {
             if (col = "") {
                 line .= "        "
             } else {
-                targetLength := 16
+                targetLength := 20
                 currentLength := StrLen(col)
                 if (currentLength >= targetLength) {
                     line .= col
@@ -280,19 +288,9 @@ CreateIntuitiveDirectionDisplay() {
 
 CreateDirectionIndicator() {
     direction := GetDirectionFromCircle()
+    arrow := GetDirectionArrow(direction)
     chineseDirection := GetDirectionChineseName(direction)
     actionName := GetCurrentActionFunctionName()
-    arrows := Map(
-        "R", "→",
-        "RD", "↘",
-        "D", "↓",
-        "LD", "↙",
-        "L", "←",
-        "LU", "↖",
-        "U", "↑",
-        "RU", "↗"
-    )
-    arrow := arrows.Has(direction) ? arrows[direction] : "•"
     return "方向: " arrow " " chineseDirection "`n操作: " actionName
 }
 
