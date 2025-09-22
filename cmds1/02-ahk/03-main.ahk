@@ -5,8 +5,9 @@
 #Include 02-画圆.ahk
 
 ; RButton:: {
+;     GetrButtonWindowHwnd()
 ;     CreateOrShowCircleWindow()
-;     SetTimer(UpdateToolTip, 10)
+;     SetTimer(UpdateToolTip, 100)
 ; }
 ;
 ; RButton Up:: {
@@ -15,6 +16,8 @@
 ;     HideCircleWindow()
 ;     if (IsMouseInCircle()) {
 ;         Click "Right"
+;     } else {
+;         HandleProcess()
 ;     }
 ; }
 ;

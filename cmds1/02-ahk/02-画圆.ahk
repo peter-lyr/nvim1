@@ -6,6 +6,7 @@ global circleHwnd := 0
 global circleRadius := 50
 global circleCenterX := 0
 global circleCenterY := 0
+global rButtonWindowHwnd := 0
 
 CreateOrShowCircleWindowDo(centerX, centerY, width, height, transparency, bgColor) {
     if (width <= 0 || height <= 0)
@@ -114,9 +115,30 @@ Print(message) {
     SetTimer(() => ToolTip(), 2000, -1)
 }
 
+GetrButtonWindowHwnd() {
+    global rButtonWindowHwnd
+    CoordMode("Mouse", "Screen")
+    MouseGetPos(, , &rButtonWindowHwnd)
+}
+
+HandleProcess() {
+    global rButtonWindowHwnd
+    direction := GetMouseDirection()
+    if (direction == "右上") {
+        if (WinGetMinMax(rButtonWindowHwnd) == 1) {
+            WinRestore(rButtonWindowHwnd)
+        } else {
+            WinMaximize(rButtonWindowHwnd)
+        }
+    } else if (direction == "右下") {
+        WinMinimize(rButtonWindowHwnd)
+    }
+}
+
 RButton:: {
+    GetrButtonWindowHwnd()
     CreateOrShowCircleWindow()
-    SetTimer(UpdateToolTip, 10)
+    SetTimer(UpdateToolTip, 100)
 }
 
 RButton Up:: {
@@ -125,6 +147,8 @@ RButton Up:: {
     HideCircleWindow()
     if (IsMouseInCircle()) {
         Click "Right"
+    } else {
+        HandleProcess()
     }
 }
 
