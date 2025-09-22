@@ -9,7 +9,7 @@ CreateCircleWindowDo(centerX, centerY, width, height, transparency, bgColor) {
         throw Error("透明度必须在0-255之间（当前值：" transparency "）")
     posX := centerX - width / 2
     posY := centerY - height / 2
-    myGui := Gui("-Caption +ToolWindow +E0x20 +AlwaysOnTop")
+    myGui := Gui("-Caption +ToolWindow +AlwaysOnTop")
     myGui.BackColor := bgColor
     myGui.Show("x" posX " y" posY " w" width " h" height " NoActivate")
     WinSetTransparent(transparency, myGui.Hwnd)
