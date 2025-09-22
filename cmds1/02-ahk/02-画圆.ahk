@@ -1,5 +1,7 @@
 #Requires AutoHotkey v2.0
 
+DetectHiddenWindows True
+
 global circleWindow := ""
 
 CreateCircleWindowDo(centerX, centerY, width, height, transparency, bgColor) {
@@ -59,5 +61,19 @@ DestroyCricleWindow() {
 
 CreateCircleWindow()
 DestroyCricleWindow()
+
+; 测试查看当前激活窗口
+; SetTimer(CheckActiveWindow, 10)
+; lastTitle := ""
+; CheckActiveWindow() {
+;     global lastTitle
+;     Try {
+;         currentTitle := WinGetTitle("A")  ; "A" 表示当前激活的窗口
+;         if (currentTitle != lastTitle) {
+;             lastTitle := currentTitle
+;             ToolTip("当前窗口: " currentTitle)
+;         }
+;     }
+; }
 
 Esc::ExitApp
