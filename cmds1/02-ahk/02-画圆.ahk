@@ -11,7 +11,6 @@ global g_TargetWindowHwnd := 0
 global g_Counter1 := 0, g_Counter2 := 0, g_Counter3 := 0
 global g_Max1 := 6, g_Max2 := 4, g_Max3 := 5
 
-; 方向映射表
 global g_DirectionMap := Map(
     "R", "右",
     "RD", "右下",
@@ -23,17 +22,10 @@ global g_DirectionMap := Map(
     "RU", "右上"
 )
 
-; 操作映射表 - 将状态组合映射到有意义的操作函数
 global g_ActionMap := Map()
 
-; 初始化操作映射
 InitActionMap() {
     global g_ActionMap
-
-    ; 示例映射 - 您可以根据需要扩展这个映射表
-    ; 格式: "计数器1_计数器2_计数器3_方向" -> "有意义的函数名"
-
-    ; 计数器全为0时的操作
     g_ActionMap["0_0_0_R"] := "MoveRight"
     g_ActionMap["0_0_0_RD"] := "MinimizeWindow"
     g_ActionMap["0_0_0_RU"] := "ToggleMaximizeWindow"
@@ -42,23 +34,14 @@ InitActionMap() {
     g_ActionMap["0_0_0_U"] := "MoveUp"
     g_ActionMap["0_0_0_LU"] := "ExampleAction1"
     g_ActionMap["0_0_0_LD"] := "ExampleAction2"
-
-    ; 计数器1=1时的操作示例
     g_ActionMap["1_0_0_R"] := "IncreaseVolume"
     g_ActionMap["1_0_0_L"] := "DecreaseVolume"
-
-    ; 计数器2=1时的操作示例
     g_ActionMap["0_1_0_U"] := "NextTab"
     g_ActionMap["0_1_0_D"] := "PreviousTab"
-
-    ; 计数器3=1时的操作示例
     g_ActionMap["0_0_1_R"] := "NextMedia"
     g_ActionMap["0_0_1_L"] := "PreviousMedia"
-
-    ; 更多组合可以在这里添加...
 }
 
-; 有意义的操作函数定义
 MoveRight() {
     Send "{Right}"
 }
@@ -193,21 +176,21 @@ GetDirectionFromCircle() {
     if (angle < 0)
         angle += 360
     if (angle >= 337.5 || angle < 22.5)
-        return "R"    ; 右
+        return "R"
     else if (angle >= 22.5 && angle < 67.5)
-        return "RD"   ; 右下
+        return "RD"
     else if (angle >= 67.5 && angle < 112.5)
-        return "D"    ; 下
+        return "D"
     else if (angle >= 112.5 && angle < 157.5)
-        return "LD"   ; 左下
+        return "LD"
     else if (angle >= 157.5 && angle < 202.5)
-        return "L"    ; 左
+        return "L"
     else if (angle >= 202.5 && angle < 247.5)
-        return "LU"   ; 左上
+        return "LU"
     else if (angle >= 247.5 && angle < 292.5)
-        return "U"    ; 上
+        return "U"
     else if (angle >= 292.5 && angle < 337.5)
-        return "RU"   ; 右上
+        return "RU"
 }
 
 GetDirectionChineseName(direction) {
@@ -215,18 +198,15 @@ GetDirectionChineseName(direction) {
     return g_DirectionMap.Has(direction) ? g_DirectionMap[direction] : direction
 }
 
-; 获取当前状态组合的键
 GetCurrentStateKey() {
     global g_Counter1, g_Counter2, g_Counter3
     direction := GetDirectionFromCircle()
     return g_Counter1 "_" g_Counter2 "_" g_Counter3 "_" direction
 }
 
-; 获取当前组合对应的操作函数名
 GetCurrentActionFunctionName() {
     global g_ActionMap
     stateKey := GetCurrentStateKey()
-
     if (g_ActionMap.Has(stateKey)) {
         return g_ActionMap[stateKey]
     } else {
@@ -234,76 +214,74 @@ GetCurrentActionFunctionName() {
     }
 }
 
-; 创建圆形布局的操作提示
-CreateCircularTooltipText() {
+CreateIntuitiveDirectionDisplay() {
     global g_Counter1, g_Counter2, g_Counter3, g_ActionMap, g_DirectionMap
-
-    ; 定义方向在圆形布局中的位置
-    ; 格式: [行, 列, 方向缩写]
-    directionsLayout := [
-        [1, 2, "U"],    ; 上
-        [2, 3, "RU"],   ; 右上
-        [2, 1, "LU"],   ; 左上
-        [3, 3, "R"],    ; 右
-        [3, 1, "L"],    ; 左
-        [4, 2, "D"],    ; 下
-        [4, 3, "RD"],   ; 右下
-        [4, 1, "LD"]    ; 左下
+    directionsGrid := [
+        ["", "上", ""],
+        ["左上", "", "右上"],
+        ["左", "", "右"],
+        ["左下", "", "右下"],
+        ["", "下", ""]
     ]
-
-    ; 创建5行3列的网格
-    grid := []
-    Loop 5 {
-        row := []
-        Loop 3 {
-            row.Push("")
+    gridWithActions := []
+    for row in directionsGrid {
+        newRow := []
+        for direction in row {
+            if (direction = "") {
+                newRow.Push("")
+                continue
+            }
+            dirAbbr := ""
+            for abbr, name in g_DirectionMap {
+                if (name = direction) {
+                    dirAbbr := abbr
+                    break
+                }
+            }
+            if (dirAbbr = "") {
+                newRow.Push(direction)
+                continue
+            }
+            stateKey := g_Counter1 "_" g_Counter2 "_" g_Counter3 "_" dirAbbr
+            actionName := g_ActionMap.Has(stateKey) ? g_ActionMap[stateKey] : "未定义"
+            newRow.Push(direction ":" actionName)
         }
-        grid.Push(row)
+        gridWithActions.Push(newRow)
     }
-
-    ; 填充网格
-    for layout in directionsLayout {
-        row := layout[1]
-        col := layout[2]
-        direction := layout[3]
-
-        stateKey := g_Counter1 "_" g_Counter2 "_" g_Counter3 "_" direction
-        chineseDirection := GetDirectionChineseName(direction)
-
-        if (g_ActionMap.Has(stateKey)) {
-            actionName := g_ActionMap[stateKey]
-            grid[row][col] := chineseDirection ":" actionName
-        } else {
-            grid[row][col] := chineseDirection ":未定义"
-        }
-    }
-
-    ; 将网格转换为文本
     tipText := "计数器: " g_Counter1 ", " g_Counter2 ", " g_Counter3 "`n`n"
-
-    for row in grid {
+    for row in gridWithActions {
         line := ""
         for col in row {
-            ; 确保每列宽度一致
-            text := col
-            while (StrLen(text) < 15) {
-                text .= " "
+            if (col = "") {
+                line .= "        "
+            } else {
+                targetLength := 16
+                currentLength := StrLen(col)
+                if (currentLength >= targetLength) {
+                    line .= col
+                } else {
+                    spacesNeeded := targetLength - currentLength
+                    leftSpaces := spacesNeeded // 2
+                    rightSpaces := spacesNeeded - leftSpaces
+                    Loop leftSpaces {
+                        line .= " "
+                    }
+                    line .= col
+                    Loop rightSpaces {
+                        line .= " "
+                    }
+                }
             }
-            line .= text
         }
         tipText .= line "`n"
     }
-
     return tipText
 }
 
-; 创建方向指示器
 CreateDirectionIndicator() {
     direction := GetDirectionFromCircle()
     chineseDirection := GetDirectionChineseName(direction)
     actionName := GetCurrentActionFunctionName()
-
-    ; 创建箭头指示器
     arrows := Map(
         "R", "→",
         "RD", "↘",
@@ -314,38 +292,25 @@ CreateDirectionIndicator() {
         "U", "↑",
         "RU", "↗"
     )
-
     arrow := arrows.Has(direction) ? arrows[direction] : "•"
-
     return "方向: " arrow " " chineseDirection "`n操作: " actionName
 }
 
-; 更新ToolTip - 减少闪烁
-UpdateCounterToolTip() {
-    global g_CircleHwnd, g_LastToolTipText
-
-    if (!g_CircleHwnd)
-        return
-
-    ; 生成新的ToolTip文本
+UpdateDisplay() {
+    global g_LastDisplayText
     if (IsMouseInsideCircle()) {
-        ; 鼠标在圆内：显示8个方位的操作函数名（圆形布局）
-        newText := CreateCircularTooltipText()
+        newText := CreateIntuitiveDirectionDisplay()
     } else {
-        ; 鼠标在圆外：显示将要执行的操作函数名
         newText := CreateDirectionIndicator()
     }
-
-    ; 只有当文本发生变化时才更新ToolTip，减少闪烁
-    if (newText != g_LastToolTipText) {
+    if (newText != g_LastDisplayText) {
         ToolTip(newText)
-        g_LastToolTipText := newText
+        g_LastDisplayText := newText
     }
 }
 
 IncrementCounter(counterNum) {
     global g_Counter1, g_Counter2, g_Counter3, g_Max1, g_Max2, g_Max3
-
     if (counterNum = 1) {
         g_Counter1 := Mod(g_Counter1 + 1, g_Max1 + 1)
     } else if (counterNum = 2) {
@@ -366,11 +331,9 @@ CaptureWindowUnderMouse() {
     MouseGetPos(, , &g_TargetWindowHwnd)
 }
 
-; 执行当前组合对应的操作
 ExecuteCurrentAction() {
     global g_ActionMap
     stateKey := GetCurrentStateKey()
-
     if (g_ActionMap.Has(stateKey)) {
         actionFuncName := g_ActionMap[stateKey]
         try {
@@ -384,16 +347,16 @@ ExecuteCurrentAction() {
 }
 
 RButton:: {
-    global g_LastToolTipText := ""
+    global g_LastDisplayText := ""
     CaptureWindowUnderMouse()
     ShowCircleAtMouse()
-    SetTimer(UpdateCounterToolTip, 150) ; 降低更新频率减少闪烁
+    SetTimer(UpdateDisplay, 150)
 }
 
 RButton Up:: {
-    SetTimer(UpdateCounterToolTip, 0)
+    SetTimer(UpdateDisplay, 0)
     ToolTip()
-    global g_LastToolTipText := ""
+    global g_LastDisplayText := ""
     HideCircle()
     if (IsMouseInsideCircle()) {
         Click "Right"
@@ -405,7 +368,6 @@ RButton Up:: {
 ~LButton:: {
     if (IsMouseInsideCircle() && GetKeyState("RButton", "P")) {
         IncrementCounter(1)
-        ; 不立即更新ToolTip，等待定时器更新
         return
     }
 }
@@ -413,7 +375,6 @@ RButton Up:: {
 ~MButton:: {
     if (IsMouseInsideCircle() && GetKeyState("RButton", "P")) {
         IncrementCounter(2)
-        ; 不立即更新ToolTip，等待定时器更新
         return
     }
 }
@@ -422,12 +383,10 @@ RButton Up:: {
 ~WheelDown:: {
     if (IsMouseInsideCircle() && GetKeyState("RButton", "P")) {
         IncrementCounter(3)
-        ; 不立即更新ToolTip，等待定时器更新
         return
     }
 }
 
-; 初始化操作映射
 InitActionMap()
 
 ShowCircleAtMouse()

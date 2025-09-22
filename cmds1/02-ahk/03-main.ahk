@@ -5,14 +5,16 @@
 #Include 02-画圆.ahk
 
 ; RButton:: {
+;     global g_LastDisplayText := ""
 ;     CaptureWindowUnderMouse()
 ;     ShowCircleAtMouse()
-;     SetTimer(UpdateCounterToolTip, 100)
+;     SetTimer(UpdateDisplay, 150)
 ; }
 ;
 ; RButton Up:: {
-;     SetTimer(UpdateCounterToolTip, 0)
+;     SetTimer(UpdateDisplay, 0)
 ;     ToolTip()
+;     global g_LastDisplayText := ""
 ;     HideCircle()
 ;     if (IsMouseInsideCircle()) {
 ;         Click "Right"
@@ -24,7 +26,6 @@
 ; ~LButton:: {
 ;     if (IsMouseInsideCircle() && GetKeyState("RButton", "P")) {
 ;         IncrementCounter(1)
-;         UpdateCounterToolTip()
 ;         return
 ;     }
 ; }
@@ -32,7 +33,6 @@
 ; ~MButton:: {
 ;     if (IsMouseInsideCircle() && GetKeyState("RButton", "P")) {
 ;         IncrementCounter(2)
-;         UpdateCounterToolTip()
 ;         return
 ;     }
 ; }
@@ -41,12 +41,12 @@
 ; ~WheelDown:: {
 ;     if (IsMouseInsideCircle() && GetKeyState("RButton", "P")) {
 ;         IncrementCounter(3)
-;         UpdateCounterToolTip()
 ;         return
 ;     }
 ; }
 ;
 ; InitActionMap()
+;
 ; ShowCircleAtMouse()
 ; HideCircle()
 ;
