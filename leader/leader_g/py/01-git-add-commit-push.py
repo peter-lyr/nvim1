@@ -18,14 +18,10 @@ if __name__ == "__main__":
             if not line.strip():
                 continue
             f.write(line.strip() + b"\n")
-            # print(line.strip().decode("utf-8"))
             push_allow = True
     if not push_allow:
         os.system(f"echo commit file is empty: {git_commit_txt}")
         os._exit(2)
     os.system("chcp 65001>nul & git add -A")
     os.system(f"git commit -F {git_commit_txt}")
-    # print("=========commit info:=========")
-    # os.system(f"git log -n 1")  # 打印当前commit
-    # print("==============================")
     os.system("git push")
