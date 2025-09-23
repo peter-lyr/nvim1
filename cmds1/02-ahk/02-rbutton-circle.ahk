@@ -350,16 +350,6 @@ GetCurrentStateCombination() {
     return g_LeftClickState "" g_MiddleClickState "" g_WheelState "" direction
 }
 
-GetFunctionForCurrentState() {
-    global g_ActionFunctionMap
-    stateKey := GetCurrentStateCombination()
-    if (g_ActionFunctionMap.Has(stateKey)) {
-        return g_ActionFunctionMap[stateKey]
-    } else {
-        return "未定义操作"
-    }
-}
-
 CreateDirectionalOperationDisplay() {
     global g_LeftClickState, g_MiddleClickState, g_WheelState, g_ActionFunctionMap
     directionLayout := [
