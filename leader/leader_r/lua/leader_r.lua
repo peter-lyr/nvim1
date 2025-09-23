@@ -47,7 +47,7 @@ function R.run_cur_file(no_console_window, auto_exit)
 		end
 	elseif vim.o.ft == "autohotkey" then
 		require("f").cmd(
-			[[silent !start %s cmd /c "python "%s" %s"]],
+			[[silent !start %s cmd /c ""%s" %s"]],
 			no_console_window,
 			require("f").find_file("main.ahk"),
 			auto_exit
