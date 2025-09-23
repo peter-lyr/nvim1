@@ -76,6 +76,14 @@ require("which-key").register({
 		"copy_cur_file",
 		mode = { "n", "v" },
 	},
+	["<leader>wr"] = {
+		function()
+			W.rename_file_and_reopen()
+		end,
+		"rename_file_and_reopen",
+		mode = { "n", "v" },
+		silent = true,
+	},
 
 	-- ['<leader>wo'] = { name = 'window.new.inc', },
 	-- ['<leader>woj'] = { function() W.new_win_finc_down() end, 'window.new.inc down', mode = { 'n', 'v', }, },

@@ -68,6 +68,37 @@ function W.copy_cur_file()
 	end)
 end
 
+function W.rename_file_and_reopen_do(new_path)
+	local old_path = vim.api.nvim_buf_get_name(0)
+	if old_path == "" then
+		return
+	end
+	if vim.fn.filereadable(new_path) == 1 then
+		vim.notify("目标文件已存在: " .. new_path, vim.log.levels.ERROR)
+		return
+	end
+	local success, rename_error = pcall(vim.loop.fs_rename, old_path, new_path)
+	if not success then
+		vim.notify("重命名失败: " .. (rename_error or "未知错误"), vim.log.levels.ERROR)
+		return
+	end
+	local cursor_pos = vim.api.nvim_win_get_cursor(0)
+	vim.cmd("e " .. vim.fn.fnameescape(new_path))
+	vim.api.nvim_win_set_cursor(0, cursor_pos)
+end
+
+function W.rename_file_and_reopen()
+	local bname = W.get_cur_bname()
+	if not require("f").is(bname) then
+		return
+	end
+	vim.ui.input({ prompt = "rename_cur_file: ", default = bname }, function(file_path)
+		if file_path then
+			W.rename_file_and_reopen_do(file_path)
+		end
+	end)
+end
+
 -- function W.new_win_finc_do(new)
 --   local bname = require 'f'.rep_slash(vim.fn.bufname())
 --   local head = vim.fn.fnamemodify(bname, ':h')
