@@ -11,6 +11,8 @@ global g_TargetWindowHwnd := 0
 global g_LeftClickState := 0, g_MiddleClickState := 0, g_WheelState := 0
 global g_MaxLeftClickStates := 1, g_MaxMiddleClickStates := 1, g_MaxWheelStates := 1
 
+global g_MediaMode := false
+
 global g_DirectionArrowMap := Map(
     "R", "→",
     "RD", "↘",
@@ -108,8 +110,44 @@ PlayPreviousMedia() {
 }
 
 ExampleFunction1() {
-    MsgBox "执行示例操作1"
+    global g_MediaMode := true
+    ToolTip("已切换到媒体控制模式`n左键:播放/暂停 中键:静音 滚轮:音量 右键:恢复")
+    SetTimer(() => ToolTip(), 2000)
 }
+
+#HotIf g_MediaMode
+RButton::
+{
+    global g_MediaMode := false
+    ToolTip("已恢复原始热键模式")
+    SetTimer(() => ToolTip(), 2000)
+    return
+}
+
+LButton::
+{
+    Send "{Media_Play_Pause}"
+    return
+}
+
+MButton::
+{
+    Send "{Volume_Mute}"
+    return
+}
+
+WheelUp::
+{
+    Send "{Volume_Up}"
+    return
+}
+
+WheelDown::
+{
+    Send "{Volume_Down}"
+    return
+}
+#HotIf
 
 ExampleFunction2() {
     MsgBox "执行示例操作2"
@@ -349,6 +387,7 @@ ExecuteCurrentOperation() {
     }
 }
 
+#HotIf !g_MediaMode
 RButton:: {
     global g_LastDisplayContent := ""
     CaptureWindowUnderCursor()
@@ -390,6 +429,7 @@ RButton Up:: {
         return
     }
 }
+#Hotif
 
 InitializeActionMappings()
 

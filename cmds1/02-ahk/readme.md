@@ -24,3 +24,10 @@ Action_0_0_0_D不以这种格式去命名函数，直接以这个函数要执行
   （不够直观）
   方向箭头
 格式化代码
+其中ExampleFunction1改成如下功能：
+  松开右键之后，换一下RButton，LButton，MButton，WheelUp，WheelDown热键，
+  RButton：恢复热键
+  LButton：暂停或播放音乐
+  MButton：静音或取消静音
+  WheelUp：音量加
+  WheelDown：音量减
