@@ -1,70 +1,73 @@
 #Requires AutoHotkey v2.0
 
-global g_ResizeData := {win: 0, initMouseX: 0, initMouseY: 0, initWinX: 0, initWinY: 0, initWinW: 0, initWinH: 0, direction: ""}
-global g_MoveData := {win: 0, initMouseX: 0, initMouseY: 0, initWinX: 0, initWinY: 0}
+; 窗口操作变量
+global g_WindowResizeData := {win: 0, initMouseX: 0, initMouseY: 0, initWinX: 0, initWinY: 0, initWinW: 0, initWinH: 0, direction: ""}
+global g_WindowMoveData := {win: 0, initMouseX: 0, initMouseY: 0, initWinX: 0, initWinY: 0}
 
-WindowControlMode() {
+SwitchToWindowControlMode() {
     global g_CurrentMode := "window_control"
-    ToolTip("已切换到窗口控制模式`n左键:移动窗口 中键:调整大小 滚轮:透明度 右键:恢复")
-    SetTimer(() => ToolTip(), -2000)
+    windowControlMap := Map()
+    windowControlMap["000L"] := ["恢复普通模式", SwitchToNormalMode]
+    g_ActionFunctionMaps["window_control"] := windowControlMap
+    ShowTemporaryTooltip("已切换到窗口控制模式`n左键:移动窗口 中键:调整大小 滚轮:透明度 右键:恢复")
 }
 
 #HotIf g_CurrentMode = "window_control"
 
-MoveWindow() {
-    global g_MoveData
+MoveWindowWithMouse() {
+    global g_WindowMoveData
     if !GetKeyState("LButton", "P") {
-        SetTimer MoveWindow, 0
+        SetTimer MoveWindowWithMouse, 0
         return
     }
     MouseGetPos &currentMouseX, &currentMouseY
-    deltaX := currentMouseX - g_MoveData.initMouseX
-    deltaY := currentMouseY - g_MoveData.initMouseY
-    newX := g_MoveData.initWinX + deltaX
-    newY := g_MoveData.initWinY + deltaY
-    WinMove newX, newY, , , g_MoveData.win
+    deltaX := currentMouseX - g_WindowMoveData.initMouseX
+    deltaY := currentMouseY - g_WindowMoveData.initMouseY
+    newX := g_WindowMoveData.initWinX + deltaX
+    newY := g_WindowMoveData.initWinY + deltaY
+    WinMove newX, newY, , , g_WindowMoveData.win
 }
 
-ResizeWindow() {
-    global g_ResizeData
+ResizeWindowWithMouse() {
+    global g_WindowResizeData
     if !GetKeyState("MButton", "P") {
-        SetTimer ResizeWindow, 0
+        SetTimer ResizeWindowWithMouse, 0
         return
     }
     MouseGetPos &currentMouseX, &currentMouseY
-    deltaX := currentMouseX - g_ResizeData.initMouseX
-    deltaY := currentMouseY - g_ResizeData.initMouseY
-    newX := g_ResizeData.initWinX
-    newY := g_ResizeData.initWinY
-    newWidth := g_ResizeData.initWinW
-    newHeight := g_ResizeData.initWinH
-    switch g_ResizeData.direction {
+    deltaX := currentMouseX - g_WindowResizeData.initMouseX
+    deltaY := currentMouseY - g_WindowResizeData.initMouseY
+    newX := g_WindowResizeData.initWinX
+    newY := g_WindowResizeData.initWinY
+    newWidth := g_WindowResizeData.initWinW
+    newHeight := g_WindowResizeData.initWinH
+    switch g_WindowResizeData.direction {
         case "top-left":
-            newX := g_ResizeData.initWinX + deltaX
-            newY := g_ResizeData.initWinY + deltaY
-            newWidth := g_ResizeData.initWinW - deltaX
-            newHeight := g_ResizeData.initWinH - deltaY
+            newX := g_WindowResizeData.initWinX + deltaX
+            newY := g_WindowResizeData.initWinY + deltaY
+            newWidth := g_WindowResizeData.initWinW - deltaX
+            newHeight := g_WindowResizeData.initWinH - deltaY
         case "top":
-            newY := g_ResizeData.initWinY + deltaY
-            newHeight := g_ResizeData.initWinH - deltaY
+            newY := g_WindowResizeData.initWinY + deltaY
+            newHeight := g_WindowResizeData.initWinH - deltaY
         case "top-right":
-            newY := g_ResizeData.initWinY + deltaY
-            newWidth := g_ResizeData.initWinW + deltaX
-            newHeight := g_ResizeData.initWinH - deltaY
+            newY := g_WindowResizeData.initWinY + deltaY
+            newWidth := g_WindowResizeData.initWinW + deltaX
+            newHeight := g_WindowResizeData.initWinH - deltaY
         case "left":
-            newX := g_ResizeData.initWinX + deltaX
-            newWidth := g_ResizeData.initWinW - deltaX
+            newX := g_WindowResizeData.initWinX + deltaX
+            newWidth := g_WindowResizeData.initWinW - deltaX
         case "right":
-            newWidth := g_ResizeData.initWinW + deltaX
+            newWidth := g_WindowResizeData.initWinW + deltaX
         case "bottom-left":
-            newX := g_ResizeData.initWinX + deltaX
-            newWidth := g_ResizeData.initWinW - deltaX
-            newHeight := g_ResizeData.initWinH + deltaY
+            newX := g_WindowResizeData.initWinX + deltaX
+            newWidth := g_WindowResizeData.initWinW - deltaX
+            newHeight := g_WindowResizeData.initWinH + deltaY
         case "bottom":
-            newHeight := g_ResizeData.initWinH + deltaY
+            newHeight := g_WindowResizeData.initWinH + deltaY
         case "bottom-right", "center":
-            newWidth := g_ResizeData.initWinW + deltaX
-            newHeight := g_ResizeData.initWinH + deltaY
+            newWidth := g_WindowResizeData.initWinW + deltaX
+            newHeight := g_WindowResizeData.initWinH + deltaY
     }
     if (newWidth < 100)
         newWidth := 100
@@ -74,119 +77,103 @@ ResizeWindow() {
         newX := 10 - newWidth
     if (newY + newHeight < 10)
         newY := 10 - newHeight
-    WinMove newX, newY, newWidth, newHeight, g_ResizeData.win
-}
-
-RButton:: {
-    MouseGetPos , , &MouseWin
-    WinActivate(MouseWin)
-}
-
-RButton & LButton:: {
-    Click "Left"
-}
-
-RButton & MButton:: {
-    global g_CurrentMode := "normal"
-    ToolTip("已恢复原始热键模式")
-    SetTimer(() => ToolTip(), -2000)
+    WinMove newX, newY, newWidth, newHeight, g_WindowResizeData.win
 }
 
 LButton:: {
-    global g_MoveData
-    MouseGetPos , , &MouseWin
-    if MouseWin {
+    global g_WindowMoveData
+    MouseGetPos , , &mouseWindow
+    if mouseWindow {
         MouseGetPos &initMouseX, &initMouseY
-        WinGetPos &initWinX, &initWinY, , , MouseWin
-        g_MoveData.initMouseX := initMouseX
-        g_MoveData.initMouseY := initMouseY
-        g_MoveData.initWinX := initWinX
-        g_MoveData.initWinY := initWinY
-        g_MoveData.win := MouseWin
-        SetTimer MoveWindow, 10
+        WinGetPos &initWinX, &initWinY, , , mouseWindow
+        g_WindowMoveData.initMouseX := initMouseX
+        g_WindowMoveData.initMouseY := initMouseY
+        g_WindowMoveData.initWinX := initWinX
+        g_WindowMoveData.initWinY := initWinY
+        g_WindowMoveData.win := mouseWindow
+        SetTimer MoveWindowWithMouse, 10
     }
 }
 
 LButton Up:: {
-    SetTimer MoveWindow, 0
+    SetTimer MoveWindowWithMouse, 0
 }
 
 MButton:: {
-    global g_ResizeData
-    MouseGetPos , , &MouseWin
-    if MouseWin {
+    global g_WindowResizeData
+    MouseGetPos , , &mouseWindow
+    if mouseWindow {
         MouseGetPos &initMouseX, &initMouseY
-        WinGetPos &initWinX, &initWinY, &initWinW, &initWinH, MouseWin
-        relX := initMouseX - initWinX
-        relY := initMouseY - initWinY
-        if (relX < initWinW / 3) {
-            if (relY < initWinH / 3) {
-                g_ResizeData.direction := "top-left"
-            } else if (relY > initWinH * 2 / 3) {
-                g_ResizeData.direction := "bottom-left"
+        WinGetPos &initWinX, &initWinY, &initWinW, &initWinH, mouseWindow
+        relativeX := initMouseX - initWinX
+        relativeY := initMouseY - initWinY
+        if (relativeX < initWinW / 3) {
+            if (relativeY < initWinH / 3) {
+                g_WindowResizeData.direction := "top-left"
+            } else if (relativeY > initWinH * 2 / 3) {
+                g_WindowResizeData.direction := "bottom-left"
             } else {
-                g_ResizeData.direction := "left"
+                g_WindowResizeData.direction := "left"
             }
-        } else if (relX > initWinW * 2 / 3) {
-            if (relY < initWinH / 3) {
-                g_ResizeData.direction := "top-right"
-            } else if (relY > initWinH * 2 / 3) {
-                g_ResizeData.direction := "bottom-right"
+        } else if (relativeX > initWinW * 2 / 3) {
+            if (relativeY < initWinH / 3) {
+                g_WindowResizeData.direction := "top-right"
+            } else if (relativeY > initWinH * 2 / 3) {
+                g_WindowResizeData.direction := "bottom-right"
             } else {
-                g_ResizeData.direction := "right"
+                g_WindowResizeData.direction := "right"
             }
         } else {
-            if (relY < initWinH / 3) {
-                g_ResizeData.direction := "top"
-            } else if (relY > initWinH * 2 / 3) {
-                g_ResizeData.direction := "bottom"
+            if (relativeY < initWinH / 3) {
+                g_WindowResizeData.direction := "top"
+            } else if (relativeY > initWinH * 2 / 3) {
+                g_WindowResizeData.direction := "bottom"
             } else {
-                g_ResizeData.direction := "center"
+                g_WindowResizeData.direction := "center"
             }
         }
-        g_ResizeData.initMouseX := initMouseX
-        g_ResizeData.initMouseY := initMouseY
-        g_ResizeData.initWinX := initWinX
-        g_ResizeData.initWinY := initWinY
-        g_ResizeData.initWinW := initWinW
-        g_ResizeData.initWinH := initWinH
-        g_ResizeData.win := MouseWin
-        SetTimer ResizeWindow, 10
+        g_WindowResizeData.initMouseX := initMouseX
+        g_WindowResizeData.initMouseY := initMouseY
+        g_WindowResizeData.initWinX := initWinX
+        g_WindowResizeData.initWinY := initWinY
+        g_WindowResizeData.initWinW := initWinW
+        g_WindowResizeData.initWinH := initWinH
+        g_WindowResizeData.win := mouseWindow
+        SetTimer ResizeWindowWithMouse, 10
     }
 }
 
 MButton Up:: {
-    SetTimer ResizeWindow, 0
+    SetTimer ResizeWindowWithMouse, 0
 }
 
 WheelDown:: {
-    MouseGetPos , , &MouseWin
-    if MouseWin {
-        currentTrans := WinGetTransparent(MouseWin)
-        if (currentTrans = "")
-            currentTrans := 255
-        newTrans := currentTrans - 15
-        if (newTrans < 30)
-            newTrans := 30
-        WinSetTransparent newTrans, MouseWin
-        ToolTip("透明度: " newTrans)
-        SetTimer(() => ToolTip(), -1000)
+    MouseGetPos , , &mouseWindow
+    if mouseWindow {
+        currentTransparency := WinGetTransparent(mouseWindow)
+        if (currentTransparency = "")
+            currentTransparency := 255
+        newTransparency := currentTransparency - 15
+        if (newTransparency < 30)
+            newTransparency := 30
+        WinSetTransparent newTransparency, mouseWindow
+        ShowTemporaryTooltip("透明度: " newTransparency)
     }
 }
 
 WheelUp:: {
-    MouseGetPos , , &MouseWin
-    if MouseWin {
-        currentTrans := WinGetTransparent(MouseWin)
-        if (currentTrans = "")
-            currentTrans := 255
-        newTrans := currentTrans + 15
-        if (newTrans > 255)
-            newTrans := 255
-        WinSetTransparent newTrans, MouseWin
-        ToolTip("透明度: " newTrans)
-        SetTimer(() => ToolTip(), -1000)
+    MouseGetPos , , &mouseWindow
+    if mouseWindow {
+        currentTransparency := WinGetTransparent(mouseWindow)
+        if (currentTransparency = "")
+            currentTransparency := 255
+        newTransparency := currentTransparency + 15
+        if (newTransparency > 255)
+            newTransparency := 255
+        WinSetTransparent newTransparency, mouseWindow
+        ShowTemporaryTooltip("透明度: " newTransparency)
     }
 }
 
 #HotIf
+
