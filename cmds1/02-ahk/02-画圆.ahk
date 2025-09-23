@@ -11,7 +11,7 @@ global g_TargetWindowHwnd := 0
 global g_LeftClickState := 0, g_MiddleClickState := 0, g_WheelState := 0
 global g_MaxLeftClickStates := 1, g_MaxMiddleClickStates := 1, g_MaxWheelStates := 1
 
-global g_MediaMode := false
+global g_CurrentMode := "normal"
 
 global g_DirectionArrowMap := Map(
     "R", "→",
@@ -110,15 +110,21 @@ PlayPreviousMedia() {
 }
 
 ExampleFunction1() {
-    global g_MediaMode := true
+    global g_CurrentMode := "media"
     ToolTip("已切换到媒体控制模式`n左键:播放/暂停 中键:静音 滚轮:音量 右键:恢复")
     SetTimer(() => ToolTip(), 2000)
 }
 
-#HotIf g_MediaMode
+ExampleFunction2() {
+    global g_CurrentMode := "example2"
+    ToolTip("已切换到示例模式2`n左键:功能A 中键:功能B 滚轮:功能C 右键:恢复")
+    SetTimer(() => ToolTip(), 2000)
+}
+
+#HotIf g_CurrentMode = "media"
 RButton::
 {
-    global g_MediaMode := false
+    global g_CurrentMode := "normal"
     ToolTip("已恢复原始热键模式")
     SetTimer(() => ToolTip(), 2000)
     return
@@ -149,9 +155,39 @@ WheelDown::
 }
 #HotIf
 
-ExampleFunction2() {
-    MsgBox "执行示例操作2"
+#HotIf g_CurrentMode = "example2"
+RButton::
+{
+    global g_CurrentMode := "normal"
+    ToolTip("已恢复原始热键模式")
+    SetTimer(() => ToolTip(), 2000)
+    return
 }
+
+LButton::
+{
+    MsgBox "执行示例模式2的功能A"
+    return
+}
+
+MButton::
+{
+    MsgBox "执行示例模式2的功能B"
+    return
+}
+
+WheelUp::
+{
+    MsgBox "执行示例模式2的功能C（滚轮上）"
+    return
+}
+
+WheelDown::
+{
+    MsgBox "执行示例模式2的功能C（滚轮下）"
+    return
+}
+#HotIf
 
 CreateCircleInterface(centerX, centerY, width, height, transparency, bgColor) {
     if (width <= 0 || height <= 0)
@@ -387,7 +423,7 @@ ExecuteCurrentOperation() {
     }
 }
 
-#HotIf !g_MediaMode
+#HotIf g_CurrentMode = "normal"
 RButton:: {
     global g_LastDisplayContent := ""
     CaptureWindowUnderCursor()
@@ -429,7 +465,7 @@ RButton Up:: {
         return
     }
 }
-#Hotif
+#HotIf
 
 InitializeActionMappings()
 

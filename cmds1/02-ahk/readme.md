@@ -31,3 +31,5 @@ Action_0_0_0_D不以这种格式去命名函数，直接以这个函数要执行
   MButton：静音或取消静音
   WheelUp：音量加
   WheelDown：音量减
+不要用g_MediaMode，因为我还想ExampleFunction2也改一下热键，
+  不然的话有需要增加一个变量，导致#HotIf !g_MediaMode这行会变得很长
