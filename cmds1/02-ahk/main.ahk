@@ -6,23 +6,29 @@ DetectHiddenWindows True
 #Include %A_ScriptDir%\window_control.ahk
 
 ; 界面相关变量
-global g_CircleGui := ""
-global g_CircleHwnd := 0
-global g_CircleRadius := 50
-global g_CircleCenterX := 0
-global g_CircleCenterY := 0
-global g_TargetWindowHwnd := 0
+global g_RadialMenuGui := ""
+global g_RadialMenuHwnd := 0
+global g_RadialMenuRadius := 50
+global g_RadialMenuCenterX := 0
+global g_RadialMenuCenterY := 0
+global g_ActiveWindowHwnd := 0
+global g_TargetClickX := 0
+global g_TargetClickY := 0
 
 ; 鼠标状态变量
-global g_LeftClickState := 0, g_MiddleClickState := 0, g_WheelState := 0
-global g_MaxLeftClickStates := 1, g_MaxMiddleClickStates := 1, g_MaxWheelStates := 1
+global g_LeftButtonState := 0, g_MiddleButtonState := 0, g_WheelButtonState := 0
+global g_MaxLeftButtonStates := 1, g_MaxMiddleButtonStates := 1, g_MaxWheelButtonStates := 1
+
+; 窗口操作变量
+global g_WindowResizeInfo := {win: 0, startMouseX: 0, startMouseY: 0, startWinX: 0, startWinY: 0, startWinW: 0, startWinH: 0, resizeEdge: ""}
+global g_WindowMoveInfo := {win: 0, startMouseX: 0, startMouseY: 0, startWinX: 0, startWinY: 0}
 
 ; 模式管理
-global g_CurrentMode := "normal"
-global g_LastDisplayContent := ""
+global g_CurrentOperationMode := "normal"
+global g_LastTooltipContent := ""
 
 ; 方向映射表
-global g_DirectionArrowMap := Map(
+global g_DirectionToArrowSymbol := Map(
     "R", "→",
     "RD", "↘",
     "D", "↓",
@@ -33,7 +39,7 @@ global g_DirectionArrowMap := Map(
     "RU", "↗"
 )
 
-global g_DirectionNameMap := Map(
+global g_DirectionToChineseName := Map(
     "R", "右",
     "RD", "右下",
     "D", "下",
@@ -45,76 +51,84 @@ global g_DirectionNameMap := Map(
 )
 
 ; 动作映射表
-global g_ActionFunctionMaps := Map()
+global g_ModeActionMappings := Map()
 
-InitializeActionMappings() {
-    global g_ActionFunctionMaps
-    normalModeMap := Map()
-    normalModeMap["000U"] := ["向上移动光标", Send.Bind("{Up}")]
-    normalModeMap["000D"] := ["向下移动光标", Send.Bind("{Down}")]
-    normalModeMap["000L"] := ["向左移动光标", Send.Bind("{Left}")]
-    normalModeMap["000R"] := ["向右移动光标", Send.Bind("{Right}")]
-    normalModeMap["000RU"] := ["切换最大化窗口", ToggleMaximizeWindow]
-    normalModeMap["000RD"] := ["最小化窗口", MinimizeTargetWindow]
-    normalModeMap["000LU"] := ["窗口控制模式", SwitchToWindowControlMode]
-    g_ActionFunctionMaps["normal"] := normalModeMap
+InitializeModeActionMappings() {
+    global g_ModeActionMappings
+    normalModeActions := Map()
+    normalModeActions["000U"] := ["向上移动光标", Send.Bind("{Up}")]
+    normalModeActions["000D"] := ["向下移动光标", Send.Bind("{Down}")]
+    normalModeActions["000L"] := ["向左移动光标", Send.Bind("{Left}")]
+    normalModeActions["000R"] := ["向右移动光标", Send.Bind("{Right}")]
+    normalModeActions["000RU"] := ["切换最大化窗口", ToggleWindowMaximize]
+    normalModeActions["000RD"] := ["最小化窗口", MinimizeActiveWindow]
+    normalModeActions["000LU"] := ["窗口控制模式", ActivateWindowControlMode]
+    g_ModeActionMappings["normal"] := normalModeActions
 }
 
 SwitchToNormalMode() {
-    global g_CurrentMode := "normal"
-    ShowTemporaryTooltip("已恢复原始热键模式")
+    global g_CurrentOperationMode := "normal"
+    ShowTemporaryMessage("已恢复原始热键模式")
 }
 
-OnRButtonPress() {
-    global g_LastDisplayContent := ""
+ClickAtTargetPosition() {
+    global g_TargetClickX, g_TargetClickY
+    CoordMode("Mouse", "Screen")
+    MouseGetPos(&originalX, &originalY)
+    Click(g_TargetClickX, g_TargetClickY, "Left")
+    MouseMove(originalX, originalY, 0)
+}
+
+OnRightButtonPressed() {
+    global g_LastTooltipContent := ""
     CaptureWindowUnderCursor()
-    ShowCircleGuiAtMousePosition()
-    SetTimer(UpdateOperationDisplayTooltip, 10)
+    DisplayRadialMenuAtCursor()
+    SetTimer(UpdateRadialMenuTooltip, 10)
 }
 
-#HotIf g_CurrentMode = "normal"
+#HotIf g_CurrentOperationMode = "normal"
 
 ~LButton:: {
-    if (IsMouseInsideCircle() && GetKeyState("RButton", "P")) {
-        CycleLeftClickState()
+    if (IsCursorInsideRadialMenu() && GetKeyState("RButton", "P")) {
+        CycleLeftButtonState()
         return
     }
 }
 
 ~MButton:: {
-    if (IsMouseInsideCircle() && GetKeyState("RButton", "P")) {
-        CycleMiddleClickState()
+    if (IsCursorInsideRadialMenu() && GetKeyState("RButton", "P")) {
+        CycleMiddleButtonState()
         return
     }
 }
 
 ~WheelUp::
 ~WheelDown:: {
-    if (IsMouseInsideCircle() && GetKeyState("RButton", "P")) {
-        CycleWheelState()
+    if (IsCursorInsideRadialMenu() && GetKeyState("RButton", "P")) {
+        CycleWheelButtonState()
         return
     }
 }
 #HotIf
 
 RButton:: {
-    OnRButtonPress()
+    OnRightButtonPressed()
 }
 
 RButton Up:: {
-    SetTimer(UpdateOperationDisplayTooltip, 0)
+    SetTimer(UpdateRadialMenuTooltip, 0)
     ToolTip()
-    global g_LastDisplayContent := ""
-    HideCircleGui()
-    if (IsMouseInsideCircle()) {
+    global g_LastTooltipContent := ""
+    HideRadialMenu()
+    if (IsCursorInsideRadialMenu()) {
         Click "Right"
     } else {
-        ExecuteCurrentOperation()
+        ExecuteSelectedAction()
     }
 }
 
-InitializeActionMappings()
-ShowCircleGuiAtMousePosition()
-HideCircleGui()
+InitializeModeActionMappings()
+DisplayRadialMenuAtCursor()
+HideRadialMenu()
 
 ^Ins::ExitApp

@@ -1,15 +1,21 @@
 #Requires AutoHotkey v2.0
 
-MinimizeTargetWindow() {
-    global g_TargetWindowHwnd
-    WinMinimize(g_TargetWindowHwnd)
+ActivateTargetWindow() {
+    global g_ActiveWindowHwnd
+    WinActivate(g_ActiveWindowHwnd)
 }
 
-ToggleMaximizeWindow() {
-    global g_TargetWindowHwnd
-    if (WinGetMinMax(g_TargetWindowHwnd) == 1) {
-        WinRestore(g_TargetWindowHwnd)
+MinimizeActiveWindow() {
+    global g_ActiveWindowHwnd
+    WinMinimize(g_ActiveWindowHwnd)
+}
+
+ToggleWindowMaximize() {
+    global g_ActiveWindowHwnd
+    if (WinGetMinMax(g_ActiveWindowHwnd) == 1) {
+        WinRestore(g_ActiveWindowHwnd)
     } else {
-        WinMaximize(g_TargetWindowHwnd)
+        WinMaximize(g_ActiveWindowHwnd)
     }
 }
+

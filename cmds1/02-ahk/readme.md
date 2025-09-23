@@ -45,3 +45,4 @@ Action_0_0_0_D不以这种格式去命名函数，直接以这个函数要执行
   当为window_control模式时，ActionFunction使用另一个map，
   即不同模式如果需要的话，可以用不同的g_ActionFunctionMap，
   可以改变g_ActionFunctionMap的结构，接受不同模式作为键
+重命名
