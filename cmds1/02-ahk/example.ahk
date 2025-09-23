@@ -1,19 +1,5 @@
 #Requires AutoHotkey v2.0
 
-MinimizeTargetWindow() {
-    global g_TargetWindowHwnd
-    WinMinimize(g_TargetWindowHwnd)
-}
-
-ToggleMaximizeWindow() {
-    global g_TargetWindowHwnd
-    if (WinGetMinMax(g_TargetWindowHwnd) == 1) {
-        WinRestore(g_TargetWindowHwnd)
-    } else {
-        WinMaximize(g_TargetWindowHwnd)
-    }
-}
-
 ExampleFunction1() {
     global g_CurrentMode := "media"
     ToolTip("已切换到媒体控制模式`n左键:播放/暂停 中键:静音 滚轮:音量 右键:恢复")

@@ -2,7 +2,7 @@
 DetectHiddenWindows True
 
 #Include %A_ScriptDir%\circle.ahk
-#Include %A_ScriptDir%\example.ahk
+#Include %A_ScriptDir%\window.ahk
 
 global g_CircleGui := ""
 global g_CircleHwnd := 0
@@ -44,18 +44,10 @@ InitializeActionMappings() {
     global g_ActionFunctionMap
     g_ActionFunctionMap["000D"] := ["向下移动光标", Send.Bind("{Down}")]
     g_ActionFunctionMap["000L"] := ["向左移动光标", Send.Bind("{Left}")]
-    g_ActionFunctionMap["000LD"] := ["切换到示例模式2", ExampleFunction2]
-    g_ActionFunctionMap["000LU"] := ["切换到媒体控制模式", ExampleFunction1]
     g_ActionFunctionMap["000R"] := ["向右移动光标", Send.Bind("{Right}")]
     g_ActionFunctionMap["000RD"] := ["最小化窗口", MinimizeTargetWindow]
     g_ActionFunctionMap["000RU"] := ["切换最大化窗口", ToggleMaximizeWindow]
     g_ActionFunctionMap["000U"] := ["向上移动光标", Send.Bind("{Up}")]
-    g_ActionFunctionMap["001L"] := ["上一首媒体", Send.Bind("{Media_Prev}")]
-    g_ActionFunctionMap["001R"] := ["下一首媒体", Send.Bind("{Media_Next}")]
-    g_ActionFunctionMap["010D"] := ["上一个标签页", Send.Bind("^+{Tab}")]
-    g_ActionFunctionMap["010U"] := ["下一个标签页", Send.Bind("^{Tab}")]
-    g_ActionFunctionMap["100L"] := ["减少系统音量", Send.Bind("{Volume_Down}")]
-    g_ActionFunctionMap["100R"] := ["增加系统音量", Send.Bind("{Volume_Up}")]
 }
 
 RButtonDo() {
