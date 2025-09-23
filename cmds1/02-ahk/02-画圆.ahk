@@ -94,11 +94,11 @@ DecreaseSystemVolume() {
 }
 
 SwitchToNextTab() {
-    Send "^Tab"
+    Send "^{Tab}"
 }
 
 SwitchToPreviousTab() {
-    Send "^+Tab"
+    Send "^+{Tab}"
 }
 
 PlayNextMedia() {
