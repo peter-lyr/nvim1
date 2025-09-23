@@ -11,7 +11,7 @@ global g_RadialMenuHwnd := 0
 global g_RadialMenuRadius := 50
 global g_RadialMenuCenterX := 0
 global g_RadialMenuCenterY := 0
-global g_ActiveWindowHwnd := 0
+global g_TargetWindowHwnd := 0
 global g_TargetClickX := 0
 global g_TargetClickY := 0
 
@@ -60,8 +60,8 @@ InitializeModeActionMappings() {
     normalModeActions["000D"] := ["向下移动光标", Send.Bind("{Down}")]
     normalModeActions["000L"] := ["向左移动光标", Send.Bind("{Left}")]
     normalModeActions["000R"] := ["向右移动光标", Send.Bind("{Right}")]
-    normalModeActions["000RU"] := ["切换最大化窗口", ToggleWindowMaximize]
-    normalModeActions["000RD"] := ["最小化窗口", MinimizeActiveWindow]
+    normalModeActions["000RU"] := ["切换最大化窗口", ToggleTargetWindowMaximize]
+    normalModeActions["000RD"] := ["最小化窗口", MinimizeTargetWindow]
     normalModeActions["000LU"] := ["窗口控制模式", ActivateWindowControlMode]
     g_ModeActionMappings["normal"] := normalModeActions
 }
@@ -69,21 +69,6 @@ InitializeModeActionMappings() {
 SwitchToNormalMode() {
     global g_CurrentOperationMode := "normal"
     ShowTemporaryMessage("已恢复原始热键模式")
-}
-
-ClickAtTargetPosition() {
-    global g_TargetClickX, g_TargetClickY
-    CoordMode("Mouse", "Screen")
-    MouseGetPos(&originalX, &originalY)
-    Click(g_TargetClickX, g_TargetClickY, "Left")
-    MouseMove(originalX, originalY, 0)
-}
-
-OnRightButtonPressed() {
-    global g_LastTooltipContent := ""
-    CaptureWindowUnderCursor()
-    DisplayRadialMenuAtCursor()
-    SetTimer(UpdateRadialMenuTooltip, 10)
 }
 
 #HotIf g_CurrentOperationMode = "normal"
@@ -112,7 +97,10 @@ OnRightButtonPressed() {
 #HotIf
 
 RButton:: {
-    OnRightButtonPressed()
+    global g_LastTooltipContent := ""
+    CaptureWindowUnderCursor()
+    DisplayRadialMenuAtCursor()
+    SetTimer(UpdateRadialMenuTooltip, 10)
 }
 
 RButton Up:: {

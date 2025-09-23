@@ -216,9 +216,9 @@ ShowTemporaryMessage(message) {
 }
 
 CaptureWindowUnderCursor() {
-    global g_TargetClickX, g_TargetClickY, g_ActiveWindowHwnd
+    global g_TargetClickX, g_TargetClickY, g_TargetWindowHwnd
     CoordMode("Mouse", "Screen")
-    MouseGetPos(&g_TargetClickX, &g_TargetClickY, &g_ActiveWindowHwnd)
+    MouseGetPos(&g_TargetClickX, &g_TargetClickY, &g_TargetWindowHwnd)
 }
 
 ExecuteSelectedAction() {

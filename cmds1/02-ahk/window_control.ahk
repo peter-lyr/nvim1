@@ -4,8 +4,8 @@ ActivateWindowControlMode() {
     global g_CurrentOperationMode := "window_control"
     windowControlActions := Map()
     windowControlActions["000L"] := ["恢复普通模式", SwitchToNormalMode]
-    windowControlActions["000RU"] := ["切换最大化窗口", ToggleWindowMaximize]
-    windowControlActions["000RD"] := ["最小化窗口", MinimizeActiveWindow]
+    windowControlActions["000RU"] := ["切换最大化窗口", ToggleTargetWindowMaximize]
+    windowControlActions["000RD"] := ["最小化窗口", MinimizeTargetWindow]
     windowControlActions["000U"] := ["激活窗口", ActivateTargetWindow]
     windowControlActions["000D"] := ["按退出键", Send.Bind("{Esc}")]
     windowControlActions["000LU"] := ["单击目标", ClickAtTargetPosition]
@@ -179,4 +179,3 @@ WheelUp:: {
 }
 
 #HotIf
-

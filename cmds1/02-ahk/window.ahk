@@ -1,21 +1,28 @@
 #Requires AutoHotkey v2.0
 
 ActivateTargetWindow() {
-    global g_ActiveWindowHwnd
-    WinActivate(g_ActiveWindowHwnd)
+    global g_TargetWindowHwnd
+    WinActivate(g_TargetWindowHwnd)
 }
 
-MinimizeActiveWindow() {
-    global g_ActiveWindowHwnd
-    WinMinimize(g_ActiveWindowHwnd)
+MinimizeTargetWindow() {
+    global g_TargetWindowHwnd
+    WinMinimize(g_TargetWindowHwnd)
 }
 
-ToggleWindowMaximize() {
-    global g_ActiveWindowHwnd
-    if (WinGetMinMax(g_ActiveWindowHwnd) == 1) {
-        WinRestore(g_ActiveWindowHwnd)
+ToggleTargetWindowMaximize() {
+    global g_TargetWindowHwnd
+    if (WinGetMinMax(g_TargetWindowHwnd) == 1) {
+        WinRestore(g_TargetWindowHwnd)
     } else {
-        WinMaximize(g_ActiveWindowHwnd)
+        WinMaximize(g_TargetWindowHwnd)
     }
 }
 
+ClickAtTargetPosition() {
+    global g_TargetClickX, g_TargetClickY
+    CoordMode("Mouse", "Screen")
+    MouseGetPos(&originalX, &originalY)
+    Click(g_TargetClickX, g_TargetClickY, "Left")
+    MouseMove(originalX, originalY, 0)
+}

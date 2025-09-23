@@ -7,7 +7,7 @@ global g_RadialMenuHwnd := 0
 global g_RadialMenuRadius := 50
 global g_RadialMenuCenterX := 0
 global g_RadialMenuCenterY := 0
-global g_ActiveWindowHwnd := 0
+global g_TargetWindowHwnd := 0
 global g_TargetClickX := 0
 global g_TargetClickY := 0
 
@@ -56,38 +56,37 @@ InitializeModeActionMappings() {
     normalModeActions["000D"] := ["向下移动光标", Send.Bind("{Down}")]
     normalModeActions["000L"] := ["向左移动光标", Send.Bind("{Left}")]
     normalModeActions["000R"] := ["向右移动光标", Send.Bind("{Right}")]
-    normalModeActions["000RU"] := ["切换最大化窗口", ToggleWindowMaximize]
-    normalModeActions["000RD"] := ["最小化窗口", MinimizeActiveWindow]
+    normalModeActions["000RU"] := ["切换最大化窗口", ToggleTargetWindowMaximize]
+    normalModeActions["000RD"] := ["最小化窗口", MinimizeTargetWindow]
     normalModeActions["000LU"] := ["窗口控制模式", ActivateWindowControlMode]
     g_ModeActionMappings["normal"] := normalModeActions
 }
 
 ActivateTargetWindow() {
-    global g_ActiveWindowHwnd
-    WinActivate(g_ActiveWindowHwnd)
+    global g_TargetWindowHwnd
+    WinActivate(g_TargetWindowHwnd)
 }
 
-MinimizeActiveWindow() {
-    global g_ActiveWindowHwnd
-    WinMinimize(g_ActiveWindowHwnd)
+MinimizeTargetWindow() {
+    global g_TargetWindowHwnd
+    WinMinimize(g_TargetWindowHwnd)
 }
 
-ToggleWindowMaximize() {
-    global g_ActiveWindowHwnd
-    if (WinGetMinMax(g_ActiveWindowHwnd) == 1) {
-        WinRestore(g_ActiveWindowHwnd)
+ToggleTargetWindowMaximize() {
+    global g_TargetWindowHwnd
+    if (WinGetMinMax(g_TargetWindowHwnd) == 1) {
+        WinRestore(g_TargetWindowHwnd)
     } else {
-        WinMaximize(g_ActiveWindowHwnd)
+        WinMaximize(g_TargetWindowHwnd)
     }
 }
 
 ActivateWindowControlMode() {
     global g_CurrentOperationMode := "window_control"
-    global g_TargetClickX, g_TargetClickY, g_ActiveWindowHwnd
     windowControlActions := Map()
     windowControlActions["000L"] := ["恢复普通模式", SwitchToNormalMode]
-    windowControlActions["000RU"] := ["切换最大化窗口", ToggleWindowMaximize]
-    windowControlActions["000RD"] := ["最小化窗口", MinimizeActiveWindow]
+    windowControlActions["000RU"] := ["切换最大化窗口", ToggleTargetWindowMaximize]
+    windowControlActions["000RD"] := ["最小化窗口", MinimizeTargetWindow]
     windowControlActions["000U"] := ["激活窗口", ActivateTargetWindow]
     windowControlActions["000D"] := ["按退出键", Send.Bind("{Esc}")]
     windowControlActions["000LU"] := ["单击目标", ClickAtTargetPosition]
@@ -491,9 +490,9 @@ ShowTemporaryMessage(message) {
 }
 
 CaptureWindowUnderCursor() {
-    global g_TargetClickX, g_TargetClickY, g_ActiveWindowHwnd
+    global g_TargetClickX, g_TargetClickY, g_TargetWindowHwnd
     CoordMode("Mouse", "Screen")
-    MouseGetPos(&g_TargetClickX, &g_TargetClickY, &g_ActiveWindowHwnd)
+    MouseGetPos(&g_TargetClickX, &g_TargetClickY, &g_TargetWindowHwnd)
 }
 
 ExecuteSelectedAction() {
@@ -510,13 +509,6 @@ ExecuteSelectedAction() {
     } else {
         ShowTemporaryMessage("未定义的操作: " stateKey)
     }
-}
-
-OnRightButtonPressed() {
-    global g_LastTooltipContent := ""
-    CaptureWindowUnderCursor()
-    DisplayRadialMenuAtCursor()
-    SetTimer(UpdateRadialMenuTooltip, 10)
 }
 
 #HotIf g_CurrentOperationMode = "normal"
@@ -545,7 +537,10 @@ OnRightButtonPressed() {
 #HotIf
 
 RButton:: {
-    OnRightButtonPressed()
+    global g_LastTooltipContent := ""
+    CaptureWindowUnderCursor()
+    DisplayRadialMenuAtCursor()
+    SetTimer(UpdateRadialMenuTooltip, 10)
 }
 
 RButton Up:: {
