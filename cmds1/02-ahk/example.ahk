@@ -3,7 +3,7 @@
 ExampleFunction1() {
     global g_CurrentMode := "media"
     ToolTip("已切换到媒体控制模式`n左键:播放/暂停 中键:静音 滚轮:音量 右键:恢复")
-    SetTimer(() => ToolTip(), 2000)
+    SetTimer(() => ToolTip(), -2000)
 }
 
 #HotIf g_CurrentMode = "media"
@@ -11,7 +11,7 @@ RButton::
 {
     global g_CurrentMode := "normal"
     ToolTip("已恢复原始热键模式")
-    SetTimer(() => ToolTip(), 2000)
+    SetTimer(() => ToolTip(), -2000)
     RButtonDo()
     return
 }
@@ -44,7 +44,7 @@ WheelDown::
 ExampleFunction2() {
     global g_CurrentMode := "example2"
     ToolTip("已切换到示例模式2`n左键:功能A 中键:功能B 滚轮:功能C 右键:恢复")
-    SetTimer(() => ToolTip(), 2000)
+    SetTimer(() => ToolTip(), -2000)
 }
 
 #HotIf g_CurrentMode = "example2"
@@ -52,7 +52,7 @@ RButton::
 {
     global g_CurrentMode := "normal"
     ToolTip("已恢复原始热键模式")
-    SetTimer(() => ToolTip(), 2000)
+    SetTimer(() => ToolTip(), -2000)
     RButtonDo()
     return
 }

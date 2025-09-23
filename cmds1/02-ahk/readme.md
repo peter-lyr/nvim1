@@ -33,3 +33,11 @@ Action_0_0_0_D不以这种格式去命名函数，直接以这个函数要执行
   WheelDown：音量减
 不要用g_MediaMode，因为我还想ExampleFunction2也改一下热键，
   不然的话有需要增加一个变量，导致#HotIf !g_MediaMode这行会变得很长
+仿照以上代码，实现我想要的功能：
+  RButton热键不变
+  LButton Down:: 移动鼠标下的窗口
+  LButton Down:: 结束鼠标下的窗口的移动
+  MButton Down:: 改变鼠标下的窗口的大小
+  MButton Up:: 结束改变鼠标下的窗口的大小
+  WheelUp:: 增大鼠标下窗口的透明度
+  WheelDown:: 减小鼠标下窗口的透明度

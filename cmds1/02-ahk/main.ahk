@@ -3,6 +3,7 @@ DetectHiddenWindows True
 
 #Include %A_ScriptDir%\circle.ahk
 #Include %A_ScriptDir%\window.ahk
+#Include %A_ScriptDir%\window_control.ahk
 
 global g_CircleGui := ""
 global g_CircleHwnd := 0
@@ -48,13 +49,14 @@ InitializeActionMappings() {
     g_ActionFunctionMap["000RD"] := ["最小化窗口", MinimizeTargetWindow]
     g_ActionFunctionMap["000RU"] := ["切换最大化窗口", ToggleMaximizeWindow]
     g_ActionFunctionMap["000U"] := ["向上移动光标", Send.Bind("{Up}")]
+    g_ActionFunctionMap["000LU"] := ["窗口控制模式", WindowControlMode]
 }
 
 RButtonDo() {
     global g_LastDisplayContent := ""
     CaptureWindowUnderCursor()
     ShowCircleAtMousePosition()
-    SetTimer(UpdateOperationDisplay, 150)
+    SetTimer(UpdateOperationDisplay, 10)
 }
 
 #HotIf g_CurrentMode = "normal"

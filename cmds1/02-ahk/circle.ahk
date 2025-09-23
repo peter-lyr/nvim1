@@ -212,7 +212,7 @@ ChangeWheelState() {
 
 ShowTemporaryTooltip(message) {
     ToolTip(message)
-    SetTimer(() => ToolTip(), 2000, -1)
+    SetTimer(() => ToolTip(), -2000, -1)
 }
 
 CaptureWindowUnderCursor() {
