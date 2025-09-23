@@ -472,6 +472,41 @@ function F.just_get_git_remote_url(proj)
 	return ""
 end
 
+function F.find_file(tail)
+	if not tail then
+		return nil
+	end
+	local escaped_tail = tail:gsub("%.", "%%."):gsub("%[", "%%["):gsub("%]", "%%]")
+	local current_file = vim.api.nvim_buf_get_name(0)
+	local current_dir = F.rep_slash(vim.fn.fnamemodify(current_file, ":h"))
+	local patterns = {
+		current_dir .. "/" .. escaped_tail,
+		current_dir .. "/**/" .. escaped_tail,
+	}
+	for _, pattern in ipairs(patterns) do
+		local files = vim.fn.globpath("", pattern, true, true)
+		if #files > 0 then
+			return files[1]
+		end
+	end
+	local parent_dir = vim.fn.fnamemodify(current_dir, ":h")
+	while parent_dir ~= current_dir do
+		local files = vim.fn.globpath(parent_dir, tail, true, true)
+		if #files > 0 then
+			return files[1]
+		end
+		local other_files = vim.fn.globpath(parent_dir, "*/" .. tail, true, true)
+		for _, file in ipairs(other_files) do
+			if not vim.startswith(file, current_dir) then
+				return file
+			end
+		end
+		current_dir = parent_dir
+		parent_dir = vim.fn.fnamemodify(parent_dir, ":h")
+	end
+	return nil
+end
+
 function F.copy_multiple_filenames()
 	vim.fn.setreg("w", vim.loop.cwd())
 	vim.fn.setreg("a", F.get_cur_file())
@@ -556,7 +591,7 @@ function F.execute_out_buffer(cmd)
 		F.printf("No Output cmd: %s", cmd)
 		return
 	end
-	require("f").jump_or_split(TempTxt)
+	F.jump_or_split(TempTxt)
 	vim.cmd("norm ggdG")
 	vim.fn.append(vim.fn.line("$"), lines)
 end

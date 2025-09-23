@@ -45,6 +45,13 @@ function R.run_cur_file(no_console_window, auto_exit)
 		if require("f").is(lua) then
 			package.loaded[lua] = dofile(cur_file)
 		end
+	elseif vim.o.ft == "autohotkey" then
+		require("f").cmd(
+			[[silent !start %s cmd /c "python "%s" %s"]],
+			no_console_window,
+			require("f").find_file("main.ahk"),
+			auto_exit
+		)
 	elseif vim.o.ft == "python" then
 		require("f").cmd([[silent !start %s cmd /c "python "%s" %s"]], no_console_window, cur_file, auto_exit)
 	else
