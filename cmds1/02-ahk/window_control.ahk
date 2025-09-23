@@ -11,40 +11,6 @@ WindowControlMode() {
 
 #HotIf g_CurrentMode = "window_control"
 
-RButton::
-{
-    MouseGetPos , , &MouseWin
-    WinActivate(MouseWin)
-}
-
-RButton & LButton::
-{
-    Click "Left"
-}
-
-RButton & MButton::
-{
-    global g_CurrentMode := "normal"
-    ToolTip("已恢复原始热键模式")
-    SetTimer(() => ToolTip(), -2000)
-}
-
-LButton::
-{
-    global g_MoveData
-    MouseGetPos , , &MouseWin
-    if MouseWin {
-        MouseGetPos &initMouseX, &initMouseY
-        WinGetPos &initWinX, &initWinY, , , MouseWin
-        g_MoveData.initMouseX := initMouseX
-        g_MoveData.initMouseY := initMouseY
-        g_MoveData.initWinX := initWinX
-        g_MoveData.initWinY := initWinY
-        g_MoveData.win := MouseWin
-        SetTimer MoveWindow, 10
-    }
-}
-
 MoveWindow() {
     global g_MoveData
     if !GetKeyState("LButton", "P") {
@@ -57,56 +23,6 @@ MoveWindow() {
     newX := g_MoveData.initWinX + deltaX
     newY := g_MoveData.initWinY + deltaY
     WinMove newX, newY, , , g_MoveData.win
-}
-
-LButton Up::
-{
-    SetTimer MoveWindow, 0
-}
-
-MButton::
-{
-    global g_ResizeData
-    MouseGetPos , , &MouseWin
-    if MouseWin {
-        MouseGetPos &initMouseX, &initMouseY
-        WinGetPos &initWinX, &initWinY, &initWinW, &initWinH, MouseWin
-        relX := initMouseX - initWinX
-        relY := initMouseY - initWinY
-        if (relX < initWinW / 3) {
-            if (relY < initWinH / 3) {
-                g_ResizeData.direction := "top-left"
-            } else if (relY > initWinH * 2 / 3) {
-                g_ResizeData.direction := "bottom-left"
-            } else {
-                g_ResizeData.direction := "left"
-            }
-        } else if (relX > initWinW * 2 / 3) {
-            if (relY < initWinH / 3) {
-                g_ResizeData.direction := "top-right"
-            } else if (relY > initWinH * 2 / 3) {
-                g_ResizeData.direction := "bottom-right"
-            } else {
-                g_ResizeData.direction := "right"
-            }
-        } else {
-            if (relY < initWinH / 3) {
-                g_ResizeData.direction := "top"
-            } else if (relY > initWinH * 2 / 3) {
-                g_ResizeData.direction := "bottom"
-            } else {
-                g_ResizeData.direction := "center"
-            }
-        }
-        g_ResizeData.initMouseX := initMouseX
-        g_ResizeData.initMouseY := initMouseY
-        g_ResizeData.initWinX := initWinX
-        g_ResizeData.initWinY := initWinY
-        g_ResizeData.initWinW := initWinW
-        g_ResizeData.initWinH := initWinH
-        g_ResizeData.win := MouseWin
-        SetTimer ResizeWindow, 10
-    }
 }
 
 ResizeWindow() {
@@ -161,13 +77,89 @@ ResizeWindow() {
     WinMove newX, newY, newWidth, newHeight, g_ResizeData.win
 }
 
-MButton Up::
-{
+RButton:: {
+    MouseGetPos , , &MouseWin
+    WinActivate(MouseWin)
+}
+
+RButton & LButton:: {
+    Click "Left"
+}
+
+RButton & MButton:: {
+    global g_CurrentMode := "normal"
+    ToolTip("已恢复原始热键模式")
+    SetTimer(() => ToolTip(), -2000)
+}
+
+LButton:: {
+    global g_MoveData
+    MouseGetPos , , &MouseWin
+    if MouseWin {
+        MouseGetPos &initMouseX, &initMouseY
+        WinGetPos &initWinX, &initWinY, , , MouseWin
+        g_MoveData.initMouseX := initMouseX
+        g_MoveData.initMouseY := initMouseY
+        g_MoveData.initWinX := initWinX
+        g_MoveData.initWinY := initWinY
+        g_MoveData.win := MouseWin
+        SetTimer MoveWindow, 10
+    }
+}
+
+LButton Up:: {
+    SetTimer MoveWindow, 0
+}
+
+MButton:: {
+    global g_ResizeData
+    MouseGetPos , , &MouseWin
+    if MouseWin {
+        MouseGetPos &initMouseX, &initMouseY
+        WinGetPos &initWinX, &initWinY, &initWinW, &initWinH, MouseWin
+        relX := initMouseX - initWinX
+        relY := initMouseY - initWinY
+        if (relX < initWinW / 3) {
+            if (relY < initWinH / 3) {
+                g_ResizeData.direction := "top-left"
+            } else if (relY > initWinH * 2 / 3) {
+                g_ResizeData.direction := "bottom-left"
+            } else {
+                g_ResizeData.direction := "left"
+            }
+        } else if (relX > initWinW * 2 / 3) {
+            if (relY < initWinH / 3) {
+                g_ResizeData.direction := "top-right"
+            } else if (relY > initWinH * 2 / 3) {
+                g_ResizeData.direction := "bottom-right"
+            } else {
+                g_ResizeData.direction := "right"
+            }
+        } else {
+            if (relY < initWinH / 3) {
+                g_ResizeData.direction := "top"
+            } else if (relY > initWinH * 2 / 3) {
+                g_ResizeData.direction := "bottom"
+            } else {
+                g_ResizeData.direction := "center"
+            }
+        }
+        g_ResizeData.initMouseX := initMouseX
+        g_ResizeData.initMouseY := initMouseY
+        g_ResizeData.initWinX := initWinX
+        g_ResizeData.initWinY := initWinY
+        g_ResizeData.initWinW := initWinW
+        g_ResizeData.initWinH := initWinH
+        g_ResizeData.win := MouseWin
+        SetTimer ResizeWindow, 10
+    }
+}
+
+MButton Up:: {
     SetTimer ResizeWindow, 0
 }
 
-WheelDown::
-{
+WheelDown:: {
     MouseGetPos , , &MouseWin
     if MouseWin {
         currentTrans := WinGetTransparent(MouseWin)
@@ -182,8 +174,7 @@ WheelDown::
     }
 }
 
-WheelUp::
-{
+WheelUp:: {
     MouseGetPos , , &MouseWin
     if MouseWin {
         currentTrans := WinGetTransparent(MouseWin)
