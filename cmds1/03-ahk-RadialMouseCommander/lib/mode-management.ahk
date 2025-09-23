@@ -31,7 +31,7 @@ ActivateWindowControlMode() {
     windowControlActions["000LD"] := ["单击目标", ClickAtTargetPosition]
     windowControlActions["000R"] := ["单击目标", ClickAtTargetPosition]
     g_ModeActionMappings["window_control"] := windowControlActions
-    ShowTemporaryMessage("已切换到窗口控制模式`n左键:移动窗口 中键:调整大小 滚轮:透明度 右键:恢复")
+    ShowTemporaryMessage("已切换到窗口控制模式")
 }
 
 SwitchToNormalMode() {
