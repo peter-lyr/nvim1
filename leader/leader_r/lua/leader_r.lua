@@ -17,11 +17,15 @@ function R.source(luafile)
 	require("f").cmd("source %s", luafile)
 end
 
-function R.run_cur_file(no_console_window, auto_exit)
+function R.run_cur_file(no_console_window, auto_exit, force_cmd)
 	auto_exit = auto_exit and "" or " & pause"
 	no_console_window = no_console_window and " /b /min " or ""
 	local cur_file = require("f").get_cur_file()
 	if not require("f").is_file_exists(cur_file) then
+		return
+	end
+	if force_cmd then
+		require("f").cmd([[silent !start %s cmd /c ""%s" %s"]], no_console_window, cur_file, auto_exit)
 		return
 	end
 	if vim.o.ft == "lua" then
@@ -65,6 +69,14 @@ end
 
 function R.run_cur_file_exit()
 	R.run_cur_file(nil, 1)
+end
+
+function R.run_cur_file_silent_force_cmd()
+	R.run_cur_file(1, nil, 1)
+end
+
+function R.run_cur_file_exit_force_cmd()
+	R.run_cur_file(nil, 1, 1)
 end
 
 function R.stop_cur_file() end

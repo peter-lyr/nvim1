@@ -66,6 +66,7 @@ RButton::
     global g_CurrentMode := "normal"
     ToolTip("已恢复原始热键模式")
     SetTimer(() => ToolTip(), 2000)
+    RButtonDo()
     return
 }
 
@@ -106,6 +107,7 @@ RButton::
     global g_CurrentMode := "normal"
     ToolTip("已恢复原始热键模式")
     SetTimer(() => ToolTip(), 2000)
+    RButtonDo()
     return
 }
 

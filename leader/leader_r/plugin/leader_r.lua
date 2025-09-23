@@ -23,6 +23,27 @@ require("which-key").register({
 		"run_cur_file_exit",
 		mode = { "n", "v" },
 	},
+	["<leader>r<leader>p"] = {
+		function()
+			R.run_cur_file(nil, nil, 1)
+		end,
+		"run_cur_file_console_pause-force_cmd",
+		mode = { "n", "v" },
+	},
+	["<leader>r<leader>s"] = {
+		function()
+			R.run_cur_file_silent_force_cmd()
+		end,
+		"run_cur_file_silent-force_cmd",
+		mode = { "n", "v" },
+	},
+	["<leader>r<leader>e"] = {
+		function()
+			R.run_cur_file_exit_force_cmd()
+		end,
+		"run_cur_file_exit-force_cmd",
+		mode = { "n", "v" },
+	},
 	["<leader>rt"] = {
 		function()
 			R.stop_cur_file()

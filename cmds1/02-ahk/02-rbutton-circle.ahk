@@ -423,12 +423,16 @@ ExecuteCurrentOperation() {
     }
 }
 
-#HotIf g_CurrentMode = "normal"
-RButton:: {
+RButtonDo() {
     global g_LastDisplayContent := ""
     CaptureWindowUnderCursor()
     ShowCircleAtMousePosition()
     SetTimer(UpdateOperationDisplay, 150)
+}
+
+#HotIf g_CurrentMode = "normal"
+RButton:: {
+    RButtonDo()
 }
 
 RButton Up:: {
