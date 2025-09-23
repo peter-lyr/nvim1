@@ -41,3 +41,7 @@ Action_0_0_0_D不以这种格式去命名函数，直接以这个函数要执行
   MButton Up:: 结束改变鼠标下的窗口的大小
   WheelUp:: 增大鼠标下窗口的透明度
   WheelDown:: 减小鼠标下窗口的透明度
+当为normal模式时，ActionFunction使用g_ActionFunctionMap，
+  当为window_control模式时，ActionFunction使用另一个map，
+  即不同模式如果需要的话，可以用不同的g_ActionFunctionMap，
+  可以改变g_ActionFunctionMap的结构，接受不同模式作为键

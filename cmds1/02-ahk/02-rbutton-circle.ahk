@@ -38,17 +38,19 @@ global g_DirectionNameMap := Map(
     "RU", "右上"
 )
 
-global g_ActionFunctionMap := Map()
+global g_ActionFunctionMaps := Map()
 
 InitializeActionMappings() {
-    global g_ActionFunctionMap
-    g_ActionFunctionMap["000D"] := ["向下移动光标", Send.Bind("{Down}")]
-    g_ActionFunctionMap["000L"] := ["向左移动光标", Send.Bind("{Left}")]
-    g_ActionFunctionMap["000R"] := ["向右移动光标", Send.Bind("{Right}")]
-    g_ActionFunctionMap["000RD"] := ["最小化窗口", MinimizeTargetWindow]
-    g_ActionFunctionMap["000RU"] := ["切换最大化窗口", ToggleMaximizeWindow]
-    g_ActionFunctionMap["000U"] := ["向上移动光标", Send.Bind("{Up}")]
-    g_ActionFunctionMap["000LU"] := ["窗口控制模式", WindowControlMode]
+    global g_ActionFunctionMaps
+    normalMap := Map()
+    normalMap["000D"] := ["向下移动光标", Send.Bind("{Down}")]
+    normalMap["000L"] := ["向左移动光标", Send.Bind("{Left}")]
+    normalMap["000R"] := ["向右移动光标", Send.Bind("{Right}")]
+    normalMap["000RD"] := ["最小化窗口", MinimizeTargetWindow]
+    normalMap["000RU"] := ["切换最大化窗口", ToggleMaximizeWindow]
+    normalMap["000U"] := ["向上移动光标", Send.Bind("{Up}")]
+    normalMap["000LU"] := ["窗口控制模式", WindowControlMode]
+    g_ActionFunctionMaps["normal"] := normalMap
 }
 
 MinimizeTargetWindow() {
@@ -67,7 +69,16 @@ ToggleMaximizeWindow() {
 
 WindowControlMode() {
     global g_CurrentMode := "window_control"
+    windowControlMap := Map()
+    windowControlMap["000L"] := ["恢复普通模式", RestoreNormalMode]
+    g_ActionFunctionMaps["window_control"] := windowControlMap
     ToolTip("已切换到窗口控制模式`n左键:移动窗口 中键:调整大小 滚轮:透明度 右键:恢复")
+    SetTimer(() => ToolTip(), -2000)
+}
+
+RestoreNormalMode() {
+    global g_CurrentMode := "normal"
+    ToolTip("已恢复原始热键模式")
     SetTimer(() => ToolTip(), -2000)
 }
 
@@ -137,13 +148,6 @@ ResizeWindow() {
     if (newY + newHeight < 10)
         newY := 10 - newHeight
     WinMove newX, newY, newWidth, newHeight, g_ResizeData.win
-}
-
-RButton:: {
-    global g_CurrentMode := "normal"
-    ToolTip("已恢复原始热键模式")
-    SetTimer(() => ToolTip(), -2000)
-    RButtonDo()
 }
 
 LButton:: {
@@ -224,7 +228,7 @@ WheelDown:: {
             newTrans := 30
         WinSetTransparent newTrans, MouseWin
         ToolTip("透明度: " newTrans)
-        SetTimer(() => ToolTip(), -1000)
+        SetTimer(() => ToolTip(), -2000)
     }
 }
 
@@ -239,7 +243,7 @@ WheelUp:: {
             newTrans := 255
         WinSetTransparent newTrans, MouseWin
         ToolTip("透明度: " newTrans)
-        SetTimer(() => ToolTip(), -1000)
+        SetTimer(() => ToolTip(), -2000)
     }
 }
 
@@ -350,8 +354,17 @@ GetCurrentStateCombination() {
     return g_LeftClickState "" g_MiddleClickState "" g_WheelState "" direction
 }
 
+GetCurrentActionMap() {
+    global g_ActionFunctionMaps, g_CurrentMode
+    if (!g_ActionFunctionMaps.Has(g_CurrentMode)) {
+        return g_ActionFunctionMaps["normal"]
+    }
+    return g_ActionFunctionMaps[g_CurrentMode]
+}
+
 CreateDirectionalOperationDisplay() {
-    global g_LeftClickState, g_MiddleClickState, g_WheelState, g_ActionFunctionMap
+    global g_LeftClickState, g_MiddleClickState, g_WheelState
+    actionMap := GetCurrentActionMap()
     directionLayout := [
         ["", "U", ""],
         ["LU", "", "RU"],
@@ -368,7 +381,7 @@ CreateDirectionalOperationDisplay() {
                 continue
             }
             stateKey := g_LeftClickState "" g_MiddleClickState "" g_WheelState "" directionCode
-            operationInfo := g_ActionFunctionMap.Has(stateKey) ? g_ActionFunctionMap[stateKey] : ["未定义操作", ""]
+            operationInfo := actionMap.Has(stateKey) ? actionMap[stateKey] : ["未定义操作", ""]
             operationName := operationInfo[1]
             arrowSymbol := GetDirectionArrowSymbol(directionCode)
             directionName := GetDirectionDisplayName(directionCode)
@@ -377,7 +390,7 @@ CreateDirectionalOperationDisplay() {
         }
         displayGrid.Push(newRow)
     }
-    displayText := "状态: 左键=" g_LeftClickState ", 中键=" g_MiddleClickState ", 滚轮=" g_WheelState "`n`n"
+    displayText := "模式: " g_CurrentMode " 状态: 左键=" g_LeftClickState ", 中键=" g_MiddleClickState ", 滚轮=" g_WheelState "`n`n"
     for row in displayGrid {
         line := ""
         for column in row {
@@ -412,9 +425,10 @@ CreateCurrentDirectionIndicator() {
     arrowSymbol := GetDirectionArrowSymbol(directionCode)
     directionName := GetDirectionDisplayName(directionCode)
     stateKey := GetCurrentStateCombination()
-    operationInfo := g_ActionFunctionMap.Has(stateKey) ? g_ActionFunctionMap[stateKey] : ["未定义操作", ""]
+    actionMap := GetCurrentActionMap()
+    operationInfo := actionMap.Has(stateKey) ? actionMap[stateKey] : ["未定义操作", ""]
     operationName := operationInfo[1]
-    return "方向: " arrowSymbol " " directionName "`n操作: " operationName
+    return "模式: " g_CurrentMode " 方向: " arrowSymbol " " directionName "`n操作: " operationName
 }
 
 UpdateOperationDisplay() {
@@ -457,10 +471,10 @@ CaptureWindowUnderCursor() {
 }
 
 ExecuteCurrentOperation() {
-    global g_ActionFunctionMap
     stateKey := GetCurrentStateCombination()
-    if (g_ActionFunctionMap.Has(stateKey)) {
-        operationInfo := g_ActionFunctionMap[stateKey]
+    actionMap := GetCurrentActionMap()
+    if (actionMap.Has(stateKey)) {
+        operationInfo := actionMap[stateKey]
         functionRef := operationInfo[2]
         try {
             functionRef()
@@ -480,22 +494,6 @@ RButtonDo() {
 }
 
 #HotIf g_CurrentMode = "normal"
-RButton:: {
-    RButtonDo()
-}
-
-RButton Up:: {
-    SetTimer(UpdateOperationDisplay, 0)
-    ToolTip()
-    global g_LastDisplayContent := ""
-    HideCircleInterface()
-
-    if (IsMouseWithinCircle()) {
-        Click "Right"
-    } else {
-        ExecuteCurrentOperation()
-    }
-}
 
 ~LButton:: {
     if (IsMouseWithinCircle() && GetKeyState("RButton", "P")) {
@@ -519,6 +517,22 @@ RButton Up:: {
     }
 }
 #HotIf
+
+RButton:: {
+    RButtonDo()
+}
+
+RButton Up:: {
+    SetTimer(UpdateOperationDisplay, 0)
+    ToolTip()
+    global g_LastDisplayContent := ""
+    HideCircleInterface()
+    if (IsMouseWithinCircle()) {
+        Click "Right"
+    } else {
+        ExecuteCurrentOperation()
+    }
+}
 
 InitializeActionMappings()
 
