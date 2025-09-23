@@ -39,20 +39,20 @@ global g_ActionFunctionMap := Map()
 
 InitializeActionMappings() {
     global g_ActionFunctionMap
-    g_ActionFunctionMap["000R"] := "MoveCursorRight"
-    g_ActionFunctionMap["000RD"] := "MinimizeTargetWindow"
-    g_ActionFunctionMap["000RU"] := "ToggleMaximizeWindow"
-    g_ActionFunctionMap["000D"] := "MoveCursorDown"
-    g_ActionFunctionMap["000L"] := "MoveCursorLeft"
-    g_ActionFunctionMap["000U"] := "MoveCursorUp"
-    g_ActionFunctionMap["000LU"] := "ExampleFunction1"
-    g_ActionFunctionMap["000LD"] := "ExampleFunction2"
-    g_ActionFunctionMap["100R"] := "IncreaseSystemVolume"
-    g_ActionFunctionMap["100L"] := "DecreaseSystemVolume"
-    g_ActionFunctionMap["010U"] := "SwitchToNextTab"
-    g_ActionFunctionMap["010D"] := "SwitchToPreviousTab"
-    g_ActionFunctionMap["001R"] := "PlayNextMedia"
-    g_ActionFunctionMap["001L"] := "PlayPreviousMedia"
+    g_ActionFunctionMap["000R"] := ["向右移动光标", MoveCursorRight]
+    g_ActionFunctionMap["000RD"] := ["最小化窗口", MinimizeTargetWindow]
+    g_ActionFunctionMap["000RU"] := ["切换最大化窗口", ToggleMaximizeWindow]
+    g_ActionFunctionMap["000D"] := ["向下移动光标", MoveCursorDown]
+    g_ActionFunctionMap["000L"] := ["向左移动光标", MoveCursorLeft]
+    g_ActionFunctionMap["000U"] := ["向上移动光标", MoveCursorUp]
+    g_ActionFunctionMap["000LU"] := ["切换到媒体控制模式", ExampleFunction1]
+    g_ActionFunctionMap["000LD"] := ["切换到示例模式2", ExampleFunction2]
+    g_ActionFunctionMap["100R"] := ["增加系统音量", IncreaseSystemVolume]
+    g_ActionFunctionMap["100L"] := ["减少系统音量", DecreaseSystemVolume]
+    g_ActionFunctionMap["010U"] := ["下一个标签页", SwitchToNextTab]
+    g_ActionFunctionMap["010D"] := ["上一个标签页", SwitchToPreviousTab]
+    g_ActionFunctionMap["001R"] := ["下一首媒体", PlayNextMedia]
+    g_ActionFunctionMap["001L"] := ["上一首媒体", PlayPreviousMedia]
 }
 
 MoveCursorRight() {
@@ -127,6 +127,7 @@ RButton::
     global g_CurrentMode := "normal"
     ToolTip("已恢复原始热键模式")
     SetTimer(() => ToolTip(), 2000)
+    RButtonDo()
     return
 }
 
@@ -161,6 +162,7 @@ RButton::
     global g_CurrentMode := "normal"
     ToolTip("已恢复原始热键模式")
     SetTimer(() => ToolTip(), 2000)
+    RButtonDo()
     return
 }
 
@@ -322,7 +324,8 @@ CreateDirectionalOperationDisplay() {
                 continue
             }
             stateKey := g_LeftClickState "" g_MiddleClickState "" g_WheelState "" directionCode
-            operationName := g_ActionFunctionMap.Has(stateKey) ? g_ActionFunctionMap[stateKey] : "未定义"
+            operationInfo := g_ActionFunctionMap.Has(stateKey) ? g_ActionFunctionMap[stateKey] : ["未定义操作", ""]
+            operationName := operationInfo[1]
             arrowSymbol := GetDirectionArrowSymbol(directionCode)
             directionName := GetDirectionDisplayName(directionCode)
             displayText := arrowSymbol " " directionName ":" operationName
@@ -364,7 +367,9 @@ CreateCurrentDirectionIndicator() {
     directionCode := CalculateDirectionFromCenter()
     arrowSymbol := GetDirectionArrowSymbol(directionCode)
     directionName := GetDirectionDisplayName(directionCode)
-    operationName := GetFunctionForCurrentState()
+    stateKey := GetCurrentStateCombination()
+    operationInfo := g_ActionFunctionMap.Has(stateKey) ? g_ActionFunctionMap[stateKey] : ["未定义操作", ""]
+    operationName := operationInfo[1]
     return "方向: " arrowSymbol " " directionName "`n操作: " operationName
 }
 
@@ -410,13 +415,13 @@ CaptureWindowUnderCursor() {
 ExecuteCurrentOperation() {
     global g_ActionFunctionMap
     stateKey := GetCurrentStateCombination()
-
     if (g_ActionFunctionMap.Has(stateKey)) {
-        functionName := g_ActionFunctionMap[stateKey]
+        operationInfo := g_ActionFunctionMap[stateKey]
+        functionRef := operationInfo[2]
         try {
-            %functionName%()
+            functionRef()
         } catch as e {
-            ShowTemporaryTooltip("执行操作时出错: " e.Message " [" functionName "]")
+            ShowTemporaryTooltip("执行操作时出错: " e.Message " [" operationInfo[1] "]")
         }
     } else {
         ShowTemporaryTooltip("未定义的操作: " stateKey)

@@ -42,20 +42,20 @@ global g_ActionFunctionMap := Map()
 
 InitializeActionMappings() {
     global g_ActionFunctionMap
-    g_ActionFunctionMap["000R"] := "MoveCursorRight"
-    g_ActionFunctionMap["000RD"] := "MinimizeTargetWindow"
-    g_ActionFunctionMap["000RU"] := "ToggleMaximizeWindow"
-    g_ActionFunctionMap["000D"] := "MoveCursorDown"
-    g_ActionFunctionMap["000L"] := "MoveCursorLeft"
-    g_ActionFunctionMap["000U"] := "MoveCursorUp"
-    g_ActionFunctionMap["000LU"] := "ExampleFunction1"
-    g_ActionFunctionMap["000LD"] := "ExampleFunction2"
-    g_ActionFunctionMap["100R"] := "IncreaseSystemVolume"
-    g_ActionFunctionMap["100L"] := "DecreaseSystemVolume"
-    g_ActionFunctionMap["010U"] := "SwitchToNextTab"
-    g_ActionFunctionMap["010D"] := "SwitchToPreviousTab"
-    g_ActionFunctionMap["001R"] := "PlayNextMedia"
-    g_ActionFunctionMap["001L"] := "PlayPreviousMedia"
+    g_ActionFunctionMap["000R"] := ["向右移动光标", MoveCursorRight]
+    g_ActionFunctionMap["000RD"] := ["最小化窗口", MinimizeTargetWindow]
+    g_ActionFunctionMap["000RU"] := ["切换最大化窗口", ToggleMaximizeWindow]
+    g_ActionFunctionMap["000D"] := ["向下移动光标", MoveCursorDown]
+    g_ActionFunctionMap["000L"] := ["向左移动光标", MoveCursorLeft]
+    g_ActionFunctionMap["000U"] := ["向上移动光标", MoveCursorUp]
+    g_ActionFunctionMap["000LU"] := ["切换到媒体控制模式", ExampleFunction1]
+    g_ActionFunctionMap["000LD"] := ["切换到示例模式2", ExampleFunction2]
+    g_ActionFunctionMap["100R"] := ["增加系统音量", IncreaseSystemVolume]
+    g_ActionFunctionMap["100L"] := ["减少系统音量", DecreaseSystemVolume]
+    g_ActionFunctionMap["010U"] := ["下一个标签页", SwitchToNextTab]
+    g_ActionFunctionMap["010D"] := ["上一个标签页", SwitchToPreviousTab]
+    g_ActionFunctionMap["001R"] := ["下一首媒体", PlayNextMedia]
+    g_ActionFunctionMap["001L"] := ["上一首媒体", PlayPreviousMedia]
 }
 
 RButtonDo() {

@@ -133,7 +133,8 @@ CreateDirectionalOperationDisplay() {
                 continue
             }
             stateKey := g_LeftClickState "" g_MiddleClickState "" g_WheelState "" directionCode
-            operationName := g_ActionFunctionMap.Has(stateKey) ? g_ActionFunctionMap[stateKey] : "未定义"
+            operationInfo := g_ActionFunctionMap.Has(stateKey) ? g_ActionFunctionMap[stateKey] : ["未定义操作", ""]
+            operationName := operationInfo[1]
             arrowSymbol := GetDirectionArrowSymbol(directionCode)
             directionName := GetDirectionDisplayName(directionCode)
             displayText := arrowSymbol " " directionName ":" operationName
@@ -175,7 +176,9 @@ CreateCurrentDirectionIndicator() {
     directionCode := CalculateDirectionFromCenter()
     arrowSymbol := GetDirectionArrowSymbol(directionCode)
     directionName := GetDirectionDisplayName(directionCode)
-    operationName := GetFunctionForCurrentState()
+    stateKey := GetCurrentStateCombination()
+    operationInfo := g_ActionFunctionMap.Has(stateKey) ? g_ActionFunctionMap[stateKey] : ["未定义操作", ""]
+    operationName := operationInfo[1]
     return "方向: " arrowSymbol " " directionName "`n操作: " operationName
 }
 
@@ -221,13 +224,13 @@ CaptureWindowUnderCursor() {
 ExecuteCurrentOperation() {
     global g_ActionFunctionMap
     stateKey := GetCurrentStateCombination()
-
     if (g_ActionFunctionMap.Has(stateKey)) {
-        functionName := g_ActionFunctionMap[stateKey]
+        operationInfo := g_ActionFunctionMap[stateKey]
+        functionRef := operationInfo[2]
         try {
-            %functionName%()
+            functionRef()
         } catch as e {
-            ShowTemporaryTooltip("执行操作时出错: " e.Message " [" functionName "]")
+            ShowTemporaryTooltip("执行操作时出错: " e.Message " [" operationInfo[1] "]")
         }
     } else {
         ShowTemporaryTooltip("未定义的操作: " stateKey)
