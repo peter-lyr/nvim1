@@ -163,6 +163,10 @@ MButton Up:: {
 }
 
 WheelDown:: {
+    if (IsCursorInsideRadialMenu() && GetKeyState("RButton", "P")) {
+        CycleWheelButtonState()
+        return
+    }
     MouseGetPos , , &windowUnderCursor
     if windowUnderCursor {
         currentTransparency := WinGetTransparent(windowUnderCursor)
@@ -177,6 +181,10 @@ WheelDown:: {
 }
 
 WheelUp:: {
+    if (IsCursorInsideRadialMenu() && GetKeyState("RButton", "P")) {
+        CycleWheelButtonState()
+        return
+    }
     MouseGetPos , , &windowUnderCursor
     if windowUnderCursor {
         currentTransparency := WinGetTransparent(windowUnderCursor)
