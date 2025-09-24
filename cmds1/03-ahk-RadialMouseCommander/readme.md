@@ -8,3 +8,12 @@
   其他模式的文件里去配置它们自己的mapping，比如window_control_mode.ahk，
   其他函数按照功能放到不同的文件，它们只存放一些函数，用于在各种模式的文件里去调用
   不要修改函数或变量，直接把代码剪切到相应的文件中去
+更快捷的热键
+  左键单击 → 按住右键 → 松开左键：g_LeftButtonState = 1
+  左键双击 → 按住右键 → 松开左键：g_LeftButtonState = 2
+  左键三次点击 → 按住右键 → 松开左键：g_LeftButtonState = 3
+  中键单击 → 按住右键 → 松开中键：g_MiddleButtonState = 1
+  中键双击 → 按住右键 → 松开中键：g_MiddleButtonState = 2
+  中键三次点击 → 按住右键 → 松开中键：g_MiddleButtonState = 3
+  松开中键或左键后，右键没松，此时画圆，
+  此时左键单击，中键单击，滚动滚轮都能继续改变g_LeftButtonState，g_MiddleButtonState，g_WheelButtonState这三个值
