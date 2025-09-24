@@ -750,4 +750,9 @@ function F.run_and_notify(...)
 	F.async_run(cmd)
 end
 
+function F.run_and_notify_on_err(on_stderr, ...)
+	local cmd = string.format(...)
+	F.async_run(cmd, { on_stderr = on_stderr })
+end
+
 return F
