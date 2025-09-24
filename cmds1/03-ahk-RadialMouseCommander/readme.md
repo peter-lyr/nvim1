@@ -8,12 +8,10 @@
   其他模式的文件里去配置它们自己的mapping，比如window_control_mode.ahk，
   其他函数按照功能放到不同的文件，它们只存放一些函数，用于在各种模式的文件里去调用
   不要修改函数或变量，直接把代码剪切到相应的文件中去
-更快捷的热键
-  左键单击 → 按住右键 → 松开左键：g_LeftButtonState = 1
-  左键双击 → 按住右键 → 松开左键：g_LeftButtonState = 2
-  左键三次点击 → 按住右键 → 松开左键：g_LeftButtonState = 3
-  中键单击 → 按住右键 → 松开中键：g_MiddleButtonState = 1
-  中键双击 → 按住右键 → 松开中键：g_MiddleButtonState = 2
-  中键三次点击 → 按住右键 → 松开中键：g_MiddleButtonState = 3
-  松开中键或左键后，右键没松，此时画圆，
-  此时左键单击，中键单击，滚动滚轮都能继续改变g_LeftButtonState，g_MiddleButtonState，g_WheelButtonState这三个值
+实现更快的热键：
+  g_MaxLeftButtonStates设置为6
+  先单击左键不松开，再按右键，再松开左键，此时右键保持按下，此时g_LeftButtonState值为1
+  先双击左键不松开，再按右键，再松开左键，此时右键保持按下，此时g_LeftButtonState值为2
+  先三击左键不松开，再按右键，再松开左键，此时右键保持按下，此时g_LeftButtonState值为3
+  以此类推，直到6击为止，g_LeftButtonState为6
+  这时进入normal模式，画圆，继续在圆内点击左键，中键和滚轮，继续改变g_LeftButtonState这三个变量的值
