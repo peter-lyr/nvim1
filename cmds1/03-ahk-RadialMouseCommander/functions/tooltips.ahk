@@ -19,3 +19,14 @@ UpdateRadialMenuTooltip() {
         g_PreviousTooltip := newContent
     }
 }
+
+InitRadialMenuTooltip() {
+    global g_PreviousTooltip := ""
+    SetTimer(UpdateRadialMenuTooltip, 10)
+}
+
+ExitRadialMenuTooltip() {
+    ToolTip()
+    SetTimer(UpdateRadialMenuTooltip, 0)
+    global g_PreviousTooltip := ""
+}

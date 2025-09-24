@@ -16,16 +16,13 @@ InitializeNormalModeActions() {
 
 ; 全局热键（不在任何模式条件下）
 RButton:: {
-    global g_PreviousTooltip := ""
     CaptureWindowUnderCursor()
     DisplayRadialMenuAtCursor()
-    SetTimer(UpdateRadialMenuTooltip, 10)
+    InitRadialMenuTooltip()
 }
 
 RButton Up:: {
-    SetTimer(UpdateRadialMenuTooltip, 0)
-    ToolTip()
-    global g_PreviousTooltip := ""
+    ExitRadialMenuTooltip()
     HideRadialMenu()
     if (IsCursorInsideRadialMenu()) {
         Click "Right"
