@@ -1,3 +1,10 @@
 从cmds1\02-ahk\02-rbutton-circle.ahk
   拷贝到cmds1\03-ahk-mouse\RadialMouseCommander.ahk
   并问deepseek把它拆分成多个文件
+把以上代码分割成多个文件，按照一下思路：
+  刚启动时处于normal模式，按下按下右键可以选择8个方位执行操作或切换模式，
+  不同模式单独用一个文件，类似操作放到一个文件里去，
+  main.ahk里单独配置normal模式下，8个方位执行操作和切换模式的mapping，
+  其他模式的文件里去配置它们自己的mapping，比如window_control_mode.ahk，
+  其他函数按照功能放到不同的文件，它们只存放一些函数，用于在各种模式的文件里去调用
+  不要修改函数或变量，直接把代码剪切到相应的文件中去

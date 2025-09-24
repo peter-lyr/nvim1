@@ -1,80 +1,22 @@
-; 窗口管理功能
+; 窗口控制模式配置
+
+; 初始化窗口控制模式动作映射
+InitializeWindowControlModeActions() {
+    global g_ModeActionMappings
+    windowControlActions := Map()
+    windowControlActions["000L"] := ["恢复普通模式", EnterNormalMode]
+    windowControlActions["000RU"] := ["切换最大化窗口", ToggleTargetWindowMaximize]
+    windowControlActions["000RD"] := ["最小化窗口", MinimizeTargetWindow]
+    windowControlActions["000U"] := ["激活窗口", ActivateTargetWindow]
+    windowControlActions["000D"] := ["按退出键", Send.Bind("{Esc}")]
+    windowControlActions["000LU"] := ["单击目标", ClickAtTargetPosition]
+    windowControlActions["000LD"] := ["单击目标", ClickAtTargetPosition]
+    windowControlActions["000R"] := ["单击目标", ClickAtTargetPosition]
+    g_ModeActionMappings["window_control"] := windowControlActions
+}
 
 #HotIf g_CurrentMode = "window_control"
 
-ProcessWindowMovement() {
-    global g_WindowMoveInfo
-    if !GetKeyState("LButton", "P") {
-        SetTimer ProcessWindowMovement, 0
-        return
-    }
-
-    MouseGetPos &currentMouseX, &currentMouseY
-    deltaX := currentMouseX - g_WindowMoveInfo.startMouseX
-    deltaY := currentMouseY - g_WindowMoveInfo.startMouseY
-    newX := g_WindowMoveInfo.startWinX + deltaX
-    newY := g_WindowMoveInfo.startWinY + deltaY
-    WinMove newX, newY, , , g_WindowMoveInfo.win
-}
-
-ProcessWindowResizing() {
-    global g_WindowResizeInfo
-    if !GetKeyState("MButton", "P") {
-        SetTimer ProcessWindowResizing, 0
-        return
-    }
-
-    MouseGetPos &currentMouseX, &currentMouseY
-    deltaX := currentMouseX - g_WindowResizeInfo.startMouseX
-    deltaY := currentMouseY - g_WindowResizeInfo.startMouseY
-
-    newX := g_WindowResizeInfo.startWinX
-    newY := g_WindowResizeInfo.startWinY
-    newWidth := g_WindowResizeInfo.startWinW
-    newHeight := g_WindowResizeInfo.startWinH
-
-    switch g_WindowResizeInfo.resizeEdge {
-        case "top-left":
-            newX := g_WindowResizeInfo.startWinX + deltaX
-            newY := g_WindowResizeInfo.startWinY + deltaY
-            newWidth := g_WindowResizeInfo.startWinW - deltaX
-            newHeight := g_WindowResizeInfo.startWinH - deltaY
-        case "top":
-            newY := g_WindowResizeInfo.startWinY + deltaY
-            newHeight := g_WindowResizeInfo.startWinH - deltaY
-        case "top-right":
-            newY := g_WindowResizeInfo.startWinY + deltaY
-            newWidth := g_WindowResizeInfo.startWinW + deltaX
-            newHeight := g_WindowResizeInfo.startWinH - deltaY
-        case "left":
-            newX := g_WindowResizeInfo.startWinX + deltaX
-            newWidth := g_WindowResizeInfo.startWinW - deltaX
-        case "right":
-            newWidth := g_WindowResizeInfo.startWinW + deltaX
-        case "bottom-left":
-            newX := g_WindowResizeInfo.startWinX + deltaX
-            newWidth := g_WindowResizeInfo.startWinW - deltaX
-            newHeight := g_WindowResizeInfo.startWinH + deltaY
-        case "bottom":
-            newHeight := g_WindowResizeInfo.startWinH + deltaY
-        case "bottom-right", "center":
-            newWidth := g_WindowResizeInfo.startWinW + deltaX
-            newHeight := g_WindowResizeInfo.startWinH + deltaY
-    }
-
-    if (newWidth < 100)
-        newWidth := 100
-    if (newHeight < 100)
-        newHeight := 100
-    if (newX + newWidth < 10)
-        newX := 10 - newWidth
-    if (newY + newHeight < 10)
-        newY := 10 - newHeight
-
-    WinMove newX, newY, newWidth, newHeight, g_WindowResizeInfo.win
-}
-
-; 窗口控制模式下的热键定义
 LButton:: {
     global g_WindowMoveInfo
     MouseGetPos , , &windowUnderCursor
@@ -102,7 +44,6 @@ MButton:: {
         WinGetPos &startWinX, &startWinY, &startWinW, &startWinH, windowUnderCursor
         cursorXRelative := startMouseX - startWinX
         cursorYRelative := startMouseY - startWinY
-
         if (cursorXRelative < startWinW / 3) {
             if (cursorYRelative < startWinH / 3) {
                 g_WindowResizeInfo.resizeEdge := "top-left"
@@ -128,7 +69,6 @@ MButton:: {
                 g_WindowResizeInfo.resizeEdge := "center"
             }
         }
-
         g_WindowResizeInfo.startMouseX := startMouseX
         g_WindowResizeInfo.startMouseY := startMouseY
         g_WindowResizeInfo.startWinX := startWinX
