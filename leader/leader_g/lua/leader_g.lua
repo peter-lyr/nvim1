@@ -10,7 +10,7 @@ end
 function G.add_commit_push_do(py, file)
 	require("f").run_and_notify_on_err(function(errors)
 		local message = table.concat(errors, "\n")
-		if require("f").in_str(".git/index.lock': File exists.", message) then
+		if 1 then -- require("f").in_str(".git/index.lock': File exists.", message) then
 			_G.add_commit_push_retry_cnt = _G.add_commit_push_retry_cnt - 1
 			print("_G.add_commit_push_retry_cnt: ", _G.add_commit_push_retry_cnt)
 			if _G.add_commit_push_retry_cnt < 0 then
@@ -27,7 +27,7 @@ function G.add_commit_push_file(file)
 	local git_status_py = get_py("02-git-status.py")
 	local git_add_commit_push_py = get_py("01-git-add-commit-push.py")
 	require("f").run_and_notify("python %s", git_status_py)
-	_G.add_commit_push_retry_cnt = 50
+	_G.add_commit_push_retry_cnt = 3
 	G.add_commit_push_do(git_add_commit_push_py, file)
 end
 
