@@ -2,8 +2,8 @@
 
 #Requires AutoHotkey v2.0
 
-; 初始化窗口控制模式动作映射
-InitializeWindowControlModeActions() {
+EnterWindowControlMode() {
+    global g_CurrentMode := "window_control"
     global g_ModeActionMappings
     windowControlActions := Map()
     windowControlActions["000L"] := ["恢复普通模式", EnterNormalMode]
@@ -15,6 +15,7 @@ InitializeWindowControlModeActions() {
     windowControlActions["000LD"] := ["单击目标", ClickAtTargetPosition]
     windowControlActions["000R"] := ["单击目标", ClickAtTargetPosition]
     g_ModeActionMappings["window_control"] := windowControlActions
+    ShowTimedTooltip("已切换到窗口控制模式`n左键:移动窗口 中键:调整大小 滚轮:透明度")
 }
 
 #HotIf g_CurrentMode = "window_control"

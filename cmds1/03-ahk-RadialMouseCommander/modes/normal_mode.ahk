@@ -2,6 +2,8 @@
 
 #Requires AutoHotkey v2.0
 
+global g_CurrentMode := "normal"
+
 ; 初始化普通模式动作映射
 InitializeNormalModeActions() {
     global g_ModeActionMappings
@@ -15,6 +17,11 @@ InitializeNormalModeActions() {
     normalModeActions["000LU"] := ["窗口控制模式", EnterWindowControlMode]
     normalModeActions["100LU"] := ["窗口控制模式2", EnterWindowControlMode2]
     g_ModeActionMappings["normal"] := normalModeActions
+}
+
+EnterNormalMode() {
+    global g_CurrentMode := "normal"
+    ShowTimedTooltip("已恢复原始热键模式")
 }
 
 ; 全局热键（不在任何模式条件下）

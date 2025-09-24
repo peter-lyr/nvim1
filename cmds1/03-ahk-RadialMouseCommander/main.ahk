@@ -8,10 +8,9 @@ DetectHiddenWindows True
 #Include functions/radial_menu.ahk
 #Include functions/tooltips.ahk
 #Include functions/window_operations.ahk
-#Include functions/mode_management.ahk
 
 ; 初始化
-InitializeModeActionMappings()
+InitializeNormalModeActions()
 DisplayRadialMenuAtCursor()
 HideRadialMenu()
 

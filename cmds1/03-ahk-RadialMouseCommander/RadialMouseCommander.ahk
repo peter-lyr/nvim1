@@ -43,7 +43,7 @@ global g_DirectionNames := Map(
 
 global g_ModeActionMappings := Map()
 
-InitializeModeActionMappings() {
+InitializeNormalModeActions() {
     global g_ModeActionMappings
     normalModeActions := Map()
     normalModeActions["000U"] := ["向上移动光标", Send.Bind("{Up}")]
@@ -271,6 +271,7 @@ WheelUp:: {
 
 EnterWindowControlMode2() {
     global g_CurrentMode := "window_control2"
+    global g_ModeActionMappings
     windowControl2Actions := Map()
     windowControl2Actions["000L"] := ["恢复普通模式", EnterNormalMode]
     windowControl2Actions["000RU"] := ["切换最大化窗口", ToggleTargetWindowMaximize]
@@ -844,7 +845,7 @@ RButton Up:: {
     ResetButtonStates()
 }
 
-InitializeModeActionMappings()
+InitializeNormalModeActions()
 DisplayRadialMenuAtCursor()
 HideRadialMenu()
 
