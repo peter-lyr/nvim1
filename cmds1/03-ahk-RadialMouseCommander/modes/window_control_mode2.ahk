@@ -11,6 +11,7 @@ EnterWindowControlMode2() {
     windowControl2Actions["000LU"] := ["单击目标", ClickAtTargetPosition]
     windowControl2Actions["000LD"] := ["单击目标", ClickAtTargetPosition]
     windowControl2Actions["000R"] := ["单击目标", ClickAtTargetPosition]
+    windowControl2Actions["100LU"] := ["切换窗口置顶", ToggleTargetWindowTopmost]
     g_ModeActionMappings["window_control2"] := windowControl2Actions
     ShowTimedTooltip("已切换到窗口控制模式2`n左键:移动窗口(限制在屏幕内) 中键:调整大小 滚轮:透明度")
 }

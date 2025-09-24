@@ -14,6 +14,7 @@ EnterWindowControlMode() {
     windowControlActions["000LU"] := ["单击目标", ClickAtTargetPosition]
     windowControlActions["000LD"] := ["单击目标", ClickAtTargetPosition]
     windowControlActions["000R"] := ["单击目标", ClickAtTargetPosition]
+    windowControlActions["100LU"] := ["切换窗口置顶", ToggleTargetWindowTopmost]
     g_ModeActionMappings["window_control"] := windowControlActions
     ShowTimedTooltip("已切换到窗口控制模式`n左键:移动窗口 中键:调整大小 滚轮:透明度")
 }

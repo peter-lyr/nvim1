@@ -11,6 +11,23 @@ ActivateTargetWindow() {
     WinActivate(g_TargetWindowHwnd)
 }
 
+ToggleTargetWindowTopmost() {
+    global g_TargetWindowHwnd
+    if (g_TargetWindowHwnd) {
+        currentStyle := WinGetExStyle(g_TargetWindowHwnd)
+        isTopmost := (currentStyle & 0x8)
+        if (isTopmost) {
+            WinSetAlwaysOnTop false, g_TargetWindowHwnd
+            ShowTimedTooltip("取消窗口置顶")
+        } else {
+            WinSetAlwaysOnTop true, g_TargetWindowHwnd
+            ShowTimedTooltip("窗口已置顶")
+        }
+    } else {
+        ShowTimedTooltip("没有找到目标窗口")
+    }
+}
+
 MinimizeTargetWindow() {
     global g_TargetWindowHwnd
     WinMinimize(g_TargetWindowHwnd)
