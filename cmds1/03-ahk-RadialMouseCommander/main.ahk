@@ -11,13 +11,13 @@ DetectHiddenWindows True
 
 ; 全局变量声明
 global g_RadialMenuGui := ""
-global g_RadialMenuHwnd := 0
+global g_RadialMenuGuiHwnd := 0
 global g_RadialMenuRadius := 50
 global g_RadialMenuCenterX := 0
 global g_RadialMenuCenterY := 0
 global g_TargetWindowHwnd := 0
-global g_TargetClickX := 0
-global g_TargetClickY := 0
+global g_TargetClickPosX := 0
+global g_TargetClickPosX := 0
 
 global g_LeftButtonState := 0, g_MiddleButtonState := 0, g_WheelButtonState := 0
 global g_MaxLeftButtonStates := 1, g_MaxMiddleButtonStates := 1, g_MaxWheelButtonStates := 1
@@ -25,12 +25,12 @@ global g_MaxLeftButtonStates := 1, g_MaxMiddleButtonStates := 1, g_MaxWheelButto
 global g_WindowResizeInfo := {win: 0, startMouseX: 0, startMouseY: 0, startWinX: 0, startWinY: 0, startWinW: 0, startWinH: 0, resizeEdge: ""}
 global g_WindowMoveInfo := {win: 0, startMouseX: 0, startMouseY: 0, startWinX: 0, startWinY: 0}
 
-global g_CurrentOperationMode := "normal"
-global g_LastTooltipContent := ""
+global g_CurrentMode := "normal"
+global g_PreviousTooltip := ""
 
 ; 主热键定义
 RButton:: {
-    global g_LastTooltipContent := ""
+    global g_PreviousTooltip := ""
     CaptureWindowUnderCursor()
     DisplayRadialMenuAtCursor()
     SetTimer(UpdateRadialMenuTooltip, 10)
@@ -39,7 +39,7 @@ RButton:: {
 RButton Up:: {
     SetTimer(UpdateRadialMenuTooltip, 0)
     ToolTip()
-    global g_LastTooltipContent := ""
+    global g_PreviousTooltip := ""
     HideRadialMenu()
     if (IsCursorInsideRadialMenu()) {
         Click "Right"
@@ -48,7 +48,7 @@ RButton Up:: {
     }
 }
 
-#HotIf g_CurrentOperationMode = "normal"
+#HotIf g_CurrentMode = "normal"
 ~LButton:: {
     if (IsCursorInsideRadialMenu() && GetKeyState("RButton", "P")) {
         CycleLeftButtonState()

@@ -1,6 +1,6 @@
 ; 工具提示显示功能
 
-ShowTemporaryMessage(message) {
+ShowTimedTooltip(message) {
     ToolTip(message)
     SetTimer(() => ToolTip(), -2000)
 }
@@ -35,7 +35,7 @@ GenerateRadialMenuDisplay() {
         displayGrid.Push(newRow)
     }
 
-    displayText := "模式: " g_CurrentOperationMode " 状态: 左键=" g_LeftButtonState ", 中键=" g_MiddleButtonState ", 滚轮=" g_WheelButtonState "`n`n"
+    displayText := "模式: " g_CurrentMode " 状态: 左键=" g_LeftButtonState ", 中键=" g_MiddleButtonState ", 滚轮=" g_WheelButtonState "`n`n"
     for row in displayGrid {
         line := ""
         for column in row {
@@ -73,18 +73,18 @@ GenerateCurrentDirectionInfo() {
     actionMap := GetCurrentModeActionMap()
     actionInfo := actionMap.Has(stateKey) ? actionMap[stateKey] : ["未定义操作", ""]
     actionDescription := actionInfo[1]
-    return "模式: " g_CurrentOperationMode " 方向: " directionSymbol " " directionName "`n操作: " actionDescription
+    return "模式: " g_CurrentMode " 方向: " directionSymbol " " directionName "`n操作: " actionDescription
 }
 
 UpdateRadialMenuTooltip() {
-    global g_LastTooltipContent
+    global g_PreviousTooltip
     if (IsCursorInsideRadialMenu()) {
         newContent := GenerateRadialMenuDisplay()
     } else {
         newContent := GenerateCurrentDirectionInfo()
     }
-    if (newContent != g_LastTooltipContent) {
+    if (newContent != g_PreviousTooltip) {
         ToolTip(newContent)
-        g_LastTooltipContent := newContent
+        g_PreviousTooltip := newContent
     }
 }

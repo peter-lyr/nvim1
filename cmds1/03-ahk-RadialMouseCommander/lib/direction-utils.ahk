@@ -1,6 +1,6 @@
 ; 方向计算工具
 
-global g_DirectionToArrowSymbol := Map(
+global g_DirectionSymbols := Map(
     "R", "→",
     "RD", "↘",
     "D", "↓",
@@ -11,7 +11,7 @@ global g_DirectionToArrowSymbol := Map(
     "RU", "↗"
 )
 
-global g_DirectionToChineseName := Map(
+global g_DirectionNames := Map(
     "R", "右",
     "RD", "右下",
     "D", "下",
@@ -52,13 +52,13 @@ CalculateCursorDirection() {
 }
 
 GetDirectionChineseName(directionCode) {
-    global g_DirectionToChineseName
-    return g_DirectionToChineseName.Has(directionCode) ? g_DirectionToChineseName[directionCode] : directionCode
+    global g_DirectionNames
+    return g_DirectionNames.Has(directionCode) ? g_DirectionNames[directionCode] : directionCode
 }
 
 GetDirectionSymbol(directionCode) {
-    global g_DirectionToArrowSymbol
-    return g_DirectionToArrowSymbol.Has(directionCode) ? g_DirectionToArrowSymbol[directionCode] : "•"
+    global g_DirectionSymbols
+    return g_DirectionSymbols.Has(directionCode) ? g_DirectionSymbols[directionCode] : "•"
 }
 
 GetCurrentButtonStateAndDirection() {

@@ -3,13 +3,13 @@ DetectHiddenWindows True
 
 ; 界面相关变量
 global g_RadialMenuGui := ""
-global g_RadialMenuHwnd := 0
+global g_RadialMenuGuiHwnd := 0
 global g_RadialMenuRadius := 50
 global g_RadialMenuCenterX := 0
 global g_RadialMenuCenterY := 0
 global g_TargetWindowHwnd := 0
-global g_TargetClickX := 0
-global g_TargetClickY := 0
+global g_TargetClickPosX := 0
+global g_TargetClickPosX := 0
 
 ; 鼠标状态变量
 global g_LeftButtonState := 0, g_MiddleButtonState := 0, g_WheelButtonState := 0
@@ -20,11 +20,11 @@ global g_WindowResizeInfo := {win: 0, startMouseX: 0, startMouseY: 0, startWinX:
 global g_WindowMoveInfo := {win: 0, startMouseX: 0, startMouseY: 0, startWinX: 0, startWinY: 0}
 
 ; 模式管理
-global g_CurrentOperationMode := "normal"
-global g_LastTooltipContent := ""
+global g_CurrentMode := "normal"
+global g_PreviousTooltip := ""
 
 ; 方向映射表
-global g_DirectionToArrowSymbol := Map(
+global g_DirectionSymbols := Map(
     "R", "→",
     "RD", "↘",
     "D", "↓",
@@ -35,7 +35,7 @@ global g_DirectionToArrowSymbol := Map(
     "RU", "↗"
 )
 
-global g_DirectionToChineseName := Map(
+global g_DirectionNames := Map(
     "R", "右",
     "RD", "右下",
     "D", "下",
@@ -58,7 +58,7 @@ InitializeModeActionMappings() {
     normalModeActions["000R"] := ["向右移动光标", Send.Bind("{Right}")]
     normalModeActions["000RU"] := ["切换最大化窗口", ToggleTargetWindowMaximize]
     normalModeActions["000RD"] := ["最小化窗口", MinimizeTargetWindow]
-    normalModeActions["000LU"] := ["窗口控制模式", ActivateWindowControlMode]
+    normalModeActions["000LU"] := ["窗口控制模式", EnterWindowControlMode]
     g_ModeActionMappings["normal"] := normalModeActions
 }
 
@@ -81,10 +81,10 @@ ToggleTargetWindowMaximize() {
     }
 }
 
-ActivateWindowControlMode() {
-    global g_CurrentOperationMode := "window_control"
+EnterWindowControlMode() {
+    global g_CurrentMode := "window_control"
     windowControlActions := Map()
-    windowControlActions["000L"] := ["恢复普通模式", SwitchToNormalMode]
+    windowControlActions["000L"] := ["恢复普通模式", EnterNormalMode]
     windowControlActions["000RU"] := ["切换最大化窗口", ToggleTargetWindowMaximize]
     windowControlActions["000RD"] := ["最小化窗口", MinimizeTargetWindow]
     windowControlActions["000U"] := ["激活窗口", ActivateTargetWindow]
@@ -93,23 +93,23 @@ ActivateWindowControlMode() {
     windowControlActions["000LD"] := ["单击目标", ClickAtTargetPosition]
     windowControlActions["000R"] := ["单击目标", ClickAtTargetPosition]
     g_ModeActionMappings["window_control"] := windowControlActions
-    ShowTemporaryMessage("已切换到窗口控制模式`n左键:移动窗口 中键:调整大小 滚轮:透明度 右键:恢复")
+    ShowTimedTooltip("已切换到窗口控制模式`n左键:移动窗口 中键:调整大小 滚轮:透明度 右键:恢复")
 }
 
-SwitchToNormalMode() {
-    global g_CurrentOperationMode := "normal"
-    ShowTemporaryMessage("已恢复原始热键模式")
+EnterNormalMode() {
+    global g_CurrentMode := "normal"
+    ShowTimedTooltip("已恢复原始热键模式")
 }
 
 ClickAtTargetPosition() {
-    global g_TargetClickX, g_TargetClickY
+    global g_TargetClickPosX, g_TargetClickPosX
     CoordMode("Mouse", "Screen")
     MouseGetPos(&originalX, &originalY)
-    Click(g_TargetClickX, g_TargetClickY, "Left")
+    Click(g_TargetClickPosX, g_TargetClickPosX, "Left")
     MouseMove(originalX, originalY, 0)
 }
 
-#HotIf g_CurrentOperationMode = "window_control"
+#HotIf g_CurrentMode = "window_control"
 
 ProcessWindowMovement() {
     global g_WindowMoveInfo
@@ -254,7 +254,7 @@ WheelDown:: {
         if (newTransparency < 30)
             newTransparency := 30
         WinSetTransparent newTransparency, windowUnderCursor
-        ShowTemporaryMessage("透明度: " newTransparency)
+        ShowTimedTooltip("透明度: " newTransparency)
     }
 }
 
@@ -268,7 +268,7 @@ WheelUp:: {
         if (newTransparency > 255)
             newTransparency := 255
         WinSetTransparent newTransparency, windowUnderCursor
-        ShowTemporaryMessage("透明度: " newTransparency)
+        ShowTimedTooltip("透明度: " newTransparency)
     }
 }
 
@@ -295,7 +295,7 @@ CreateRadialMenuGui(centerX, centerY, width, height, transparency, backgroundCol
 }
 
 DisplayRadialMenuAtCursor() {
-    global g_RadialMenuGui, g_RadialMenuHwnd, g_RadialMenuRadius, g_RadialMenuCenterX, g_RadialMenuCenterY
+    global g_RadialMenuGui, g_RadialMenuGuiHwnd, g_RadialMenuRadius, g_RadialMenuCenterX, g_RadialMenuCenterY
     CoordMode("Mouse", "Screen")
     MouseGetPos(&cursorX, &cursorY)
     g_RadialMenuCenterX := cursorX
@@ -305,16 +305,16 @@ DisplayRadialMenuAtCursor() {
         menuX := cursorX - g_RadialMenuRadius
         menuY := cursorY - g_RadialMenuRadius
         g_RadialMenuGui.Show("x" menuX " y" menuY " w" menuDiameter " h" menuDiameter " NoActivate")
-        g_RadialMenuHwnd := g_RadialMenuGui.Hwnd
+        g_RadialMenuGuiHwnd := g_RadialMenuGui.Hwnd
     } else {
         try {
             g_RadialMenuGui := CreateRadialMenuGui(cursorX, cursorY, menuDiameter, menuDiameter, 180, "FF0000")
-            g_RadialMenuHwnd := g_RadialMenuGui.Hwnd
+            g_RadialMenuGuiHwnd := g_RadialMenuGui.Hwnd
         }
         catch as e {
-            ShowTemporaryMessage("创建圆形菜单失败: " . e.Message)
+            ShowTimedTooltip("创建圆形菜单失败: " . e.Message)
             g_RadialMenuGui := ""
-            g_RadialMenuHwnd := 0
+            g_RadialMenuGuiHwnd := 0
         }
     }
 }
@@ -327,8 +327,8 @@ HideRadialMenu() {
 }
 
 IsCursorInsideRadialMenu() {
-    global g_RadialMenuHwnd, g_RadialMenuRadius, g_RadialMenuCenterX, g_RadialMenuCenterY
-    if (!g_RadialMenuHwnd)
+    global g_RadialMenuGuiHwnd, g_RadialMenuRadius, g_RadialMenuCenterX, g_RadialMenuCenterY
+    if (!g_RadialMenuGuiHwnd)
         return false
     CoordMode("Mouse", "Screen")
     MouseGetPos(&cursorX, &cursorY)
@@ -364,13 +364,13 @@ CalculateCursorDirection() {
 }
 
 GetDirectionChineseName(directionCode) {
-    global g_DirectionToChineseName
-    return g_DirectionToChineseName.Has(directionCode) ? g_DirectionToChineseName[directionCode] : directionCode
+    global g_DirectionNames
+    return g_DirectionNames.Has(directionCode) ? g_DirectionNames[directionCode] : directionCode
 }
 
 GetDirectionSymbol(directionCode) {
-    global g_DirectionToArrowSymbol
-    return g_DirectionToArrowSymbol.Has(directionCode) ? g_DirectionToArrowSymbol[directionCode] : "•"
+    global g_DirectionSymbols
+    return g_DirectionSymbols.Has(directionCode) ? g_DirectionSymbols[directionCode] : "•"
 }
 
 GetCurrentButtonStateAndDirection() {
@@ -380,11 +380,11 @@ GetCurrentButtonStateAndDirection() {
 }
 
 GetCurrentModeActionMap() {
-    global g_ModeActionMappings, g_CurrentOperationMode
-    if (!g_ModeActionMappings.Has(g_CurrentOperationMode)) {
+    global g_ModeActionMappings, g_CurrentMode
+    if (!g_ModeActionMappings.Has(g_CurrentMode)) {
         return g_ModeActionMappings["normal"]
     }
-    return g_ModeActionMappings[g_CurrentOperationMode]
+    return g_ModeActionMappings[g_CurrentMode]
 }
 
 GenerateRadialMenuDisplay() {
@@ -415,7 +415,7 @@ GenerateRadialMenuDisplay() {
         }
         displayGrid.Push(newRow)
     }
-    displayText := "模式: " g_CurrentOperationMode " 状态: 左键=" g_LeftButtonState ", 中键=" g_MiddleButtonState ", 滚轮=" g_WheelButtonState "`n`n"
+    displayText := "模式: " g_CurrentMode " 状态: 左键=" g_LeftButtonState ", 中键=" g_MiddleButtonState ", 滚轮=" g_WheelButtonState "`n`n"
     for row in displayGrid {
         line := ""
         for column in row {
@@ -453,19 +453,19 @@ GenerateCurrentDirectionInfo() {
     actionMap := GetCurrentModeActionMap()
     actionInfo := actionMap.Has(stateKey) ? actionMap[stateKey] : ["未定义操作", ""]
     actionDescription := actionInfo[1]
-    return "模式: " g_CurrentOperationMode " 方向: " directionSymbol " " directionName "`n操作: " actionDescription
+    return "模式: " g_CurrentMode " 方向: " directionSymbol " " directionName "`n操作: " actionDescription
 }
 
 UpdateRadialMenuTooltip() {
-    global g_LastTooltipContent
+    global g_PreviousTooltip
     if (IsCursorInsideRadialMenu()) {
         newContent := GenerateRadialMenuDisplay()
     } else {
         newContent := GenerateCurrentDirectionInfo()
     }
-    if (newContent != g_LastTooltipContent) {
+    if (newContent != g_PreviousTooltip) {
         ToolTip(newContent)
-        g_LastTooltipContent := newContent
+        g_PreviousTooltip := newContent
     }
 }
 
@@ -484,15 +484,15 @@ CycleWheelButtonState() {
     g_WheelButtonState := Mod(g_WheelButtonState + 1, g_MaxWheelButtonStates + 1)
 }
 
-ShowTemporaryMessage(message) {
+ShowTimedTooltip(message) {
     ToolTip(message)
     SetTimer(() => ToolTip(), -2000)
 }
 
 CaptureWindowUnderCursor() {
-    global g_TargetClickX, g_TargetClickY, g_TargetWindowHwnd
+    global g_TargetClickPosX, g_TargetClickPosX, g_TargetWindowHwnd
     CoordMode("Mouse", "Screen")
-    MouseGetPos(&g_TargetClickX, &g_TargetClickY, &g_TargetWindowHwnd)
+    MouseGetPos(&g_TargetClickPosX, &g_TargetClickPosX, &g_TargetWindowHwnd)
 }
 
 ExecuteSelectedAction() {
@@ -504,14 +504,14 @@ ExecuteSelectedAction() {
         try {
             actionFunction()
         } catch as e {
-            ShowTemporaryMessage("执行操作时出错: " e.Message " [" actionInfo[1] "]")
+            ShowTimedTooltip("执行操作时出错: " e.Message " [" actionInfo[1] "]")
         }
     } else {
-        ShowTemporaryMessage("未定义的操作: " stateKey)
+        ShowTimedTooltip("未定义的操作: " stateKey)
     }
 }
 
-#HotIf g_CurrentOperationMode = "normal"
+#HotIf g_CurrentMode = "normal"
 
 ~LButton:: {
     if (IsCursorInsideRadialMenu() && GetKeyState("RButton", "P")) {
@@ -537,7 +537,7 @@ ExecuteSelectedAction() {
 #HotIf
 
 RButton:: {
-    global g_LastTooltipContent := ""
+    global g_PreviousTooltip := ""
     CaptureWindowUnderCursor()
     DisplayRadialMenuAtCursor()
     SetTimer(UpdateRadialMenuTooltip, 10)
@@ -546,7 +546,7 @@ RButton:: {
 RButton Up:: {
     SetTimer(UpdateRadialMenuTooltip, 0)
     ToolTip()
-    global g_LastTooltipContent := ""
+    global g_PreviousTooltip := ""
     HideRadialMenu()
     if (IsCursorInsideRadialMenu()) {
         Click "Right"

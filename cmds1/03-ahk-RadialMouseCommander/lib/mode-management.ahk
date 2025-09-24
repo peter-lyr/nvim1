@@ -19,10 +19,10 @@ ToggleTargetWindowMaximize() {
     }
 }
 
-ActivateWindowControlMode() {
-    global g_CurrentOperationMode := "window_control"
+EnterWindowControlMode() {
+    global g_CurrentMode := "window_control"
     windowControlActions := Map()
-    windowControlActions["000L"] := ["恢复普通模式", SwitchToNormalMode]
+    windowControlActions["000L"] := ["恢复普通模式", EnterNormalMode]
     windowControlActions["000RU"] := ["切换最大化窗口", ToggleTargetWindowMaximize]
     windowControlActions["000RD"] := ["最小化窗口", MinimizeTargetWindow]
     windowControlActions["000U"] := ["激活窗口", ActivateTargetWindow]
@@ -31,28 +31,28 @@ ActivateWindowControlMode() {
     windowControlActions["000LD"] := ["单击目标", ClickAtTargetPosition]
     windowControlActions["000R"] := ["单击目标", ClickAtTargetPosition]
     g_ModeActionMappings["window_control"] := windowControlActions
-    ShowTemporaryMessage("已切换到窗口控制模式")
+    ShowTimedTooltip("已切换到窗口控制模式")
 }
 
-SwitchToNormalMode() {
-    global g_CurrentOperationMode := "normal"
-    ShowTemporaryMessage("已恢复原始热键模式")
+EnterNormalMode() {
+    global g_CurrentMode := "normal"
+    ShowTimedTooltip("已恢复原始热键模式")
 }
 
 ClickAtTargetPosition() {
-    global g_TargetClickX, g_TargetClickY
+    global g_TargetClickPosX, g_TargetClickPosX
     CoordMode("Mouse", "Screen")
     MouseGetPos(&originalX, &originalY)
-    Click(g_TargetClickX, g_TargetClickY, "Left")
+    Click(g_TargetClickPosX, g_TargetClickPosX, "Left")
     MouseMove(originalX, originalY, 0)
 }
 
 GetCurrentModeActionMap() {
-    global g_ModeActionMappings, g_CurrentOperationMode
-    if (!g_ModeActionMappings.Has(g_CurrentOperationMode)) {
+    global g_ModeActionMappings, g_CurrentMode
+    if (!g_ModeActionMappings.Has(g_CurrentMode)) {
         return g_ModeActionMappings["normal"]
     }
-    return g_ModeActionMappings[g_CurrentOperationMode]
+    return g_ModeActionMappings[g_CurrentMode]
 }
 
 ExecuteSelectedAction() {
@@ -64,10 +64,10 @@ ExecuteSelectedAction() {
         try {
             actionFunction()
         } catch as e {
-            ShowTemporaryMessage("执行操作时出错: " e.Message " [" actionInfo[1] "]")
+            ShowTimedTooltip("执行操作时出错: " e.Message " [" actionInfo[1] "]")
         }
     } else {
-        ShowTemporaryMessage("未定义的操作: " stateKey)
+        ShowTimedTooltip("未定义的操作: " stateKey)
     }
 }
 

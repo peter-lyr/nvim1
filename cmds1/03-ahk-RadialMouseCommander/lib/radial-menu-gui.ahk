@@ -24,7 +24,7 @@ CreateRadialMenuGui(centerX, centerY, width, height, transparency, backgroundCol
 }
 
 DisplayRadialMenuAtCursor() {
-    global g_RadialMenuGui, g_RadialMenuHwnd, g_RadialMenuRadius, g_RadialMenuCenterX, g_RadialMenuCenterY
+    global g_RadialMenuGui, g_RadialMenuGuiHwnd, g_RadialMenuRadius, g_RadialMenuCenterX, g_RadialMenuCenterY
 
     CoordMode("Mouse", "Screen")
     MouseGetPos(&cursorX, &cursorY)
@@ -36,16 +36,16 @@ DisplayRadialMenuAtCursor() {
         menuX := cursorX - g_RadialMenuRadius
         menuY := cursorY - g_RadialMenuRadius
         g_RadialMenuGui.Show("x" menuX " y" menuY " w" menuDiameter " h" menuDiameter " NoActivate")
-        g_RadialMenuHwnd := g_RadialMenuGui.Hwnd
+        g_RadialMenuGuiHwnd := g_RadialMenuGui.Hwnd
     } else {
         try {
             g_RadialMenuGui := CreateRadialMenuGui(cursorX, cursorY, menuDiameter, menuDiameter, 180, "FF0000")
-            g_RadialMenuHwnd := g_RadialMenuGui.Hwnd
+            g_RadialMenuGuiHwnd := g_RadialMenuGui.Hwnd
         }
         catch as e {
-            ShowTemporaryMessage("创建圆形菜单失败: " . e.Message)
+            ShowTimedTooltip("创建圆形菜单失败: " . e.Message)
             g_RadialMenuGui := ""
-            g_RadialMenuHwnd := 0
+            g_RadialMenuGuiHwnd := 0
         }
     }
 }
@@ -58,8 +58,8 @@ HideRadialMenu() {
 }
 
 IsCursorInsideRadialMenu() {
-    global g_RadialMenuHwnd, g_RadialMenuRadius, g_RadialMenuCenterX, g_RadialMenuCenterY
-    if (!g_RadialMenuHwnd)
+    global g_RadialMenuGuiHwnd, g_RadialMenuRadius, g_RadialMenuCenterX, g_RadialMenuCenterY
+    if (!g_RadialMenuGuiHwnd)
         return false
 
     CoordMode("Mouse", "Screen")
@@ -69,7 +69,7 @@ IsCursorInsideRadialMenu() {
 }
 
 CaptureWindowUnderCursor() {
-    global g_TargetClickX, g_TargetClickY, g_TargetWindowHwnd
+    global g_TargetClickPosX, g_TargetClickPosX, g_TargetWindowHwnd
     CoordMode("Mouse", "Screen")
-    MouseGetPos(&g_TargetClickX, &g_TargetClickY, &g_TargetWindowHwnd)
+    MouseGetPos(&g_TargetClickPosX, &g_TargetClickPosX, &g_TargetWindowHwnd)
 }

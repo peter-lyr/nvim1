@@ -1,6 +1,6 @@
 ; 窗口管理功能
 
-#HotIf g_CurrentOperationMode = "window_control"
+#HotIf g_CurrentMode = "window_control"
 
 ProcessWindowMovement() {
     global g_WindowMoveInfo
@@ -154,7 +154,7 @@ WheelDown:: {
         if (newTransparency < 30)
             newTransparency := 30
         WinSetTransparent newTransparency, windowUnderCursor
-        ShowTemporaryMessage("透明度: " newTransparency)
+        ShowTimedTooltip("透明度: " newTransparency)
     }
 }
 
@@ -168,7 +168,7 @@ WheelUp:: {
         if (newTransparency > 255)
             newTransparency := 255
         WinSetTransparent newTransparency, windowUnderCursor
-        ShowTemporaryMessage("透明度: " newTransparency)
+        ShowTimedTooltip("透明度: " newTransparency)
     }
 }
 
