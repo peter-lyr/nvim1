@@ -1,5 +1,7 @@
 ; 工具提示相关函数
 
+#Requires AutoHotkey v2.0
+
 global g_PreviousTooltip := ""
 
 ShowTimedTooltip(message) {

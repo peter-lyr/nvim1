@@ -1,5 +1,7 @@
 ; 模式管理相关函数
 
+#Requires AutoHotkey v2.0
+
 ; 模式管理
 global g_CurrentMode := "normal"
 

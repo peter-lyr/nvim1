@@ -1,5 +1,7 @@
 ; 圆形菜单相关函数
 
+#Requires AutoHotkey v2.0
+
 ; 全局变量
 global g_RadialMenuGui := ""
 global g_RadialMenuGuiHwnd := 0

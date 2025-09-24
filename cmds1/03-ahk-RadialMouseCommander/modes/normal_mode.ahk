@@ -1,5 +1,7 @@
 ; 普通模式配置
 
+#Requires AutoHotkey v2.0
+
 ; 初始化普通模式动作映射
 InitializeNormalModeActions() {
     global g_ModeActionMappings
@@ -11,6 +13,7 @@ InitializeNormalModeActions() {
     normalModeActions["000RU"] := ["切换最大化窗口", ToggleTargetWindowMaximize]
     normalModeActions["000RD"] := ["最小化窗口", MinimizeTargetWindow]
     normalModeActions["000LU"] := ["窗口控制模式", EnterWindowControlMode]
+    normalModeActions["100LU"] := ["窗口控制模式2", EnterWindowControlMode2]
     g_ModeActionMappings["normal"] := normalModeActions
 }
 
@@ -23,7 +26,6 @@ RButton:: {
 }
 
 RButton Up:: {
-    ResetButtonStates()
     ExitRadialMenuTooltip()
     HideRadialMenu()
     if (IsCursorInsideRadialMenu()) {
@@ -31,6 +33,7 @@ RButton Up:: {
     } else {
         ExecuteSelectedAction()
     }
+    ResetButtonStates()
 }
 
 #HotIf g_CurrentMode = "normal"

@@ -1,5 +1,7 @@
 ; 窗口控制模式配置
 
+#Requires AutoHotkey v2.0
+
 ; 初始化窗口控制模式动作映射
 InitializeWindowControlModeActions() {
     global g_ModeActionMappings

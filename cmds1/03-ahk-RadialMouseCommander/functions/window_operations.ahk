@@ -1,5 +1,7 @@
 ; 窗口操作相关函数
 
+#Requires AutoHotkey v2.0
+
 ; 窗口操作变量
 global g_WindowResizeInfo := {win: 0, startMouseX: 0, startMouseY: 0, startWinX: 0, startWinY: 0, startWinW: 0, startWinH: 0, resizeEdge: ""}
 global g_WindowMoveInfo := {win: 0, startMouseX: 0, startMouseY: 0, startWinX: 0, startWinY: 0}
