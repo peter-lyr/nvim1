@@ -1,5 +1,45 @@
 ; 圆形菜单相关函数
 
+; 全局变量
+global g_RadialMenuGui := ""
+global g_RadialMenuGuiHwnd := 0
+global g_RadialMenuRadius := 50
+global g_RadialMenuCenterX := 0
+global g_RadialMenuCenterY := 0
+global g_TargetWindowHwnd := 0
+global g_TargetClickPosX := 0
+global g_TargetClickPosY := 0
+
+; 鼠标状态变量
+global g_LeftButtonState := 0, g_MiddleButtonState := 0, g_WheelButtonState := 0
+global g_MaxLeftButtonStates := 1, g_MaxMiddleButtonStates := 1, g_MaxWheelButtonStates := 1
+
+; 方向映射表
+global g_DirectionSymbols := Map(
+    "R", "→",
+    "RD", "↘",
+    "D", "↓",
+    "LD", "↙",
+    "L", "←",
+    "LU", "↖",
+    "U", "↑",
+    "RU", "↗"
+)
+
+global g_DirectionNames := Map(
+    "R", "右",
+    "RD", "右下",
+    "D", "下",
+    "LD", "左下",
+    "L", "左",
+    "LU", "左上",
+    "U", "上",
+    "RU", "右上"
+)
+
+; 动作映射表
+global g_ModeActionMappings := Map()
+
 CreateRadialMenuGui(centerX, centerY, width, height, transparency, backgroundColor) {
     if (width <= 0 || height <= 0)
         throw Error("宽度和高度必须为正数（当前宽：" width "，高：" height "）")

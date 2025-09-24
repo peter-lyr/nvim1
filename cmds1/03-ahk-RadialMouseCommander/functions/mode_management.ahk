@@ -1,7 +1,9 @@
 ; 模式管理相关函数
 
+; 模式管理
+global g_CurrentMode := "normal"
+
 InitializeModeActionMappings() {
-    global g_ModeActionMappings
     InitializeNormalModeActions()
     InitializeWindowControlModeActions()
 }

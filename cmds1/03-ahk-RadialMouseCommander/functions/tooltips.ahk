@@ -1,5 +1,7 @@
 ; 工具提示相关函数
 
+global g_PreviousTooltip := ""
+
 ShowTimedTooltip(message) {
     ToolTip(message)
     SetTimer(() => ToolTip(), -2000)
