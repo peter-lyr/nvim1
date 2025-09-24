@@ -23,6 +23,10 @@ EnterWindowControlMode() {
 
 LButton:: {
     global g_WindowMoveInfo
+    if (IsCursorInsideRadialMenu() && GetKeyState("RButton", "P")) {
+        CycleLeftButtonState()
+        return
+    }
     MouseGetPos , , &windowUnderCursor
     if windowUnderCursor {
         MouseGetPos &startMouseX, &startMouseY
@@ -42,6 +46,10 @@ LButton Up:: {
 
 MButton:: {
     global g_WindowResizeInfo
+    if (IsCursorInsideRadialMenu() && GetKeyState("RButton", "P")) {
+        CycleMiddleButtonState()
+        return
+    }
     MouseGetPos , , &windowUnderCursor
     if windowUnderCursor {
         MouseGetPos &startMouseX, &startMouseY

@@ -87,6 +87,7 @@ EnterWindowControlMode() {
     windowControlActions["000LU"] := ["单击目标", ClickAtTargetPosition]
     windowControlActions["000LD"] := ["单击目标", ClickAtTargetPosition]
     windowControlActions["000R"] := ["单击目标", ClickAtTargetPosition]
+    windowControlActions["100LU"] := ["切换窗口置顶", ToggleTargetWindowTopmost]
     g_ModeActionMappings["window_control"] := windowControlActions
     ShowTimedTooltip("已切换到窗口控制模式`n左键:移动窗口 中键:调整大小 滚轮:透明度")
 }
@@ -94,6 +95,23 @@ EnterWindowControlMode() {
 EnterNormalMode() {
     global g_CurrentMode := "normal"
     ShowTimedTooltip("已恢复原始热键模式")
+}
+
+ToggleTargetWindowTopmost() {
+    global g_TargetWindowHwnd
+    if (g_TargetWindowHwnd) {
+        currentStyle := WinGetExStyle(g_TargetWindowHwnd)
+        isTopmost := (currentStyle & 0x8)
+        if (isTopmost) {
+            WinSetAlwaysOnTop false, g_TargetWindowHwnd
+            ShowTimedTooltip("取消窗口置顶")
+        } else {
+            WinSetAlwaysOnTop true, g_TargetWindowHwnd
+            ShowTimedTooltip("窗口已置顶")
+        }
+    } else {
+        ShowTimedTooltip("没有找到目标窗口")
+    }
 }
 
 ClickAtTargetPosition() {
@@ -174,6 +192,10 @@ ProcessWindowResizing() {
 
 LButton:: {
     global g_WindowMoveInfo
+    if (IsCursorInsideRadialMenu() && GetKeyState("RButton", "P")) {
+        CycleLeftButtonState()
+        return
+    }
     MouseGetPos , , &windowUnderCursor
     if windowUnderCursor {
         MouseGetPos &startMouseX, &startMouseY
@@ -281,6 +303,7 @@ EnterWindowControlMode2() {
     windowControl2Actions["000LU"] := ["单击目标", ClickAtTargetPosition]
     windowControl2Actions["000LD"] := ["单击目标", ClickAtTargetPosition]
     windowControl2Actions["000R"] := ["单击目标", ClickAtTargetPosition]
+    windowControl2Actions["100LU"] := ["切换窗口置顶", ToggleTargetWindowTopmost]
     g_ModeActionMappings["window_control2"] := windowControl2Actions
     ShowTimedTooltip("已切换到窗口控制模式2`n左键:移动窗口(限制在屏幕内) 中键:调整大小 滚轮:透明度")
 }
@@ -450,6 +473,10 @@ ProcessWindowMovement2() {
 
 LButton:: {
     global g_WindowMoveInfo
+    if (IsCursorInsideRadialMenu() && GetKeyState("RButton", "P")) {
+        CycleLeftButtonState()
+        return
+    }
     MouseGetPos , , &windowUnderCursor
     if windowUnderCursor {
         MouseGetPos &startMouseX, &startMouseY
