@@ -469,6 +469,17 @@ UpdateRadialMenuTooltip() {
     }
 }
 
+InitRadialMenuTooltip() {
+    global g_PreviousTooltip := ""
+    SetTimer(UpdateRadialMenuTooltip, 10)
+}
+
+ExitRadialMenuTooltip() {
+    ToolTip()
+    SetTimer(UpdateRadialMenuTooltip, 0)
+    global g_PreviousTooltip := ""
+}
+
 CycleLeftButtonState() {
     global g_LeftButtonState, g_MaxLeftButtonStates
     g_LeftButtonState := Mod(g_LeftButtonState + 1, g_MaxLeftButtonStates + 1)
@@ -537,16 +548,13 @@ ExecuteSelectedAction() {
 #HotIf
 
 RButton:: {
-    global g_PreviousTooltip := ""
     CaptureWindowUnderCursor()
     DisplayRadialMenuAtCursor()
-    SetTimer(UpdateRadialMenuTooltip, 10)
+    InitRadialMenuTooltip()
 }
 
 RButton Up:: {
-    SetTimer(UpdateRadialMenuTooltip, 0)
-    ToolTip()
-    global g_PreviousTooltip := ""
+    ExitRadialMenuTooltip()
     HideRadialMenu()
     if (IsCursorInsideRadialMenu()) {
         Click "Right"
