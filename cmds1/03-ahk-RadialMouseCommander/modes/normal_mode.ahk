@@ -16,12 +16,14 @@ InitializeNormalModeActions() {
 
 ; 全局热键（不在任何模式条件下）
 RButton:: {
+    ResetButtonStates()
     CaptureWindowUnderCursor()
     DisplayRadialMenuAtCursor()
     InitRadialMenuTooltip()
 }
 
 RButton Up:: {
+    ResetButtonStates()
     ExitRadialMenuTooltip()
     HideRadialMenu()
     if (IsCursorInsideRadialMenu()) {

@@ -495,6 +495,15 @@ CycleWheelButtonState() {
     g_WheelButtonState := Mod(g_WheelButtonState + 1, g_MaxWheelButtonStates + 1)
 }
 
+ResetButtonStates() {
+    global g_LeftButtonState, g_MaxLeftButtonStates
+    global g_MiddleButtonState, g_MaxMiddleButtonStates
+    global g_WheelButtonState, g_MaxWheelButtonStates
+    g_LeftButtonState := 0
+    g_MiddleButtonState := 0
+    g_WheelButtonState := 0
+}
+
 ShowTimedTooltip(message) {
     ToolTip(message)
     SetTimer(() => ToolTip(), -2000)
@@ -548,12 +557,14 @@ ExecuteSelectedAction() {
 #HotIf
 
 RButton:: {
+    ResetButtonStates()
     CaptureWindowUnderCursor()
     DisplayRadialMenuAtCursor()
     InitRadialMenuTooltip()
 }
 
 RButton Up:: {
+    ResetButtonStates()
     ExitRadialMenuTooltip()
     HideRadialMenu()
     if (IsCursorInsideRadialMenu()) {
