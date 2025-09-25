@@ -117,10 +117,12 @@ end
 
 function G.git_reset_hard()
 	require("f").run_and_notify("git reset --hard")
+	-- todo: windo e!
 end
 
 function G.git_reset_clean_fd()
 	require("f").run_and_notify("git clean -fd")
+	-- todo: windo e!
 end
 
 function G.pull()
