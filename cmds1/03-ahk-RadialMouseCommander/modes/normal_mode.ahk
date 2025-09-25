@@ -17,6 +17,8 @@ InitializeNormalModeActions() {
     normalModeActions["000RD"] := ["最小化窗口", MinimizeTargetWindow]
     normalModeActions["000LU"] := ["窗口控制模式", EnterWindowControlMode]
     normalModeActions["100LU"] := ["窗口控制模式2", EnterWindowControlMode2]
+    normalModeActions["010R"] := ["切换菜单提示", ToggleUpdateRadialMenuTooltipEn]
+    normalModeActions["010RU"] := ["切换2秒提示", ToggleShowTimedTooltipEn]
     g_ModeActionMappings["normal"] := normalModeActions
 }
 

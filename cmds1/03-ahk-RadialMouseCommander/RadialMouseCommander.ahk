@@ -1,3 +1,4 @@
+; 此版本不再对齐main.ahk
 #Requires AutoHotkey v2.0
 DetectHiddenWindows True
 
