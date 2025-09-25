@@ -246,12 +246,9 @@ CaptureWindowUnderCursor() {
 }
 
 ResetButtonStates() {
-    global g_LeftButtonState, g_MaxLeftButtonStates
-    global g_MiddleButtonState, g_MaxMiddleButtonStates
-    global g_WheelButtonState, g_MaxWheelButtonStates
-    g_LeftButtonState := 0
-    g_MiddleButtonState := 0
-    g_WheelButtonState := 0
+    global g_LeftButtonState := 0
+    global g_MiddleButtonState := 0
+    global g_WheelButtonState := 0
 }
 
 ExecuteSelectedAction() {
