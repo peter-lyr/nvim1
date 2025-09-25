@@ -17,6 +17,9 @@
 ; 增加一种功能，有些热键在执行后，继续维持当前菜单，
 ; 比如进入second菜单后可以一直按a来向左，一直按d来向右
 
+; NormalMenu和SecondMenu合并成一个函数
+; 接收菜单名作为参数，以便我增加third菜单，……等等菜单
+
 g_MenuMode := false
 g_CurrentMenu := "normal"
 g_LastAltPress := 0
@@ -24,18 +27,26 @@ g_DoubleClickTime := 300
 g_MenuTimer := 0
 g_Timeout := 8000
 
-; 修改数据结构，增加第三个参数：是否维持菜单
-NormalHotkeyMap := Map(
-    "a", ["打开记事本", Run.Bind("notepad.exe"), false],  ; 执行后退出菜单
-    "b", ["打开计算器", Run.Bind("calc.exe"), false],     ; 执行后退出菜单
-    "c", ["打开画图", Run.Bind("mspaint.exe"), false],    ; 执行后退出菜单
-    "d", ["进入second菜单", SecondMenu, true]             ; 执行后维持菜单
-)
-
-SecondHotkeyMap := Map(
-    "a", ["向左", Send.Bind("{Left}"), true],             ; 执行后维持菜单
-    "d", ["向右", Send.Bind("{Right}"), true],            ; 执行后维持菜单
-    "s", ["进入normal菜单", NormalMenu, true]             ; 执行后维持菜单
+; 定义所有菜单
+MenuDefinitions := Map(
+    "normal", Map(
+        "a", ["打开记事本", Run.Bind("notepad.exe"), false],
+        "b", ["打开计算器", Run.Bind("calc.exe"), false],
+        "c", ["打开画图", Run.Bind("mspaint.exe"), false],
+        "d", ["进入second菜单", SwitchMenu.Bind("second"), true]
+    ),
+    "second", Map(
+        "a", ["向左", Send.Bind("{Left}"), true],
+        "d", ["向右", Send.Bind("{Right}"), true],
+        "s", ["进入normal菜单", SwitchMenu.Bind("normal"), true],
+        "t", ["进入third菜单", SwitchMenu.Bind("third"), true]
+    ),
+    "third", Map(
+        "a", ["向上", Send.Bind("{Up}"), true],
+        "d", ["向下", Send.Bind("{Down}"), true],
+        "s", ["进入second菜单", SwitchMenu.Bind("second"), true],
+        "n", ["进入normal菜单", SwitchMenu.Bind("normal"), true]
+    )
 )
 
 ~LAlt::
@@ -49,18 +60,20 @@ SecondHotkeyMap := Map(
 }
 
 EnterMenuMode(menuType) {
-    global g_MenuMode, g_CurrentMenu, g_MenuTimer, g_Timeout
+    global g_MenuMode, g_CurrentMenu, g_MenuTimer, g_Timeout, MenuDefinitions
+
     if (g_MenuMode) {
         return
     }
+
     g_MenuMode := true
     g_CurrentMenu := menuType
 
     ; 显示对应菜单的提示
-    if (menuType = "normal") {
-        ShowMenuTooltip(NormalHotkeyMap, "Normal菜单")
-    } else if (menuType = "second") {
-        ShowMenuTooltip(SecondHotkeyMap, "Second菜单")
+    if (MenuDefinitions.Has(menuType)) {
+        ShowMenuTooltip(MenuDefinitions[menuType], menuType . "菜单")
+    } else {
+        ShowMenuTooltip(Map(), "未知菜单")
     }
 
     RegisterMenuHotkeys(menuType)
@@ -72,43 +85,48 @@ EnterMenuMode(menuType) {
 
 ExitMenuMode(*) {
     global g_MenuMode, g_MenuTimer
+
     if (!g_MenuMode) {
         return
     }
+
     g_MenuMode := false
+
     if (g_MenuTimer) {
         SetTimer(g_MenuTimer, 0)
         g_MenuTimer := 0
     }
+
     UnregisterAllMenuHotkeys()
     ToolTip()
     Hotkey("Escape", "Off")
 }
 
 RegisterMenuHotkeys(menuType) {
-    if (menuType = "normal") {
-        for key, value in NormalHotkeyMap {
-            Hotkey(key, HandleMenuHotkey.Bind(key, "normal"), "On")
-        }
-    } else if (menuType = "second") {
-        for key, value in SecondHotkeyMap {
-            Hotkey(key, HandleMenuHotkey.Bind(key, "second"), "On")
+    global MenuDefinitions
+
+    if (MenuDefinitions.Has(menuType)) {
+        for key, value in MenuDefinitions[menuType] {
+            Hotkey(key, HandleMenuHotkey.Bind(key, menuType), "On")
         }
     }
 }
 
 UnregisterAllMenuHotkeys() {
-    for key in NormalHotkeyMap {
-        try Hotkey(key, "Off")
-    }
-    for key in SecondHotkeyMap {
-        try Hotkey(key, "Off")
+    global MenuDefinitions
+
+    for menuName, hotkeyMap in MenuDefinitions {
+        for key in hotkeyMap {
+            try Hotkey(key, "Off")
+        }
     }
 }
 
 ShowMenuTooltip(hotkeyMap, menuName) {
     global g_Timeout
+
     tooltipText := menuName . "（" . g_Timeout//1000 . "秒后自动退出，按ESC立即退出）`n"
+
     for key, value in hotkeyMap {
         tooltipText .= "[" key "] " value[1]
         if (value[3]) {  ; 如果维持菜单，显示提示
@@ -116,38 +134,24 @@ ShowMenuTooltip(hotkeyMap, menuName) {
         }
         tooltipText .= "`n"
     }
+
     ToolTip(tooltipText)
 }
 
 HandleMenuHotkey(key, menuType, *) {
-    global g_CurrentMenu, g_MenuTimer, g_Timeout
+    global g_CurrentMenu, g_MenuTimer, g_Timeout, MenuDefinitions
 
     ; 确保处理的是当前菜单的热键
     if (g_CurrentMenu != menuType) {
         return
     }
 
-    if (menuType = "normal" && NormalHotkeyMap.Has(key)) {
-        action := NormalHotkeyMap[key][2]
+    if (MenuDefinitions.Has(menuType) && MenuDefinitions[menuType].Has(key)) {
+        action := MenuDefinitions[menuType][key][2]
         action.Call()
 
         ; 根据第三个参数决定是否维持菜单
-        if (!NormalHotkeyMap[key][3]) {
-            ExitMenuMode()
-        } else {
-            ; 维持菜单，重置超时定时器
-            if (g_MenuTimer) {
-                SetTimer(g_MenuTimer, 0)
-            }
-            g_MenuTimer := SetTimer(ExitMenuMode, -g_Timeout)
-        }
-    }
-    else if (menuType = "second" && SecondHotkeyMap.Has(key)) {
-        action := SecondHotkeyMap[key][2]
-        action.Call()
-
-        ; 根据第三个参数决定是否维持菜单
-        if (!SecondHotkeyMap[key][3]) {
+        if (!MenuDefinitions[menuType][key][3]) {
             ExitMenuMode()
         } else {
             ; 维持菜单，重置超时定时器
@@ -159,34 +163,23 @@ HandleMenuHotkey(key, menuType, *) {
     }
 }
 
-SecondMenu() {
-    global g_MenuMode, g_CurrentMenu, g_MenuTimer
-    if (!g_MenuMode || g_CurrentMenu != "normal") {
-        return
-    }
-    if (g_MenuTimer) {
-        SetTimer(g_MenuTimer, 0)
-        g_MenuTimer := 0
-    }
-    UnregisterAllMenuHotkeys()
-    Hotkey("Escape", "Off")
-    g_MenuMode := false
-    EnterMenuMode("second")
-}
+; 通用的菜单切换函数
+SwitchMenu(targetMenu) {
+    global g_MenuMode, g_CurrentMenu, g_MenuTimer, MenuDefinitions
 
-NormalMenu() {
-    global g_MenuMode, g_CurrentMenu, g_MenuTimer
-    if (!g_MenuMode || g_CurrentMenu != "second") {
+    if (!g_MenuMode || g_CurrentMenu = targetMenu || !MenuDefinitions.Has(targetMenu)) {
         return
     }
+
     if (g_MenuTimer) {
         SetTimer(g_MenuTimer, 0)
         g_MenuTimer := 0
     }
+
     UnregisterAllMenuHotkeys()
     Hotkey("Escape", "Off")
     g_MenuMode := false
-    EnterMenuMode("normal")
+    EnterMenuMode(targetMenu)
 }
 
 OnExit((*) => ExitMenuMode())
