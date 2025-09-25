@@ -24,11 +24,23 @@ EnterNormalMode() {
     ShowTimedTooltip("已恢复原始热键模式")
 }
 
+^!t:: {
+    Global g_CurrentMode
+    if (g_CurrentMode = "null") {
+        g_CurrentMode := "normal"
+    } else {
+        g_CurrentMode := "null"
+    }
+    ShowTimedTooltip("g_CurrentMode: " g_CurrentMode)
+}
+
 RButtonDo() {
     CaptureWindowUnderCursor()
     DisplayRadialMenuAtCursor()
     InitRadialMenuTooltip()
 }
+
+#HotIf g_CurrentMode != "null"
 
 RButton:: {
     ResetButtonStates()
@@ -50,6 +62,8 @@ RButton Up:: {
     }
     ResetButtonStates()
 }
+
+#HotIf
 
 #HotIf g_CurrentMode = "normal"
 

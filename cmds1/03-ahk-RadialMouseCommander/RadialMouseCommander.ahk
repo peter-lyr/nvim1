@@ -57,6 +57,10 @@ InitializeNormalModeActions() {
     g_ModeActionMappings["normal"] := normalModeActions
 }
 
+g_WindowsNoControl := [
+    "ahk_class tooltips_class32",
+]
+
 ActivateTargetWindow() {
     global g_TargetWindowHwnd
     WinActivate(g_TargetWindowHwnd)
@@ -911,6 +915,18 @@ RButtonDo() {
 }
 #HotIf
 
+^!t:: {
+    Global g_CurrentMode
+    if (g_CurrentMode = "null") {
+        g_CurrentMode := "normal"
+    } else {
+        g_CurrentMode := "null"
+    }
+    ShowTimedTooltip("g_CurrentMode: " g_CurrentMode)
+}
+
+#HotIf g_CurrentMode != "null"
+
 RButton:: {
     ResetButtonStates()
     RButtonDo()
@@ -931,6 +947,8 @@ RButton Up:: {
     }
     ResetButtonStates()
 }
+
+#HotIf
 
 InitializeNormalModeActions()
 DisplayRadialMenuAtCursor()
