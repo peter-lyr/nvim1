@@ -80,16 +80,14 @@ EnterWindowControlMode() {
     global g_CurrentMode := "window_control"
     global g_ModeActionMappings
     windowControlActions := Map()
+    windowControlActions["000U"] := ["切换窗口置顶", ToggleTargetWindowTopmost]
+    windowControlActions["000D"] := ["激活窗口", ActivateTargetWindow]
     windowControlActions["000L"] := ["恢复普通模式", EnterNormalMode]
-    windowControlActions["000R"] := ["激活窗口", ActivateTargetWindow]
+    windowControlActions["000R"] := ["单击目标", ClickAtTargetPosition]
     windowControlActions["000RU"] := ["切换最大化窗口", ToggleTargetWindowMaximize]
     windowControlActions["000RD"] := ["最小化窗口", MinimizeTargetWindow]
-    windowControlActions["000U"] := ["切换窗口置顶", ToggleTargetWindowTopmost]
-    windowControlActions["000D"] := ["按退出键", Send.Bind("{Esc}")]
+    windowControlActions["000LD"] := ["按退出键", Send.Bind("{Esc}")]
     windowControlActions["000LU"] := ["窗口控制模式2", EnterWindowControlMode2]
-    windowControlActions["100LU"] := ["单击目标", ClickAtTargetPosition]
-    windowControlActions["100LD"] := ["单击目标", ClickAtTargetPosition]
-    windowControlActions["100R"] := ["单击目标", ClickAtTargetPosition]
     g_ModeActionMappings["window_control"] := windowControlActions
     ShowTimedTooltip("已切换到窗口控制模式`n左键:移动窗口 中键:调整大小 滚轮:透明度")
 }
@@ -324,16 +322,14 @@ WheelUp:: {
 EnterWindowControlMode2() {
     global g_CurrentMode := "window_control2"
     windowControl2Actions := Map()
+    windowControl2Actions["000U"] := ["切换窗口置顶", ToggleTargetWindowTopmost]
+    windowControl2Actions["000D"] := ["激活窗口", ActivateTargetWindow]
     windowControl2Actions["000L"] := ["恢复普通模式", EnterNormalMode]
-    windowControl2Actions["000R"] := ["激活窗口", ActivateTargetWindow]
+    windowControl2Actions["000R"] := ["单击目标", ClickAtTargetPosition]
     windowControl2Actions["000RU"] := ["切换最大化窗口", ToggleTargetWindowMaximize]
     windowControl2Actions["000RD"] := ["最小化窗口", MinimizeTargetWindow]
-    windowControl2Actions["000U"] := ["切换窗口置顶", ToggleTargetWindowTopmost]
-    windowControl2Actions["000D"] := ["按退出键", Send.Bind("{Esc}")]
+    windowControl2Actions["000LD"] := ["按退出键", Send.Bind("{Esc}")]
     windowControl2Actions["000LU"] := ["窗口控制模式", EnterWindowControlMode]
-    windowControl2Actions["100LU"] := ["单击目标", ClickAtTargetPosition]
-    windowControl2Actions["100LD"] := ["单击目标", ClickAtTargetPosition]
-    windowControl2Actions["100R"] := ["单击目标", ClickAtTargetPosition]
     g_ModeActionMappings["window_control2"] := windowControl2Actions
     ShowTimedTooltip("已切换到窗口控制模式2`n左键:移动窗口(限制在屏幕内) 中键:调整大小 滚轮:透明度")
 }
