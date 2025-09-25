@@ -9,23 +9,23 @@ g_Timeout := 8000
 
 MenuDefinitions := Map(
     "normal", Map(
-        "a", ["打开记事本", Run.Bind("notepad.exe"), false],
-        "b", ["打开计算器", Run.Bind("calc.exe"), false],
-        "c", ["打开画图", Run.Bind("mspaint.exe"), false],
-        "d", ["进入second菜单", SwitchMenu.Bind("second"), true]
+        "q", ["打开记事本", ActivateWXWorkExe, false],
+        ; "b", ["打开计算器", Run.Bind("calc.exe"), false],
+        ; "c", ["打开画图", Run.Bind("mspaint.exe"), false],
+        ; "d", ["进入second菜单", SwitchMenu.Bind("second"), true]
     ),
-    "second", Map(
-        "a", ["向左", Send.Bind("{Left}"), true],
-        "d", ["向右", Send.Bind("{Right}"), true],
-        "s", ["进入normal菜单", SwitchMenu.Bind("normal"), true],
-        "t", ["进入third菜单", SwitchMenu.Bind("third"), true]
-    ),
-    "third", Map(
-        "a", ["向上", Send.Bind("{Up}"), true],
-        "d", ["向下", Send.Bind("{Down}"), true],
-        "s", ["进入second菜单", SwitchMenu.Bind("second"), true],
-        "n", ["进入normal菜单", SwitchMenu.Bind("normal"), true]
-    )
+    ; "second", Map(
+    ;     "a", ["向左", Send.Bind("{Left}"), true],
+    ;     "d", ["向右", Send.Bind("{Right}"), true],
+    ;     "s", ["进入normal菜单", SwitchMenu.Bind("normal"), true],
+    ;     "t", ["进入third菜单", SwitchMenu.Bind("third"), true]
+    ; ),
+    ; "third", Map(
+    ;     "a", ["向上", Send.Bind("{Up}"), true],
+    ;     "d", ["向下", Send.Bind("{Down}"), true],
+    ;     "s", ["进入second菜单", SwitchMenu.Bind("second"), true],
+    ;     "n", ["进入normal菜单", SwitchMenu.Bind("normal"), true]
+    ; )
 )
 
 ~LAlt::
@@ -33,6 +33,7 @@ MenuDefinitions := Map(
     global g_MenuMode, g_LastAltPress, g_DoubleClickTime
     currentTime := A_TickCount
     if (currentTime - g_LastAltPress < g_DoubleClickTime && !g_MenuMode) {
+        JumpOutSideOffMsTsc()
         EnterMenuMode("normal")
     }
     g_LastAltPress := currentTime
@@ -136,5 +137,3 @@ SwitchMenu(targetMenu) {
 }
 
 OnExit((*) => ExitMenuMode())
-
-^Ins::ExitApp

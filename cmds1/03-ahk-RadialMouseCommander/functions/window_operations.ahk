@@ -35,7 +35,7 @@ MinimizeTargetWindow() {
 
 ToggleTargetWindowMaximize() {
     global g_TargetWindowHwnd
-    if (WinGetMinMax(g_TargetWindowHwnd) == 1) {
+    if (WinGetMinMax(g_TargetWindowHwnd) = 1) {
         WinRestore(g_TargetWindowHwnd)
     } else {
         WinMaximize(g_TargetWindowHwnd)

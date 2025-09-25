@@ -198,11 +198,11 @@ GenerateRadialMenuDisplay() {
                     spacesNeeded := targetWidth - currentWidth
                     leftSpaces := spacesNeeded // 2
                     rightSpaces := spacesNeeded - leftSpaces
-                    Loop leftSpaces {
+                    loop leftSpaces {
                         line .= " "
                     }
                     line .= column
-                    Loop rightSpaces {
+                    loop rightSpaces {
                         line .= " "
                     }
                 }

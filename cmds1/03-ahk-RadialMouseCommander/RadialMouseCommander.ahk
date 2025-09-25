@@ -75,7 +75,7 @@ MinimizeTargetWindow() {
 
 ToggleTargetWindowMaximize() {
     global g_TargetWindowHwnd
-    if (WinGetMinMax(g_TargetWindowHwnd) == 1) {
+    if (WinGetMinMax(g_TargetWindowHwnd) = 1) {
         WinRestore(g_TargetWindowHwnd)
     } else {
         WinMaximize(g_TargetWindowHwnd)
@@ -788,11 +788,11 @@ GenerateRadialMenuDisplay() {
                     spacesNeeded := targetWidth - currentWidth
                     leftSpaces := spacesNeeded // 2
                     rightSpaces := spacesNeeded - leftSpaces
-                    Loop leftSpaces {
+                    loop leftSpaces {
                         line .= " "
                     }
                     line .= column
-                    Loop rightSpaces {
+                    loop rightSpaces {
                         line .= " "
                     }
                 }
