@@ -24,12 +24,20 @@ EnterNormalMode() {
     ShowTimedTooltip("已恢复原始热键模式")
 }
 
-; 全局热键（不在任何模式条件下）
-RButton:: {
-    ResetButtonStates()
+RButtonDo() {
     CaptureWindowUnderCursor()
     DisplayRadialMenuAtCursor()
     InitRadialMenuTooltip()
+}
+
+RButton:: {
+    ResetButtonStates()
+    RButtonDo()
+}
+
+~LButton & RButton:: {
+    Global g_LeftButtonState := 1
+    RButtonDo()
 }
 
 RButton Up:: {

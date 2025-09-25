@@ -880,6 +880,12 @@ ExecuteSelectedAction() {
     }
 }
 
+RButtonDo() {
+    CaptureWindowUnderCursor()
+    DisplayRadialMenuAtCursor()
+    InitRadialMenuTooltip()
+}
+
 #HotIf g_CurrentMode = "normal"
 
 ~LButton:: {
@@ -907,9 +913,12 @@ ExecuteSelectedAction() {
 
 RButton:: {
     ResetButtonStates()
-    CaptureWindowUnderCursor()
-    DisplayRadialMenuAtCursor()
-    InitRadialMenuTooltip()
+    RButtonDo()
+}
+
+~LButton & RButton:: {
+    Global g_LeftButtonState := 1
+    RButtonDo()
 }
 
 RButton Up:: {
