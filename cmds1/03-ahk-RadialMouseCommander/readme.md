@@ -15,3 +15,4 @@
   先三击左键不松开，再按右键，再松开左键，此时右键保持按下，此时g_LeftButtonState值为3
   以此类推，直到6击为止，g_LeftButtonState为6
   这时进入normal模式，画圆，继续在圆内点击左键，中键和滚轮，继续改变g_LeftButtonState这三个变量的值
+window_control不能对tooltip操作

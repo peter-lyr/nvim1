@@ -2,6 +2,10 @@
 
 #Requires AutoHotkey v2.0
 
+g_WindowsNoControl := [
+    "ahk_class tooltips_class32",
+]
+
 EnterWindowControlMode() {
     global g_CurrentMode := "window_control"
     global g_ModeActionMappings
@@ -95,6 +99,11 @@ LButton:: {
         return
     }
     MouseGetPos , , &windowUnderCursor
+    for _, winTitle in g_WindowsNoControl {
+        if WinExist(winTitle " ahk_id " windowUnderCursor) {
+            return
+        }
+    }
     if windowUnderCursor {
         MouseGetPos &startMouseX, &startMouseY
         WinGetPos &startWinX, &startWinY, , , windowUnderCursor
@@ -118,6 +127,11 @@ MButton:: {
         return
     }
     MouseGetPos , , &windowUnderCursor
+    for _, winTitle in g_WindowsNoControl {
+        if WinExist(winTitle " ahk_id " windowUnderCursor) {
+            return
+        }
+    }
     if windowUnderCursor {
         MouseGetPos &startMouseX, &startMouseY
         WinGetPos &startWinX, &startWinY, &startWinW, &startWinH, windowUnderCursor
@@ -169,6 +183,11 @@ WheelDown:: {
         return
     }
     MouseGetPos , , &windowUnderCursor
+    for _, winTitle in g_WindowsNoControl {
+        if WinExist(winTitle " ahk_id " windowUnderCursor) {
+            return
+        }
+    }
     if windowUnderCursor {
         currentTransparency := WinGetTransparent(windowUnderCursor)
         if (currentTransparency = "")
@@ -187,6 +206,11 @@ WheelUp:: {
         return
     }
     MouseGetPos , , &windowUnderCursor
+    for _, winTitle in g_WindowsNoControl {
+        if WinExist(winTitle " ahk_id " windowUnderCursor) {
+            return
+        }
+    }
     if windowUnderCursor {
         currentTransparency := WinGetTransparent(windowUnderCursor)
         if (currentTransparency = "")

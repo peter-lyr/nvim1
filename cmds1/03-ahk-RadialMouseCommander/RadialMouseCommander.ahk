@@ -198,6 +198,11 @@ LButton:: {
         return
     }
     MouseGetPos , , &windowUnderCursor
+    for _, winTitle in g_WindowsNoControl {
+        if WinExist(winTitle " ahk_id " windowUnderCursor) {
+            return
+        }
+    }
     if windowUnderCursor {
         MouseGetPos &startMouseX, &startMouseY
         WinGetPos &startWinX, &startWinY, , , windowUnderCursor
@@ -217,6 +222,11 @@ LButton Up:: {
 MButton:: {
     global g_WindowResizeInfo
     MouseGetPos , , &windowUnderCursor
+    for _, winTitle in g_WindowsNoControl {
+        if WinExist(winTitle " ahk_id " windowUnderCursor) {
+            return
+        }
+    }
     if windowUnderCursor {
         MouseGetPos &startMouseX, &startMouseY
         WinGetPos &startWinX, &startWinY, &startWinW, &startWinH, windowUnderCursor
@@ -268,6 +278,11 @@ WheelDown:: {
         return
     }
     MouseGetPos , , &windowUnderCursor
+    for _, winTitle in g_WindowsNoControl {
+        if WinExist(winTitle " ahk_id " windowUnderCursor) {
+            return
+        }
+    }
     if windowUnderCursor {
         currentTransparency := WinGetTransparent(windowUnderCursor)
         if (currentTransparency = "")
@@ -286,6 +301,11 @@ WheelUp:: {
         return
     }
     MouseGetPos , , &windowUnderCursor
+    for _, winTitle in g_WindowsNoControl {
+        if WinExist(winTitle " ahk_id " windowUnderCursor) {
+            return
+        }
+    }
     if windowUnderCursor {
         currentTransparency := WinGetTransparent(windowUnderCursor)
         if (currentTransparency = "")
@@ -486,6 +506,11 @@ LButton:: {
         return
     }
     MouseGetPos , , &windowUnderCursor
+    for _, winTitle in g_WindowsNoControl {
+        if WinExist(winTitle " ahk_id " windowUnderCursor) {
+            return
+        }
+    }
     if windowUnderCursor {
         MouseGetPos &startMouseX, &startMouseY
         WinGetPos &startWinX, &startWinY, , , windowUnderCursor
@@ -505,6 +530,11 @@ LButton Up:: {
 MButton:: {
     global g_WindowResizeInfo
     MouseGetPos , , &windowUnderCursor
+    for _, winTitle in g_WindowsNoControl {
+        if WinExist(winTitle " ahk_id " windowUnderCursor) {
+            return
+        }
+    }
     if windowUnderCursor {
         MouseGetPos &startMouseX, &startMouseY
         WinGetPos &startWinX, &startWinY, &startWinW, &startWinH, windowUnderCursor
@@ -556,6 +586,11 @@ WheelDown:: {
         return
     }
     MouseGetPos , , &windowUnderCursor
+    for _, winTitle in g_WindowsNoControl {
+        if WinExist(winTitle " ahk_id " windowUnderCursor) {
+            return
+        }
+    }
     if windowUnderCursor {
         currentTransparency := WinGetTransparent(windowUnderCursor)
         if (currentTransparency = "")
@@ -574,6 +609,11 @@ WheelUp:: {
         return
     }
     MouseGetPos , , &windowUnderCursor
+    for _, winTitle in g_WindowsNoControl {
+        if WinExist(winTitle " ahk_id " windowUnderCursor) {
+            return
+        }
+    }
     if windowUnderCursor {
         currentTransparency := WinGetTransparent(windowUnderCursor)
         if (currentTransparency = "")
