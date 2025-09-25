@@ -12,6 +12,7 @@ EnterWindowControlMode() {
     windowControlActions["000RD"] := ["最小化窗口", MinimizeTargetWindow]
     windowControlActions["000U"] := ["切换窗口置顶", ToggleTargetWindowTopmost]
     windowControlActions["000D"] := ["按退出键", Send.Bind("{Esc}")]
+    windowControlActions["000LU"] := ["窗口控制模式2", EnterWindowControlMode2]
     windowControlActions["100LU"] := ["单击目标", ClickAtTargetPosition]
     windowControlActions["100LD"] := ["单击目标", ClickAtTargetPosition]
     windowControlActions["100R"] := ["单击目标", ClickAtTargetPosition]
