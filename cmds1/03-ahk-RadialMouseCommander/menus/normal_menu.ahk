@@ -9,7 +9,7 @@ g_Timeout := 8000
 
 MenuDefinitions := Map(
     "normal", Map(
-        "q", ["打开记事本", ActivateWXWorkExe, false],
+        "q", ["打开企业微信", ActivateWXWorkExe, false],
         ; "b", ["打开计算器", Run.Bind("calc.exe"), false],
         ; "c", ["打开画图", Run.Bind("mspaint.exe"), false],
         ; "d", ["进入second菜单", SwitchMenu.Bind("second"), true]
