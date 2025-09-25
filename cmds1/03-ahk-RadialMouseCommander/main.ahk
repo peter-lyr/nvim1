@@ -2,6 +2,7 @@
 DetectHiddenWindows True
 
 ; 包含其他文件
+; #Include menus/normal_menu.ahk
 #Include modes/normal_mode.ahk
 #Include modes/window_control_mode.ahk
 #Include modes/window_control_mode2.ahk

@@ -17,3 +17,4 @@
   这时进入normal模式，画圆，继续在圆内点击左键，中键和滚轮，继续改变g_LeftButtonState这三个变量的值
 window_control不能对tooltip操作
 ~LButton & RButton::g_LeftButtonState := 1
+cmds1/03-ahk-RadialMouseCommander/menus/normal_menu.ahk
