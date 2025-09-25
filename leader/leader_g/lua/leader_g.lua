@@ -130,7 +130,7 @@ function G.pull()
 end
 
 function G.log()
-	require("f").async_run("git log --oneline")
+	require("f").async_run("git log")
 end
 
 return G
