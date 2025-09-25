@@ -9,7 +9,7 @@ EnterWindowControlMode2() {
     windowControl2Actions["000R"] := ["单击目标", ClickAtTargetPosition]
     windowControl2Actions["000RU"] := ["切换最大化窗口", ToggleTargetWindowMaximize]
     windowControl2Actions["000RD"] := ["最小化窗口", MinimizeTargetWindow]
-    windowControl2Actions["000LD"] := ["按退出键", Send.Bind("{Esc}")]
+    windowControl2Actions["000LD"] := ["Esc", Send.Bind("{Esc}")]
     windowControl2Actions["000LU"] := ["窗口控制模式", EnterWindowControlMode]
     g_ModeActionMappings["window_control2"] := windowControl2Actions
     ShowTimedTooltip("已切换到窗口控制模式2`n左键:移动窗口(限制在屏幕内) 中键:调整大小 滚轮:透明度")
