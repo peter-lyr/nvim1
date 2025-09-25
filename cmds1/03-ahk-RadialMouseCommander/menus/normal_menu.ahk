@@ -1,5 +1,19 @@
 #Requires AutoHotkey v2.0
 
+; TODO: 多个菜单模式
+; 双击Alt进入normal菜单，热键为HotkeyMap := Map(
+;     "a", ["打开记事本", Run.Bind("notepad.exe")],
+;     "b", ["打开计算器", Run.Bind("calc.exe")],
+;     "c", ["打开画图", Run.Bind("mspaint.exe")],
+;     "d", ["进入second菜单",  SecondMenu],
+; )
+; 按热键d进入second菜单，热键为HotkeyMap2 := Map(
+;     "a", ["向左", Send.Bind("{Left}")],
+;     "d", ["向右", Send.Bind("{Right}")],
+;     "s", ["进入normal菜单", NormalMenu],
+; )
+; 此时按热键s可以从新回到normal菜单，可以实现吗，输出完整的文件
+
 g_MenuMode := false
 g_LastAltPress := 0
 g_DoubleClickTime := 300
