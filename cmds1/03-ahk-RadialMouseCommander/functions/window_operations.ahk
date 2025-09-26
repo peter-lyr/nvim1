@@ -11,16 +11,19 @@ ActivateTargetWindow() {
     WinActivate(g_TargetWindowHwnd)
 }
 
-ToggleTargetWindowTopmost() {
+ToggleTargetWindowTopmost(hwnd := 0) {
     global g_TargetWindowHwnd
-    if (g_TargetWindowHwnd) {
-        currentStyle := WinGetExStyle(g_TargetWindowHwnd)
+    if not hwnd {
+        hwnd := g_TargetWindowHwnd
+    }
+    if (hwnd) {
+        currentStyle := WinGetExStyle(hwnd)
         isTopmost := (currentStyle & 0x8)
         if (isTopmost) {
-            WinSetAlwaysOnTop false, g_TargetWindowHwnd
+            WinSetAlwaysOnTop false, hwnd
             ShowTimedTooltip("取消窗口置顶")
         } else {
-            WinSetAlwaysOnTop true, g_TargetWindowHwnd
+            WinSetAlwaysOnTop true, hwnd
             ShowTimedTooltip("窗口已置顶")
         }
     } else {
@@ -28,17 +31,23 @@ ToggleTargetWindowTopmost() {
     }
 }
 
-MinimizeTargetWindow() {
+MinimizeTargetWindow(hwnd := 0) {
     global g_TargetWindowHwnd
-    WinMinimize(g_TargetWindowHwnd)
+    if not hwnd {
+        hwnd := g_TargetWindowHwnd
+    }
+    WinMinimize(hwnd)
 }
 
-ToggleTargetWindowMaximize() {
+ToggleTargetWindowMaximize(hwnd := 0) {
     global g_TargetWindowHwnd
-    if (WinGetMinMax(g_TargetWindowHwnd) = 1) {
-        WinRestore(g_TargetWindowHwnd)
+    if not hwnd {
+        hwnd := g_TargetWindowHwnd
+    }
+    if (WinGetMinMax(hwnd) = 1) {
+        WinRestore(hwnd)
     } else {
-        WinMaximize(g_TargetWindowHwnd)
+        WinMaximize(hwnd)
     }
 }
 

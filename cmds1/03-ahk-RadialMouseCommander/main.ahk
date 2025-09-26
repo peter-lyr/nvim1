@@ -10,6 +10,7 @@
 #Include functions/tooltips.ahk
 #Include functions/window_operations.ahk
 #Include functions/window_activations.ahk
+#Include hotkeys/window_operations.ahk
 
 ; 初始化
 InitializeNormalModeActions()
