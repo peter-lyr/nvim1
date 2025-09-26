@@ -69,7 +69,7 @@ ActivateExisted(windowTitle) {
     return false
 }
 
-ActivateOrLaunch(windowTitle, appPath) {
+ActivateOrRun(windowTitle, appPath) {
     if (WinExist(windowTitle)) {
         ActivateExisted(windowTitle)
     } else {
