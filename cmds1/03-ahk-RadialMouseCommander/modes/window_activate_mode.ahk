@@ -3,18 +3,27 @@
 ;;优化GetWindowsAtMousePos性能
 ;;彻底修复切换激活窗口导致任务栏图标闪烁的问题
 ;;避免误置顶窗口
+;;已适配模式
 
 global g_WindowList := []
 global g_CurrentIndex := 0
 global g_LastMousePos := {x: 0, y: 0}
 global g_LastActiveHwnd := 0
 
-WheelUp:: {
-    SwitchWindow(-1)
-}
-
-WheelDown:: {
-    SwitchWindow(1)
+EnterWindowActivateMode() {
+    global g_CurrentMode := "window_activate"
+    global g_ModeActionMappings
+    windowActivateActions := Map()
+    windowActivateActions["000U"] := ["切换窗口置顶", ToggleTargetWindowTopmost]
+    windowActivateActions["000D"] := ["激活窗口", ActivateTargetWindow]
+    windowActivateActions["000L"] := ["恢复普通模式", EnterNormalMode]
+    windowActivateActions["000R"] := ["单击目标", ClickAtTargetPosition]
+    windowActivateActions["000RU"] := ["切换最大化窗口", ToggleTargetWindowMaximize]
+    windowActivateActions["000RD"] := ["最小化窗口", MinimizeTargetWindow]
+    windowActivateActions["000LD"] := ["Esc", Send.Bind("{Esc}")]
+    windowActivateActions["000LU"] := ["窗口控制模式2", EnterWindowControlMode2]
+    g_ModeActionMappings["window_activate"] := windowActivateActions
+    ShowTimedTooltip("已切换到窗口激活模式`n左键:移动窗口 中键:调整大小 滚轮:透明度")
 }
 
 SwitchWindow(direction) {
@@ -27,9 +36,9 @@ SwitchWindow(direction) {
         g_LastMousePos := {x: mouseX, y: mouseY}
         g_LastActiveHwnd := 0
         if (g_WindowList.Length > 0) {
-            ShowToolTip("找到 " g_WindowList.Length " 个窗口")
+            ShowTimedTooltip("找到 " g_WindowList.Length " 个窗口")
         } else {
-            ShowToolTip("未找到符合条件的窗口")
+            ShowTimedTooltip("未找到符合条件的窗口")
         }
     }
     if (g_WindowList.Length = 0)
@@ -46,12 +55,12 @@ SwitchWindow(direction) {
     try {
         hwnd := g_WindowList[g_CurrentIndex]
         if (hwnd = g_LastActiveHwnd) {
-            ShowToolTip("窗口 " g_CurrentIndex " / " g_WindowList.Length " - " WinGetTitle("ahk_id " hwnd) " (已激活)")
+            ShowTimedTooltip("窗口 " g_CurrentIndex " / " g_WindowList.Length " - " WinGetTitle("ahk_id " hwnd) " (已激活)")
             return
         }
         SwitchToWindow(hwnd)
         g_LastActiveHwnd := hwnd
-        ShowToolTip("窗口 " g_CurrentIndex " / " g_WindowList.Length " - " WinGetTitle("ahk_id " hwnd))
+        ShowTimedTooltip("窗口 " g_CurrentIndex " / " g_WindowList.Length " - " WinGetTitle("ahk_id " hwnd))
     }
 }
 
@@ -136,9 +145,18 @@ IsPointInWindowOptimized(hwnd, x, y) {
     return (x >= left && x <= right && y >= top && y <= bottom)
 }
 
-ShowToolTip(text) {
-    ToolTip(text)
-    SetTimer(() => ToolTip(), -1500)
+#HotIf g_CurrentMode = "window_activate"
+
+WheelUp:: {
+    SwitchWindow(-1)
+}
+
+WheelDown:: {
+    SwitchWindow(1)
+}
+
+LButton:: {
+    EnterNormalMode()
 }
 
 ^Del:: {
@@ -166,9 +184,9 @@ ShowToolTip(text) {
     g_LastMousePos := {x: mouseX, y: mouseY}
     g_LastActiveHwnd := 0
     if (g_WindowList.Length > 0) {
-        ShowToolTip("重新扫描完成，找到 " g_WindowList.Length " 个窗口")
+        ShowTimedTooltip("重新扫描完成，找到 " g_WindowList.Length " 个窗口")
     } else {
-        ShowToolTip("重新扫描完成，未找到窗口")
+        ShowTimedTooltip("重新扫描完成，未找到窗口")
     }
 }
 
@@ -188,4 +206,4 @@ ShowToolTip(text) {
     MsgBox(listText)
 }
 
-^Esc::ExitApp
+#HotIf

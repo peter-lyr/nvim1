@@ -16,13 +16,13 @@ ToggleShowTimedTooltipEn() {
     g_ShowTimedTooltipEn := 1 -g_ShowTimedTooltipEn
 }
 
-ShowTimedTooltip(message) {
+ShowTimedTooltip(message, timeout := 2000) {
     global g_ShowTimedTooltipEn
     if not g_ShowTimedTooltipEn {
         return
     }
     ToolTip(message)
-    SetTimer(() => ToolTip(), -2000)
+    SetTimer(() => ToolTip(), -timeout)
 }
 
 UpdateRadialMenuTooltip() {

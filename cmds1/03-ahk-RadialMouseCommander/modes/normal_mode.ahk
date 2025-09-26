@@ -8,7 +8,7 @@ global g_CurrentMode := "normal"
 InitializeNormalModeActions() {
     global g_ModeActionMappings
     normalModeActions := Map()
-    normalModeActions["000U"] := ["向上移动光标", Send.Bind("{Up}")]
+    normalModeActions["000U"] := ["窗口激活模式", EnterWindowActivateMode]
     normalModeActions["000D"] := ["向下移动光标", Send.Bind("{Down}")]
     normalModeActions["000L"] := ["向左移动光标", Send.Bind("{Left}")]
     normalModeActions["000R"] := ["向右移动光标", Send.Bind("{Right}")]
