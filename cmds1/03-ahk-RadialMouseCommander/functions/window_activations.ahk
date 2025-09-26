@@ -39,12 +39,39 @@ JumpOutSideOffMsTsc() {
     }
 }
 
-ActivateOrLaunch(windowTitle, appPath) {
-    if (WinExist(windowTitle)) {
-        WinActivate(windowTitle)
-        if (WinWaitActive(windowTitle, , 2)) {
+ActivateExistedSel(windowList) {
+    choices := ""
+    windowIDs := []
+    for i, windowID in windowList {
+        title := WinGetTitle("ahk_id " windowID)
+        windowIDs.Push(windowID)
+        choices .= i ". " title "`n"
+    }
+    choice := InputBox("请选择要激活的窗口：`n`n" choices, "选择窗口", "w400 h300")
+    if (choice.Result = "OK" && IsNumber(choice.Value) && choice.Value >= 1 && choice.Value <= windowList.Length) {
+        selectedID := windowIDs[choice.Value]
+        WinActivate("ahk_id " selectedID)
+        if (WinWaitActive("ahk_id " selectedID, , 2)) {
             return true
         }
+    }
+    return false
+}
+
+ActivateExisted(windowTitle) {
+    if (not WinExist(windowTitle)) {
+        return false
+    }
+    WinActivate(windowTitle)
+    if (WinWaitActive(windowTitle, , 2)) {
+        return true
+    }
+    return false
+}
+
+ActivateOrLaunch(windowTitle, appPath) {
+    if (WinExist(windowTitle)) {
+        ActivateExisted(windowTitle)
     } else {
         Run(appPath)
         if (WinWait(windowTitle, , 5) && WinExist(windowTitle)) {
@@ -89,25 +116,12 @@ ActivateOrRunInWinR(windowTitle, appPath) {
     windowList := WinGetList(windowTitle)
     if (windowList.Length > 0) {
         if (windowList.Length = 1) {
-            WinActivate("ahk_id " windowList[1])
-            if (WinWaitActive("ahk_id " windowList[1], , 2)) {
+            if (ActivateExisted("ahk_id " windowList[1])) {
                 return true
             }
         } else {
-            choices := ""
-            windowIDs := []
-            for i, windowID in windowList {
-                title := WinGetTitle("ahk_id " windowID)
-                windowIDs.Push(windowID)
-                choices .= i ". " title "`n"
-            }
-            choice := InputBox("请选择要激活的窗口：`n`n" choices, "选择窗口", "w400 h300")
-            if (choice.Result = "OK" && IsNumber(choice.Value) && choice.Value >= 1 && choice.Value <= windowList.Length) {
-                selectedID := windowIDs[choice.Value]
-                WinActivate("ahk_id " selectedID)
-                if (WinWaitActive("ahk_id " selectedID, , 2)) {
-                    return true
-                }
+            if (ActivateExistedSel(windowList)) {
+                return true
             }
         }
     } else {
