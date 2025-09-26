@@ -38,3 +38,19 @@ JumpOutSideOffMsTsc() {
         }
     }
 }
+
+ActivateOrLaunch(windowTitle, appPath) {
+    if (WinExist(windowTitle)) {
+        WinActivate(windowTitle)
+        if (WinWaitActive(windowTitle, , 2)) {
+            return true
+        }
+    } else {
+        Run(appPath)
+        if (WinWait(windowTitle, , 5) && WinExist(windowTitle)) {
+            WinActivate(windowTitle)
+            return true
+        }
+    }
+    return false
+}
