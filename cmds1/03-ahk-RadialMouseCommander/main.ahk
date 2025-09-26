@@ -1,5 +1,4 @@
 #Requires AutoHotkey v2.0
-DetectHiddenWindows True
 
 ; 包含其他文件
 #Include menus/normal_menu.ahk

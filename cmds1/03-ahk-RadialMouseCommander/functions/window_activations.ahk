@@ -84,12 +84,31 @@ RunInWinR(windowTitle, appPath) {
     return false
 }
 
-
 ActivateOrRunInWinR(windowTitle, appPath) {
-    if (WinExist(windowTitle)) {
-        WinActivate(windowTitle)
-        if (WinWaitActive(windowTitle, , 2)) {
-            return true
+    DetectHiddenWindows False
+    windowList := WinGetList(windowTitle)
+    if (windowList.Length > 0) {
+        if (windowList.Length = 1) {
+            WinActivate("ahk_id " windowList[1])
+            if (WinWaitActive("ahk_id " windowList[1], , 2)) {
+                return true
+            }
+        } else {
+            choices := ""
+            windowIDs := []
+            for i, windowID in windowList {
+                title := WinGetTitle("ahk_id " windowID)
+                windowIDs.Push(windowID)
+                choices .= i ". " title "`n"
+            }
+            choice := InputBox("请选择要激活的窗口：`n`n" choices, "选择窗口", "w400 h300")
+            if (choice.Result = "OK" && IsNumber(choice.Value) && choice.Value >= 1 && choice.Value <= windowList.Length) {
+                selectedID := windowIDs[choice.Value]
+                WinActivate("ahk_id " selectedID)
+                if (WinWaitActive("ahk_id " selectedID, , 2)) {
+                    return true
+                }
+            }
         }
     } else {
         RunInWinR(windowTitle, appPath)
