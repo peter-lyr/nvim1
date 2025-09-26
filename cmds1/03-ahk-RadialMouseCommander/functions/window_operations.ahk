@@ -53,6 +53,9 @@ MinimizeTargetWindow(hwnd := 0) {
     if not hwnd {
         hwnd := g_TargetWindowHwnd
     }
+    if hwnd = WinExist(GetDesktopClass()) {
+        return ;;桌面不最小化
+    }
     WinMinimize(hwnd)
 }
 
