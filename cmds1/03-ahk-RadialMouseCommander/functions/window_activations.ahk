@@ -55,6 +55,36 @@ ActivateOrLaunch(windowTitle, appPath) {
     return false
 }
 
+RunInWinR(windowTitle, appPath) {
+    ClipboardOld := A_Clipboard
+    Sleep(50)
+    A_Clipboard := ""
+    A_Clipboard := appPath
+    if !ClipWait(2) {
+        A_Clipboard := ClipboardOld
+        ClipboardOld := ""
+        return false
+    }
+    Send("#r")
+    if !WinWait("Run", , 3) {
+        A_Clipboard := ClipboardOld
+        ClipboardOld := ""
+        return false
+    }
+    WinActivate("Run")
+    Sleep(200)
+    Send("^v")
+    Sleep(300)
+    Send("{Enter}")
+    SetTimer(RestoreClipboard.Bind(ClipboardOld), -1000)
+    if (WinWait(windowTitle, , 5) && WinExist(windowTitle)) {
+        WinActivate(windowTitle)
+        return true
+    }
+    return false
+}
+
+
 ActivateOrRunInWinR(windowTitle, appPath) {
     if (WinExist(windowTitle)) {
         WinActivate(windowTitle)
@@ -62,31 +92,7 @@ ActivateOrRunInWinR(windowTitle, appPath) {
             return true
         }
     } else {
-        ClipboardOld := A_Clipboard
-        Sleep(50)
-        A_Clipboard := ""
-        A_Clipboard := appPath
-        if !ClipWait(2) {
-            A_Clipboard := ClipboardOld
-            ClipboardOld := ""
-            return false
-        }
-        Send("#r")
-        if !WinWait("Run", , 3) {
-            A_Clipboard := ClipboardOld
-            ClipboardOld := ""
-            return false
-        }
-        WinActivate("Run")
-        Sleep(200)
-        Send("^v")
-        Sleep(300)
-        Send("{Enter}")
-        SetTimer(RestoreClipboard.Bind(ClipboardOld), -1000)
-        if (WinWait(windowTitle, , 5) && WinExist(windowTitle)) {
-            WinActivate(windowTitle)
-            return true
-        }
+        RunInWinR(windowTitle, appPath)
     }
     return false
 }

@@ -10,10 +10,20 @@ g_Timeout := 8000
 MenuDefinitions := Map(
     "normal", Map(
         "q", ["打开企业微信", ActivateWXWorkExe, false],
+        "a", ["activate", SwitchMenu.Bind("activate"), true],
+        "r", ["run", SwitchMenu.Bind("run"), true],
+        ; "c", ["打开画图", Run.Bind("mspaint.exe"), false],
+        ; "d", ["进入second菜单", SwitchMenu.Bind("second"), true],
+    ),
+    "activate", Map(
         ",", ["打开或激活nvim-0.10.4", ActivateOrRunInWinR.Bind("ahk_exe nvim-qt.exe", "C:\Program Files\Neovim-0.10.4\bin\nvim-qt.exe -- -u ~/AppData/Local/nvim/init-qt.vim"), false],
         ".", ["打开或激活nvim-0.11.4", ActivateOrLaunch.Bind("ahk_exe nvim-qt.exe", "nvim-qt.exe -- -u ~/Dp1/lazy/nvim1/init-qt.vim"), false],
-        ; "c", ["打开画图", Run.Bind("mspaint.exe"), false],
-        ; "d", ["进入second菜单", SwitchMenu.Bind("second"), true]
+        "n", ["normal", SwitchMenu.Bind("normal"), true],
+    ),
+    "run", Map(
+        ",", ["打开nvim-0.10.4", RunInWinR.Bind("ahk_exe nvim-qt.exe", "C:\Program Files\Neovim-0.10.4\bin\nvim-qt.exe -- -u ~/AppData/Local/nvim/init-qt.vim"), false],
+        ".", ["打开nvim-0.11.4", Run.Bind("nvim-qt.exe -- -u ~/Dp1/lazy/nvim1/init-qt.vim"), false],
+        "n", ["normal", SwitchMenu.Bind("normal"), true]
     ),
     ; "second", Map(
     ;     "a", ["向左", Send.Bind("{Left}"), true],
