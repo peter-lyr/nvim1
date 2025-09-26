@@ -54,3 +54,28 @@ ActivateOrLaunch(windowTitle, appPath) {
     }
     return false
 }
+
+WinWaitActivate(win) {
+  Loop 1000 {
+    If WinExist(win) {
+      WinActivate(win)
+      If WinActive(win) {
+        Return 1
+      }
+    }
+  }
+  Return 0
+}
+
+ActivateOrOpen(wid, exe) {
+  Try {
+    If Not WinExist(wid) {
+      Run(exe)
+    }
+    WinWaitActivate(wid)
+  }
+}
+
+ActivateOrLaunchNvim0104() {
+    ActivateOrOpen("ahk_exe nvim-qt.exe", "C:\Program Files\Neovim-0.10.4\bin\nvim-qt.exe -- -u ~/AppData/Local/nvim/init-qt.vim")
+}
