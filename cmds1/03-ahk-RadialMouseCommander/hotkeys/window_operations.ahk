@@ -11,3 +11,11 @@
 ^#m:: {
     ToggleTargetWindowTopmost("A")
 }
+
+^#h:: {
+    TransparencyDown("A")
+}
+
+^#l:: {
+    TransparencyUp("A")
+}

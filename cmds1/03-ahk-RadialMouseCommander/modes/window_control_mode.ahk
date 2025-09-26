@@ -186,16 +186,7 @@ WheelDown:: {
             return
         }
     }
-    if windowUnderCursor {
-        currentTransparency := WinGetTransparent(windowUnderCursor)
-        if (currentTransparency = "")
-            currentTransparency := 255
-        newTransparency := currentTransparency - 15
-        if (newTransparency < 30)
-            newTransparency := 30
-        WinSetTransparent newTransparency, windowUnderCursor
-        ShowTimedTooltip("透明度: " newTransparency)
-    }
+    TransparencyDown(windowUnderCursor)
 }
 
 WheelUp:: {
@@ -209,16 +200,7 @@ WheelUp:: {
             return
         }
     }
-    if windowUnderCursor {
-        currentTransparency := WinGetTransparent(windowUnderCursor)
-        if (currentTransparency = "")
-            currentTransparency := 255
-        newTransparency := currentTransparency + 15
-        if (newTransparency > 255)
-            newTransparency := 255
-        WinSetTransparent newTransparency, windowUnderCursor
-        ShowTimedTooltip("透明度: " newTransparency)
-    }
+    TransparencyUp(windowUnderCursor)
 }
 
 #HotIf

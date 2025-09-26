@@ -58,3 +58,31 @@ ClickAtTargetPosition() {
     Click(g_TargetClickPosX, g_TargetClickPosY, "Left")
     MouseMove(originalX, originalY, 0)
 }
+
+TransparencyDown(hwnd := 0) {
+    if not hwnd {
+        return
+    }
+    currentTransparency := WinGetTransparent(hwnd)
+    if (currentTransparency = "")
+        currentTransparency := 255
+    newTransparency := currentTransparency - 15
+    if (newTransparency < 30)
+        newTransparency := 30
+    WinSetTransparent newTransparency, hwnd
+    ShowTimedTooltip("透明度: " newTransparency)
+}
+
+TransparencyUp(hwnd := 0) {
+    if not hwnd {
+        return
+    }
+    currentTransparency := WinGetTransparent(hwnd)
+    if (currentTransparency = "")
+        currentTransparency := 255
+    newTransparency := currentTransparency + 15
+    if (newTransparency > 255)
+        newTransparency := 255
+    WinSetTransparent newTransparency, hwnd
+    ShowTimedTooltip("透明度: " newTransparency)
+}
