@@ -2,13 +2,12 @@
 
 ;;优化GetWindowsAtMousePos性能
 ;;彻底修复切换激活窗口导致任务栏图标闪烁的问题
-;;有些窗口会被误置顶
+;;避免误置顶窗口
 
 global g_WindowList := []
 global g_CurrentIndex := 0
 global g_LastMousePos := {x: 0, y: 0}
 global g_LastActiveHwnd := 0
-global g_UnpinTimer := 0
 
 WheelUp:: {
     SwitchWindow(-1)
@@ -57,22 +56,34 @@ SwitchWindow(direction) {
 }
 
 SwitchToWindow(hwnd) {
-    global g_UnpinTimer
+    if (WinActive("ahk_id " hwnd)) {
+        return
+    }
     if (WinGetMinMax("ahk_id " hwnd) = -1) {
         WinRestore("ahk_id " hwnd)
     }
-    WinSetAlwaysOnTop(1, "ahk_id " hwnd)
-    if (g_UnpinTimer) {
-        SetTimer(g_UnpinTimer, 0)
-    }
-    unpinFunc := UnpinWindow.Bind(hwnd)
-    g_UnpinTimer := unpinFunc
-    SetTimer(unpinFunc, -50)
+    ActivateWindowSafely(hwnd)
 }
 
-UnpinWindow(hwnd) {
-    WinSetAlwaysOnTop(0, "ahk_id " hwnd)
-    global g_UnpinTimer := 0
+ActivateWindowSafely(hwnd) {
+    SimulateAltTab(hwnd)
+    if (!WinActive("ahk_id " hwnd)) {
+        try {
+            DllCall("SetForegroundWindow", "ptr", hwnd)
+        }
+    }
+}
+
+SimulateAltTab(hwnd) {
+    originalHwnd := WinGetID("A")
+    if (originalHwnd = hwnd) {
+        return
+    }
+    Send("!{Esc}")
+    WinWaitActive("ahk_id " hwnd, , 0.1)
+    if (!WinActive("ahk_id " hwnd)) {
+        WinActivate("ahk_id " hwnd)
+    }
 }
 
 GetWindowsAtMousePos(mouseX, mouseY) {
