@@ -1,10 +1,14 @@
 #Requires AutoHotkey v2.0
 
 ;;优化GetWindowsAtMousePos性能
+;;彻底修复切换激活窗口导致任务栏图标闪烁的问题
+;;有些窗口会被误置顶
 
 global g_WindowList := []
 global g_CurrentIndex := 0
 global g_LastMousePos := {x: 0, y: 0}
+global g_LastActiveHwnd := 0
+global g_UnpinTimer := 0
 
 WheelUp:: {
     SwitchWindow(-1)
@@ -15,13 +19,15 @@ WheelDown:: {
 }
 
 SwitchWindow(direction) {
-    global g_WindowList, g_CurrentIndex, g_LastMousePos
+    global g_WindowList, g_CurrentIndex, g_LastMousePos, g_LastActiveHwnd
     CoordMode("Mouse", "Screen")
     MouseGetPos(&mouseX, &mouseY, &mouseWin)
+
     if (Abs(mouseX - g_LastMousePos.x) > 10 || Abs(mouseY - g_LastMousePos.y) > 10) {
         g_WindowList := GetWindowsAtMousePos(mouseX, mouseY)
         g_CurrentIndex := 0
         g_LastMousePos := {x: mouseX, y: mouseY}
+        g_LastActiveHwnd := 0
         if (g_WindowList.Length > 0) {
             ShowToolTip("找到 " g_WindowList.Length " 个窗口")
         } else {
@@ -30,6 +36,7 @@ SwitchWindow(direction) {
     }
     if (g_WindowList.Length = 0)
         return
+
     if (g_CurrentIndex = 0) {
         g_CurrentIndex := 1
     } else {
@@ -41,15 +48,47 @@ SwitchWindow(direction) {
     }
     try {
         hwnd := g_WindowList[g_CurrentIndex]
-        WinActivate("ahk_id " hwnd)
+
+        if (hwnd = g_LastActiveHwnd) {
+            ShowToolTip("窗口 " g_CurrentIndex " / " g_WindowList.Length " - " WinGetTitle("ahk_id " hwnd) " (已激活)")
+            return
+        }
+
+        SwitchToWindow(hwnd)
+        g_LastActiveHwnd := hwnd
         ShowToolTip("窗口 " g_CurrentIndex " / " g_WindowList.Length " - " WinGetTitle("ahk_id " hwnd))
     }
+}
+
+SwitchToWindow(hwnd) {
+    global g_UnpinTimer
+
+    if (WinGetMinMax("ahk_id " hwnd) = -1) {
+        WinRestore("ahk_id " hwnd)
+    }
+
+    WinSetAlwaysOnTop(1, "ahk_id " hwnd)
+
+    if (g_UnpinTimer) {
+        SetTimer(g_UnpinTimer, 0)
+    }
+
+    unpinFunc := UnpinWindow.Bind(hwnd)
+
+    g_UnpinTimer := unpinFunc
+    SetTimer(unpinFunc, -50)
+}
+
+UnpinWindow(hwnd) {
+    WinSetAlwaysOnTop(0, "ahk_id " hwnd)
+    global g_UnpinTimer := 0
 }
 
 GetWindowsAtMousePos(mouseX, mouseY) {
     static lastMousePos := {x: 0, y: 0}
     static lastWindows := []
     static lastTimestamp := 0
+
     currentTime := A_TickCount
     if (Abs(mouseX - lastMousePos.x) <= 2 && Abs(mouseY - lastMousePos.y) <= 2 && currentTime - lastTimestamp < 500) {
         return lastWindows
@@ -58,17 +97,34 @@ GetWindowsAtMousePos(mouseX, mouseY) {
     allWindows := WinGetList()
     windows.Capacity := allWindows.Length
     for hwnd in allWindows {
-        if (!WinGetStyle("ahk_id " hwnd) & 0x10000000)
+
+        style := WinGetStyle("ahk_id " hwnd)
+        if (!(style & 0x10000000))
             continue
+
         if (WinGetMinMax("ahk_id " hwnd) = -1)
             continue
+
         class := WinGetClass("ahk_id " hwnd)
-        if (class = "Progman" || class = "WorkerW" || class = "Shell_TrayWnd" || class = "Shell_SecondaryTrayWnd")
+        if (class = "Progman" || class = "WorkerW" || class = "Shell_TrayWnd" ||
+            class = "Shell_SecondaryTrayWnd" || class = "NotifyIconOverflowWindow" ||
+            class = "Windows.UI.Core.CoreWindow") {
             continue
+        }
+
+        exStyle := WinGetExStyle("ahk_id " hwnd)
+        if (exStyle & 0x80)
+            continue
+
+        title := WinGetTitle("ahk_id " hwnd)
+        if (title = "")
+            continue
+
         if (IsPointInWindowOptimized(hwnd, mouseX, mouseY)) {
             windows.Push(hwnd)
         }
     }
+
     lastMousePos := {x: mouseX, y: mouseY}
     lastWindows := windows
     lastTimestamp := currentTime
@@ -84,54 +140,6 @@ IsPointInWindowOptimized(hwnd, x, y) {
     right := NumGet(rect, 8, "Int")
     bottom := NumGet(rect, 12, "Int")
     return (x >= left && x <= right && y >= top && y <= bottom)
-}
-
-IsWindowValid(hwnd) {
-    if (!WinExist("ahk_id " hwnd))
-        return false
-    style := WinGetStyle("ahk_id " hwnd)
-    if (!(style & 0x10000000))
-        return false
-    minMax := WinGetMinMax("ahk_id " hwnd)
-    if (minMax = -1)
-        return false
-    title := WinGetTitle("ahk_id " hwnd)
-    if (title = "")
-        return false
-    return true
-}
-
-IsPointInWindow(hwnd, x, y) {
-    try {
-        WinGetPos(&winX, &winY, &winWidth, &winHeight, "ahk_id " hwnd)
-        if (x >= winX && x <= winX + winWidth && y >= winY && y <= winY + winHeight) {
-            return true
-        }
-    }
-    return false
-}
-
-IsDesktopOrTaskbar(hwnd) {
-    class := WinGetClass("ahk_id " hwnd)
-    desktopClasses := ["Progman", "WorkerW", "Windows.UI.Core.CoreWindow"]
-    taskbarClasses := ["Shell_TrayWnd", "Shell_SecondaryTrayWnd", "NotifyIconOverflowWindow"]
-    for _, desktopClass in desktopClasses {
-        if (class = desktopClass)
-            return true
-    }
-    for _, taskbarClass in taskbarClasses {
-        if (class = taskbarClass)
-            return true
-    }
-    title := WinGetTitle("ahk_id " hwnd)
-    if (title = "Program Manager")
-        return true
-    return false
-}
-
-IsToolWindow(hwnd) {
-    exStyle := WinGetExStyle("ahk_id " hwnd)
-    return (exStyle & 0x80)
 }
 
 ShowToolTip(text) {
@@ -157,11 +165,12 @@ ShowToolTip(text) {
 }
 
 ^End:: {
-    global g_WindowList, g_CurrentIndex, g_LastMousePos
+    global g_WindowList, g_CurrentIndex, g_LastMousePos, g_LastActiveHwnd
     MouseGetPos(&mouseX, &mouseY)
     g_WindowList := GetWindowsAtMousePos(mouseX, mouseY)
     g_CurrentIndex := 0
     g_LastMousePos := {x: mouseX, y: mouseY}
+    g_LastActiveHwnd := 0
     if (g_WindowList.Length > 0) {
         ShowToolTip("重新扫描完成，找到 " g_WindowList.Length " 个窗口")
     } else {
