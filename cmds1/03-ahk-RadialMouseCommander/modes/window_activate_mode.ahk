@@ -22,7 +22,6 @@ SwitchWindow(direction) {
     global g_WindowList, g_CurrentIndex, g_LastMousePos, g_LastActiveHwnd
     CoordMode("Mouse", "Screen")
     MouseGetPos(&mouseX, &mouseY, &mouseWin)
-
     if (Abs(mouseX - g_LastMousePos.x) > 10 || Abs(mouseY - g_LastMousePos.y) > 10) {
         g_WindowList := GetWindowsAtMousePos(mouseX, mouseY)
         g_CurrentIndex := 0
@@ -36,7 +35,6 @@ SwitchWindow(direction) {
     }
     if (g_WindowList.Length = 0)
         return
-
     if (g_CurrentIndex = 0) {
         g_CurrentIndex := 1
     } else {
@@ -48,12 +46,10 @@ SwitchWindow(direction) {
     }
     try {
         hwnd := g_WindowList[g_CurrentIndex]
-
         if (hwnd = g_LastActiveHwnd) {
             ShowToolTip("窗口 " g_CurrentIndex " / " g_WindowList.Length " - " WinGetTitle("ahk_id " hwnd) " (已激活)")
             return
         }
-
         SwitchToWindow(hwnd)
         g_LastActiveHwnd := hwnd
         ShowToolTip("窗口 " g_CurrentIndex " / " g_WindowList.Length " - " WinGetTitle("ahk_id " hwnd))
@@ -62,19 +58,14 @@ SwitchWindow(direction) {
 
 SwitchToWindow(hwnd) {
     global g_UnpinTimer
-
     if (WinGetMinMax("ahk_id " hwnd) = -1) {
         WinRestore("ahk_id " hwnd)
     }
-
     WinSetAlwaysOnTop(1, "ahk_id " hwnd)
-
     if (g_UnpinTimer) {
         SetTimer(g_UnpinTimer, 0)
     }
-
     unpinFunc := UnpinWindow.Bind(hwnd)
-
     g_UnpinTimer := unpinFunc
     SetTimer(unpinFunc, -50)
 }
@@ -88,7 +79,6 @@ GetWindowsAtMousePos(mouseX, mouseY) {
     static lastMousePos := {x: 0, y: 0}
     static lastWindows := []
     static lastTimestamp := 0
-
     currentTime := A_TickCount
     if (Abs(mouseX - lastMousePos.x) <= 2 && Abs(mouseY - lastMousePos.y) <= 2 && currentTime - lastTimestamp < 500) {
         return lastWindows
@@ -97,34 +87,27 @@ GetWindowsAtMousePos(mouseX, mouseY) {
     allWindows := WinGetList()
     windows.Capacity := allWindows.Length
     for hwnd in allWindows {
-
         style := WinGetStyle("ahk_id " hwnd)
         if (!(style & 0x10000000))
             continue
-
         if (WinGetMinMax("ahk_id " hwnd) = -1)
             continue
-
         class := WinGetClass("ahk_id " hwnd)
         if (class = "Progman" || class = "WorkerW" || class = "Shell_TrayWnd" ||
             class = "Shell_SecondaryTrayWnd" || class = "NotifyIconOverflowWindow" ||
             class = "Windows.UI.Core.CoreWindow") {
             continue
         }
-
         exStyle := WinGetExStyle("ahk_id " hwnd)
         if (exStyle & 0x80)
             continue
-
         title := WinGetTitle("ahk_id " hwnd)
         if (title = "")
             continue
-
         if (IsPointInWindowOptimized(hwnd, mouseX, mouseY)) {
             windows.Push(hwnd)
         }
     }
-
     lastMousePos := {x: mouseX, y: mouseY}
     lastWindows := windows
     lastTimestamp := currentTime
