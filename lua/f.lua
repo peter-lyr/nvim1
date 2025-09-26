@@ -596,6 +596,14 @@ function F.execute_out_buffer(cmd)
 	vim.fn.append(vim.fn.line("$"), lines)
 end
 
+function F.execute_out()
+	vim.ui.input({ prompt = "execute_out: ", default = "ls!" }, function(cmd)
+		if cmd then
+			F.execute_out_buffer(cmd)
+		end
+	end)
+end
+
 function F.notifications_buffer()
 	F.lazy_load("nvim-notify")
 	F.execute_out_buffer("Notifications")

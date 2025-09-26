@@ -51,4 +51,11 @@ require("which-key").register({
 		"Fidget clear_history",
 		mode = { "n", "v" },
 	},
+	["<leader>be"] = {
+		function()
+			require("f").execute_out()
+		end,
+		"execute_out",
+		mode = { "n", "v" },
+	},
 })
