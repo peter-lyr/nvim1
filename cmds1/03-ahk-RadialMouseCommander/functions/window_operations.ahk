@@ -1,10 +1,27 @@
-; 窗口操作相关函数
-
 #Requires AutoHotkey v2.0
 
-; 窗口操作变量
 global g_WindowResizeInfo := {win: 0, startMouseX: 0, startMouseY: 0, startWinX: 0, startWinY: 0, startWinW: 0, startWinH: 0, resizeEdge: ""}
 global g_WindowMoveInfo := {win: 0, startMouseX: 0, startMouseY: 0, startWinX: 0, startWinY: 0}
+
+;;桌面不透明化
+g_WindowsNoTransparencyControl := [
+    "ahk_class tooltips_class32",
+    GetDesktopClass(),
+]
+
+GetDesktopClass() {
+    Loop {
+        hwnd := WinExist("ahk_class WorkerW")
+        if !hwnd
+            break
+        if ControlGetHwnd("SHELLDLL_DefView1", hwnd) {
+            return "ahk_class WorkerW"
+        }
+    }
+    if WinExist("ahk_class Progman")
+        return "ahk_class Progman"
+    return 0
+}
 
 ActivateTargetWindow() {
     global g_TargetWindowHwnd
@@ -60,8 +77,14 @@ ClickAtTargetPosition() {
 }
 
 TransparencyDown(hwnd := 0) {
+    hwnd := WinExist(hwnd)
     if not hwnd {
         return
+    }
+    for _, winTitle in g_WindowsNoTransparencyControl {
+        if hwnd = WinExist(winTitle) {
+            return
+        }
     }
     currentTransparency := WinGetTransparent(hwnd)
     if (currentTransparency = "")
@@ -74,8 +97,14 @@ TransparencyDown(hwnd := 0) {
 }
 
 TransparencyUp(hwnd := 0) {
+    hwnd := WinExist(hwnd)
     if not hwnd {
         return
+    }
+    for _, winTitle in g_WindowsNoTransparencyControl {
+        if hwnd = WinExist(winTitle) {
+            return
+        }
     }
     currentTransparency := WinGetTransparent(hwnd)
     if (currentTransparency = "")

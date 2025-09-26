@@ -1,5 +1,5 @@
 #Requires AutoHotkey v2.0
 
 ^#;:: {
-    tooltip(WinExist("A"))
+    tooltip(WinExist(0))
 }
