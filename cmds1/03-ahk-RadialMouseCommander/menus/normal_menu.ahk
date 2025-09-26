@@ -10,7 +10,8 @@ g_Timeout := 8000
 MenuDefinitions := Map(
     "normal", Map(
         "q", ["打开企业微信", ActivateWXWorkExe, false],
-        ; "b", ["打开计算器", Run.Bind("calc.exe"), false],
+        ",", ["打开或激活nvim-0.10.4", ActivateOrLaunch.Bind("ahk_exe nvim-qt.exe", "C:\Program Files\Neovim-0.10.4\bin\nvim-qt.exe -- -u ~/AppData/Local/nvim/init-qt.vim"), false],
+        ".", ["打开或激活nvim-0.11.4", ActivateOrLaunch.Bind("ahk_exe nvim-qt.exe", "nvim-qt.exe -- -u ~/Dp1/lazy/nvim1/init-qt.vim"), false],
         ; "c", ["打开画图", Run.Bind("mspaint.exe"), false],
         ; "d", ["进入second菜单", SwitchMenu.Bind("second"), true]
     ),
