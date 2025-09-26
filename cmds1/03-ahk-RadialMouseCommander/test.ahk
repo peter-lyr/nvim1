@@ -2,4 +2,5 @@
 
 ^#;:: {
     tooltip(WinExist(0))
+    SetTimer(Tooltip, -2000)
 }
