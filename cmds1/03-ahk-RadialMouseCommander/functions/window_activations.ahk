@@ -69,7 +69,8 @@ ActivateExisted(windowTitle) {
     return false
 }
 
-ActivateOrRun(windowTitle, appPath) {
+ActivateSelOrRun(windowTitle, appPath) {
+    ;暂时不用，而用ActivateOrRun
     DetectHiddenWindows False
     windowList := WinGetList(windowTitle)
     if (windowList.Length > 0) {
@@ -111,6 +112,65 @@ ActivateOrRun(windowTitle, appPath) {
     return false
 }
 
+ActivateOrRun(windowTitle, appPath) {
+    static lastActivation := Map()
+    DetectHiddenWindows False
+    windowList := WinGetList(windowTitle)
+    if (windowList.Length > 0) {
+        if (windowList.Length > 1) {
+            activeWindowID := WinGetID("A")
+            filteredList := []
+            for windowID in windowList {
+                if (windowID != activeWindowID) {
+                    filteredList.Push(windowID)
+                }
+            }
+            if (filteredList.Length = 0) {
+                Run(appPath)
+                if (WinWait(windowTitle, , 5) && WinExist(windowTitle)) {
+                    WinActivate(windowTitle)
+                    return true
+                }
+            } else if (filteredList.Length = 1) {
+                if (ActivateExisted("ahk_id " filteredList[1])) {
+                    lastActivation[windowTitle] := 0
+                    return true
+                }
+            } else {
+                if (!lastActivation.Has(windowTitle)) {
+                    lastActivation[windowTitle] := 0
+                }
+                nextIndex := lastActivation[windowTitle] + 1
+                if (nextIndex >= filteredList.Length) {
+                    nextIndex := 0
+                }
+                if (ActivateExisted("ahk_id " filteredList[nextIndex + 1])) {
+                    lastActivation[windowTitle] := nextIndex
+                    return true
+                }
+            }
+        } else {
+            if (ActivateExisted("ahk_id " windowList[1])) {
+                lastActivation[windowTitle] := 0
+                return true
+            }
+        }
+    } else {
+        Run(appPath)
+        if (WinWait(windowTitle, , 5) && WinExist(windowTitle)) {
+            WinActivate(windowTitle)
+            return true
+        }
+    }
+    return false
+}
+
+RestoreClipboard(ClipboardOld) {
+    A_Clipboard := ClipboardOld
+    ClipboardOld := ""
+    Sleep(50)
+}
+
 RunInWinR(windowTitle, appPath) {
     ClipboardOld := A_Clipboard
     Sleep(50)
@@ -140,7 +200,8 @@ RunInWinR(windowTitle, appPath) {
     return false
 }
 
-ActivateOrRunInWinR(windowTitle, appPath) {
+ActivateSelOrRunInWinR(windowTitle, appPath) {
+    ;暂时不用，而用ActivateOrRunInWinR
     DetectHiddenWindows False
     windowList := WinGetList(windowTitle)
     if (windowList.Length > 0) {
@@ -174,8 +235,47 @@ ActivateOrRunInWinR(windowTitle, appPath) {
     return false
 }
 
-RestoreClipboard(ClipboardOld) {
-    A_Clipboard := ClipboardOld
-    ClipboardOld := ""
-    Sleep(50)
+ActivateOrRunInWinR(windowTitle, appPath) {
+    static lastActivation := Map()
+    DetectHiddenWindows False
+    windowList := WinGetList(windowTitle)
+    if (windowList.Length > 0) {
+        if (windowList.Length > 1) {
+            activeWindowID := WinGetID("A")
+            filteredList := []
+            for windowID in windowList {
+                if (windowID != activeWindowID) {
+                    filteredList.Push(windowID)
+                }
+            }
+            if (filteredList.Length = 0) {
+                RunInWinR(windowTitle, appPath)
+            } else if (filteredList.Length = 1) {
+                if (ActivateExisted("ahk_id " filteredList[1])) {
+                    lastActivation[windowTitle] := 0
+                    return true
+                }
+            } else {
+                if (!lastActivation.Has(windowTitle)) {
+                    lastActivation[windowTitle] := 0
+                }
+                nextIndex := lastActivation[windowTitle] + 1
+                if (nextIndex >= filteredList.Length) {
+                    nextIndex := 0
+                }
+                if (ActivateExisted("ahk_id " filteredList[nextIndex + 1])) {
+                    lastActivation[windowTitle] := nextIndex
+                    return true
+                }
+            }
+        } else {
+            if (ActivateExisted("ahk_id " windowList[1])) {
+                lastActivation[windowTitle] := 0
+                return true
+            }
+        }
+    } else {
+        RunInWinR(windowTitle, appPath)
+    }
+    return false
 }

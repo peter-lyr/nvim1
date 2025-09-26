@@ -10,15 +10,15 @@ g_Timeout := 8000
 MenuDefinitions := Map(
     "normal", Map(
         "q", ["打开企业微信", ActivateWXWorkExe, false],
-        ",", ["打开或激活nvim-0.10.4", ActivateOrRunInWinR.Bind("ahk_exe nvim-qt.exe", "C:\Program Files\Neovim-0.10.4\bin\nvim-qt.exe -- -u ~/AppData/Local/nvim/init-qt.vim"), false],
-        ".", ["打开或激活nvim-0.11.4", ActivateOrRun.Bind("ahk_exe nvim-qt.exe", "nvim-qt.exe -- -u ~/Dp1/lazy/nvim1/init-qt.vim"), false],
+        ",", ["打开或激活nvim-0.10.4", ActivateOrRunInWinR.Bind("ahk_exe nvim-qt.exe", "C:\Program Files\Neovim-0.10.4\bin\nvim-qt.exe -- -u ~/AppData/Local/nvim/init-qt.vim"), true],
+        ".", ["打开或激活nvim-0.11.4", ActivateOrRun.Bind("ahk_exe nvim-qt.exe", "nvim-qt.exe -- -u ~/Dp1/lazy/nvim1/init-qt.vim"), true],
         "/", ["激活mstsc", ActivateExisted.Bind("ahk_exe mstsc.exe"), false],
         "a", ["activate", SwitchMenu.Bind("activate"), true],
         "r", ["run", SwitchMenu.Bind("run"), true],
     ),
     "activate", Map(
-        ",", ["打开或激活nvim-0.10.4", ActivateOrRunInWinR.Bind("ahk_exe nvim-qt.exe", "C:\Program Files\Neovim-0.10.4\bin\nvim-qt.exe -- -u ~/AppData/Local/nvim/init-qt.vim"), false],
-        ".", ["打开或激活nvim-0.11.4", ActivateOrRun.Bind("ahk_exe nvim-qt.exe", "nvim-qt.exe -- -u ~/Dp1/lazy/nvim1/init-qt.vim"), false],
+        ",", ["打开或激活nvim-0.10.4", ActivateOrRunInWinR.Bind("ahk_exe nvim-qt.exe", "C:\Program Files\Neovim-0.10.4\bin\nvim-qt.exe -- -u ~/AppData/Local/nvim/init-qt.vim"), true],
+        ".", ["打开或激活nvim-0.11.4", ActivateOrRun.Bind("ahk_exe nvim-qt.exe", "nvim-qt.exe -- -u ~/Dp1/lazy/nvim1/init-qt.vim"), true],
         "/", ["激活mstsc", ActivateExisted.Bind("ahk_exe mstsc.exe"), false],
         "n", ["normal", SwitchMenu.Bind("normal"), true],
     ),
