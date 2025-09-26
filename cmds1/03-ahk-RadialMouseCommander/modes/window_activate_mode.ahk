@@ -1,5 +1,7 @@
 #Requires AutoHotkey v2.0
 
+;;在一个位置附件边移动鼠标边滚动滚轮，只有一个窗口被激活，没有第二个窗口被激活
+
 global g_WindowList := []
 global g_CurrentIndex := 0
 global g_LastMousePos := {x: 0, y: 0}
