@@ -70,8 +70,37 @@ ActivateExisted(windowTitle) {
 }
 
 ActivateOrRun(windowTitle, appPath) {
-    if (WinExist(windowTitle)) {
-        ActivateExisted(windowTitle)
+    DetectHiddenWindows False
+    windowList := WinGetList(windowTitle)
+    if (windowList.Length > 0) {
+        if (windowList.Length > 1) {
+            activeWindowID := WinGetID("A")
+            filteredList := []
+            for windowID in windowList {
+                if (windowID != activeWindowID) {
+                    filteredList.Push(windowID)
+                }
+            }
+            if (filteredList.Length = 0) {
+                Run(appPath)
+                if (WinWait(windowTitle, , 5) && WinExist(windowTitle)) {
+                    WinActivate(windowTitle)
+                    return true
+                }
+            } else if (filteredList.Length = 1) {
+                if (ActivateExisted("ahk_id " filteredList[1])) {
+                    return true
+                }
+            } else {
+                if (ActivateExistedSel(filteredList)) {
+                    return true
+                }
+            }
+        } else {
+            if (ActivateExisted("ahk_id " windowList[1])) {
+                return true
+            }
+        }
     } else {
         Run(appPath)
         if (WinWait(windowTitle, , 5) && WinExist(windowTitle)) {
