@@ -1,5 +1,7 @@
 #Requires AutoHotkey v2.0
 
+;;优化GetWindowsAtMousePos性能
+
 global g_WindowList := []
 global g_CurrentIndex := 0
 global g_LastMousePos := {x: 0, y: 0}
@@ -45,20 +47,43 @@ SwitchWindow(direction) {
 }
 
 GetWindowsAtMousePos(mouseX, mouseY) {
+    static lastMousePos := {x: 0, y: 0}
+    static lastWindows := []
+    static lastTimestamp := 0
+    currentTime := A_TickCount
+    if (Abs(mouseX - lastMousePos.x) <= 2 && Abs(mouseY - lastMousePos.y) <= 2 && currentTime - lastTimestamp < 500) {
+        return lastWindows
+    }
     windows := []
-    topWindow := DllCall("WindowFromPoint", "int64", (mouseY << 32) | (mouseX & 0xFFFFFFFF), "ptr")
     allWindows := WinGetList()
+    windows.Capacity := allWindows.Length
     for hwnd in allWindows {
-        if (IsDesktopOrTaskbar(hwnd))
+        if (!WinGetStyle("ahk_id " hwnd) & 0x10000000)
             continue
-        if (!IsWindowValid(hwnd))
+        if (WinGetMinMax("ahk_id " hwnd) = -1)
             continue
-        if (IsPointInWindow(hwnd, mouseX, mouseY)) {
+        class := WinGetClass("ahk_id " hwnd)
+        if (class = "Progman" || class = "WorkerW" || class = "Shell_TrayWnd" || class = "Shell_SecondaryTrayWnd")
+            continue
+        if (IsPointInWindowOptimized(hwnd, mouseX, mouseY)) {
             windows.Push(hwnd)
         }
     }
-    windows := SortWindowsByZOrder(windows)
+    lastMousePos := {x: mouseX, y: mouseY}
+    lastWindows := windows
+    lastTimestamp := currentTime
     return windows
+}
+
+IsPointInWindowOptimized(hwnd, x, y) {
+    rect := Buffer(16, 0)
+    if !DllCall("GetWindowRect", "ptr", hwnd, "ptr", rect)
+        return false
+    left := NumGet(rect, 0, "Int")
+    top := NumGet(rect, 4, "Int")
+    right := NumGet(rect, 8, "Int")
+    bottom := NumGet(rect, 12, "Int")
+    return (x >= left && x <= right && y >= top && y <= bottom)
 }
 
 IsWindowValid(hwnd) {
@@ -109,33 +134,12 @@ IsToolWindow(hwnd) {
     return (exStyle & 0x80)
 }
 
-SortWindowsByZOrder(windows) {
-    if (windows.Length <= 1)
-        return windows
-    sorted := []
-    allWindows := WinGetList()
-    for hwnd in allWindows {
-        if (HasValue(windows, hwnd)) {
-            sorted.Push(hwnd)
-        }
-    }
-    return sorted
-}
-
-HasValue(arr, value) {
-    for item in arr {
-        if (item = value)
-            return true
-    }
-    return false
-}
-
 ShowToolTip(text) {
     ToolTip(text)
     SetTimer(() => ToolTip(), -1500)
 }
 
-^D:: {
+^Del:: {
     CoordMode("Mouse", "Screen")
     MouseGetPos(&mouseX, &mouseY, &mouseWin)
     title := WinGetTitle("ahk_id " mouseWin)
@@ -152,7 +156,7 @@ ShowToolTip(text) {
     MsgBox(info)
 }
 
-^R:: {
+^End:: {
     global g_WindowList, g_CurrentIndex, g_LastMousePos
     MouseGetPos(&mouseX, &mouseY)
     g_WindowList := GetWindowsAtMousePos(mouseX, mouseY)
@@ -165,7 +169,7 @@ ShowToolTip(text) {
     }
 }
 
-^L:: {
+^PgDn:: {
     global g_WindowList, g_CurrentIndex
     if (g_WindowList.Length = 0) {
         MsgBox("没有找到窗口")
