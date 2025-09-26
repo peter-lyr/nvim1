@@ -1,33 +1,15 @@
 #Requires AutoHotkey v2.0
 
-;;在一个位置附件边移动鼠标边滚动滚轮，只有一个窗口被激活，没有第二个窗口被激活
-
 global g_WindowList := []
 global g_CurrentIndex := 0
 global g_LastMousePos := {x: 0, y: 0}
-global g_WheelBlocked := false
 
 WheelUp:: {
-    global g_WheelBlocked
-    if (g_WheelBlocked)
-        return
-    g_WheelBlocked := true
     SwitchWindow(-1)
-    SetTimer(UnblockWheel, -300)
 }
 
 WheelDown:: {
-    global g_WheelBlocked
-    if (g_WheelBlocked)
-        return
-    g_WheelBlocked := true
     SwitchWindow(1)
-    SetTimer(UnblockWheel, -300)
-}
-
-UnblockWheel() {
-    global g_WheelBlocked
-    g_WheelBlocked := false
 }
 
 SwitchWindow(direction) {
@@ -44,10 +26,8 @@ SwitchWindow(direction) {
             ShowToolTip("未找到符合条件的窗口")
         }
     }
-    if (g_WindowList.Length = 0) {
-        g_WheelBlocked := false
+    if (g_WindowList.Length = 0)
         return
-    }
     if (g_CurrentIndex = 0) {
         g_CurrentIndex := 1
     } else {
@@ -60,7 +40,6 @@ SwitchWindow(direction) {
     try {
         hwnd := g_WindowList[g_CurrentIndex]
         WinActivate("ahk_id " hwnd)
-        g_WheelBlocked := false
         ShowToolTip("窗口 " g_CurrentIndex " / " g_WindowList.Length " - " WinGetTitle("ahk_id " hwnd))
     }
 }
@@ -175,7 +154,6 @@ ShowToolTip(text) {
 
 ^R:: {
     global g_WindowList, g_CurrentIndex, g_LastMousePos
-    CoordMode("Mouse", "Screen")
     MouseGetPos(&mouseX, &mouseY)
     g_WindowList := GetWindowsAtMousePos(mouseX, mouseY)
     g_CurrentIndex := 0
