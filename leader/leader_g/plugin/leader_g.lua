@@ -112,6 +112,21 @@ require("which-key").register({
 		"status",
 		mode = { "n", "v" },
 	},
+	["<leader>gv"] = { name = "move" },
+	["<leader>gvs"] = {
+		function()
+			G.diffview_stash()
+		end,
+		"diffview_stash",
+		mode = { "n", "v" },
+	},
+	["<leader>gvo"] = {
+		function()
+			G.diffview_open()
+		end,
+		"diffview_open",
+		mode = { "n", "v" },
+	},
 })
 
 require("which-key").register({

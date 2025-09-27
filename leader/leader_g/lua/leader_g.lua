@@ -141,4 +141,12 @@ function G.status()
 	require("f").async_run("git status")
 end
 
+function G.diffview_stash()
+	vim.cmd([[DiffviewFileHistory --walk-reflogs --range=stash]])
+end
+
+function G.diffview_open()
+	vim.cmd([[DiffviewOpen]])
+end
+
 return G
