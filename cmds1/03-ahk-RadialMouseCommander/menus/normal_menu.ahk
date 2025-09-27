@@ -29,10 +29,7 @@ MenuDefinitions := Map(
     ),
 )
 
-#HotIf g_CurrentMode != "null"
-
-~LAlt::
-{
+~LAlt:: {
     global g_MenuMode, g_LastAltPress, g_DoubleClickTime
     currentTime := A_TickCount
     if (currentTime - g_LastAltPress < g_DoubleClickTime && !g_MenuMode) {
@@ -41,8 +38,6 @@ MenuDefinitions := Map(
     }
     g_LastAltPress := currentTime
 }
-
-#HotIf
 
 EnterMenuMode(menuType) {
     global g_MenuMode, g_CurrentMenu, g_MenuTimer, g_Timeout, MenuDefinitions

@@ -40,27 +40,28 @@ EnterNormalMode() {
     ShowTimedTooltip("已恢复到normal模式")
 }
 
-^!t:: {
-    Global g_CurrentMode
-    if (g_CurrentMode = "null") {
-        g_CurrentMode := "normal"
-    } else {
-        g_CurrentMode := "null"
-    }
-    ShowTimedTooltip("g_CurrentMode: " g_CurrentMode)
-}
-
-^!r:: {
-    Reload
-}
-
 RButtonDo() {
     CaptureWindowUnderCursor()
     DisplayRadialMenuAtCursor()
     InitRadialMenuTooltip()
 }
 
-#HotIf g_CurrentMode != "null"
+^!r:: {
+    Reload
+}
+
+^!c:: {
+    CompileMouseAndRun()
+}
+
+^!t:: {
+    if FileExist(A_ScriptDir "\o.exe") != "A" {
+        CmdRunSilent(A_ScriptDir . "\o2exe.bat")
+    } else {
+        CmdRunSilent(A_ScriptDir . "\o.exe")
+    }
+    ExitApp
+}
 
 RButton:: {
     ResetButtonStates()
@@ -82,8 +83,6 @@ RButton Up:: {
     }
     ResetButtonStates()
 }
-
-#HotIf
 
 #HotIf g_CurrentMode = "normal"
 

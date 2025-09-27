@@ -10,13 +10,14 @@
 #Include functions/tooltips.ahk
 #Include functions/window_operations.ahk
 #Include functions/window_activations.ahk
+#Include functions/utils.ahk
 #Include hotkeys/window_operations.ahk
 
 ; 初始化
 InitializeNormalModeActions()
 DisplayRadialMenuAtCursor()
 HideRadialMenu()
-ShowTimedTooltip("mouse started", 800)
+CheckExe()
 
 ; 热键
 ^Ins::ExitApp
