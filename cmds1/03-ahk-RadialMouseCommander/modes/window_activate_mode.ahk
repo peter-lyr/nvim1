@@ -4,11 +4,15 @@
 ;;彻底修复切换激活窗口导致任务栏图标闪烁的问题
 ;;避免误置顶窗口
 ;;已适配模式
+;;滚动滚轮，所有窗口透明度设180，2秒后恢复原透明度
 
 global g_WindowList := []
 global g_CurrentIndex := 0
 global g_LastMousePos := {x: 0, y: 0}
 global g_LastActiveHwnd := 0
+global g_OriginalTransparency := Map()
+global g_ActivateTransparency := 180
+global g_OpacityTimer := 0
 
 EnterWindowActivateMode() {
     ModeActionsSet("window_activate",
@@ -25,13 +29,17 @@ EnterWindowActivateMode() {
 
 SwitchWindow(direction) {
     global g_WindowList, g_CurrentIndex, g_LastMousePos, g_LastActiveHwnd
+    global g_OriginalTransparency, g_OpacityTimer
+    ResetOpacityTimer()
     CoordMode("Mouse", "Screen")
     MouseGetPos(&mouseX, &mouseY, &mouseWin)
     if (Abs(mouseX - g_LastMousePos.x) > 10 || Abs(mouseY - g_LastMousePos.y) > 10) {
+        RestoreAllWindowsOpacity()
         g_WindowList := GetWindowsAtMousePos(mouseX, mouseY)
         g_CurrentIndex := 0
         g_LastMousePos := {x: mouseX, y: mouseY}
         g_LastActiveHwnd := 0
+        SetWindowsOpacity(g_ActivateTransparency)
         if (g_WindowList.Length > 0) {
             ShowTimedTooltip("找到 " g_WindowList.Length " 个窗口")
         } else {
@@ -61,41 +69,46 @@ SwitchWindow(direction) {
     }
 }
 
-SwitchToWindow(hwnd) {
-    if (WinActive("ahk_id " hwnd)) {
-        return
-    }
-    if (WinGetMinMax("ahk_id " hwnd) = -1) {
-        WinRestore("ahk_id " hwnd)
-    }
-    ActivateWindowSafely(hwnd)
-}
-
-ActivateWindowSafely(hwnd) {
-    SimulateAltTab(hwnd)
-    if (!WinActive("ahk_id " hwnd)) {
+SetWindowsOpacity(opacity := 180) {
+    global g_WindowList, g_OriginalTransparency
+    for hwnd in g_WindowList {
+        if (!g_OriginalTransparency.Has(hwnd)) {
+            try {
+                originalOpacity := WinGetTransparent("ahk_id " hwnd)
+                g_OriginalTransparency[hwnd] := originalOpacity = "" ? 255 : originalOpacity
+            } catch {
+                g_OriginalTransparency[hwnd] := 255
+            }
+        }
         try {
-            DllCall("SetForegroundWindow", "ptr", hwnd)
+            WinSetTransparent(opacity, "ahk_id " hwnd)
         }
     }
 }
 
-SimulateAltTab(hwnd) {
-    originalHwnd := WinGetID("A")
-    if (originalHwnd = hwnd) {
-        return
+RestoreAllWindowsOpacity() {
+    global g_OriginalTransparency
+    for hwnd, originalOpacity in g_OriginalTransparency {
+        try {
+            WinSetTransparent(originalOpacity, "ahk_id " hwnd)
+        }
     }
-    Send("!{Esc}")
-    WinWaitActive("ahk_id " hwnd, , 0.1)
-    if (!WinActive("ahk_id " hwnd)) {
-        WinActivate("ahk_id " hwnd)
+    g_OriginalTransparency.Clear()
+}
+
+ResetOpacityTimer() {
+    global g_OpacityTimer
+    if (g_OpacityTimer) {
+        SetTimer(g_OpacityTimer, 0)
     }
+    g_OpacityTimer := SetTimer(RestoreAllWindowsOpacity, -2000)
 }
 
 GetWindowsAtMousePos(mouseX, mouseY) {
     static lastMousePos := {x: 0, y: 0}
     static lastWindows := []
     static lastTimestamp := 0
+    ResetOpacityTimer()
     currentTime := A_TickCount
     if (Abs(mouseX - lastMousePos.x) <= 2 && Abs(mouseY - lastMousePos.y) <= 2 && currentTime - lastTimestamp < 500) {
         return lastWindows
@@ -131,6 +144,37 @@ GetWindowsAtMousePos(mouseX, mouseY) {
     return windows
 }
 
+SwitchToWindow(hwnd) {
+    if (WinActive("ahk_id " hwnd)) {
+        return
+    }
+    if (WinGetMinMax("ahk_id " hwnd) = -1) {
+        WinRestore("ahk_id " hwnd)
+    }
+    ActivateWindowSafely(hwnd)
+}
+
+ActivateWindowSafely(hwnd) {
+    SimulateAltTab(hwnd)
+    if (!WinActive("ahk_id " hwnd)) {
+        try {
+            DllCall("SetForegroundWindow", "ptr", hwnd)
+        }
+    }
+}
+
+SimulateAltTab(hwnd) {
+    originalHwnd := WinGetID("A")
+    if (originalHwnd = hwnd) {
+        return
+    }
+    Send("!{Esc}")
+    WinWaitActive("ahk_id " hwnd, , 0.1)
+    if (!WinActive("ahk_id " hwnd)) {
+        WinActivate("ahk_id " hwnd)
+    }
+}
+
 IsPointInWindowOptimized(hwnd, x, y) {
     rect := Buffer(16, 0)
     if !DllCall("GetWindowRect", "ptr", hwnd, "ptr", rect)
@@ -153,6 +197,7 @@ WheelDown:: {
 }
 
 LButton:: {
+    RestoreAllWindowsOpacity()
     EnterNormalMode()
 }
 
