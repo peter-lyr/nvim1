@@ -6,28 +6,31 @@ global g_CurrentMode := "normal"
 
 ; 初始化普通模式动作映射
 InitializeNormalModeActions() {
-    global g_ModeActionMappings
-    actionsMap := Map()
-    actionsMap["000U"] := ["窗口激活模式", EnterWindowActivateMode]
-    actionsMap["000D"] := ["向下移动光标", Send.Bind("{Down}")]
-    actionsMap["000L"] := ["向左移动光标", Send.Bind("{Left}")]
-    actionsMap["000R"] := ["向右移动光标", Send.Bind("{Right}")]
-    actionsMap["000LD"] := ["Esc", Send.Bind("{Esc}")]
-    actionsMap["000RU"] := ["切换最大化窗口", ToggleTargetWindowMaximize]
-    actionsMap["000RD"] := ["最小化窗口", MinimizeTargetWindow]
-    actionsMap["000LU"] := ["窗口控制模式", EnterWindowControlMode]
-    actionsMap["100LU"] := ["窗口控制模式2", EnterWindowControlMode2]
-    actionsMap["010R"] := ["切换菜单提示", ToggleUpdateRadialMenuTooltipEn]
-    actionsMap["010RU"] := ["切换2秒提示", ToggleShowTimedTooltipEn]
-    g_ModeActionMappings["normal"] := actionsMap
+    ModeActionsSetDo("normal",
+        "000U", ["窗口激活模式", EnterWindowActivateMode],
+        "000D", ["向下移动光标", Send.Bind("{Down}")],
+        "000L", ["向左移动光标", Send.Bind("{Left}")],
+        "000R", ["向右移动光标", Send.Bind("{Right}")],
+        "000LD", ["Esc", Send.Bind("{Esc}")],
+        "000RU", ["切换最大化窗口", ToggleTargetWindowMaximize],
+        "000RD", ["最小化窗口", MinimizeTargetWindow],
+        "000LU", ["窗口控制模式", EnterWindowControlMode],
+        "100LU", ["窗口控制模式2", EnterWindowControlMode2],
+        "010R", ["切换菜单提示", ToggleUpdateRadialMenuTooltipEn],
+        "010RU", ["切换2秒提示", ToggleShowTimedTooltipEn],
+    )
 }
 
-ModeActionsSet(modeName, actions*) {
+ModeActionsSetDo(modeName, actions*) {
     global g_ModeActionMappings
     global g_CurrentMode := modeName
     actionsMap := Map()
     actionsMap.Set(actions*)
     g_ModeActionMappings[g_CurrentMode] := actionsMap
+}
+
+ModeActionsSet(modeName, actions*) {
+    ModeActionsSetDo(modeName, actions*)
     ShowTimedTooltip("已切换到" g_CurrentMode "模式")
 }
 
