@@ -1,5 +1,16 @@
 #Requires AutoHotkey v2.0
 
+MyWinActivate(winTitle) {
+    WinWaitActive(winTitle, , 0.1)
+    if (!WinActive(winTitle)) {
+        WinActivate(winTitle)
+    }
+    if (WinActive(winTitle)) {
+        return true
+    }
+    return false
+}
+
 ActivateWXWorkExe() {
     static s_WxWorkFlag := 0
     if WinActive("ahk_exe mstsc.exe") {

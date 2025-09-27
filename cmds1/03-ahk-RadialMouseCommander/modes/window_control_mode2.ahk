@@ -10,6 +10,7 @@ EnterWindowControlMode2() {
         "000L", ["恢复普通模式", EnterNormalMode],
         "000R", ["单击目标", ClickAtTargetPosition],
         "000LU", ["窗口控制模式", EnterWindowControlMode],
+        "100LU", ["窗口Kill模式", EnterWindowKillMode],
     )
 }
 
