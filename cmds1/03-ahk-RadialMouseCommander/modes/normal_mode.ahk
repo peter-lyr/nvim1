@@ -50,6 +50,10 @@ EnterNormalMode() {
     ShowTimedTooltip("g_CurrentMode: " g_CurrentMode)
 }
 
+^!r:: {
+    Reload
+}
+
 RButtonDo() {
     CaptureWindowUnderCursor()
     DisplayRadialMenuAtCursor()

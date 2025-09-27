@@ -16,6 +16,7 @@
 InitializeNormalModeActions()
 DisplayRadialMenuAtCursor()
 HideRadialMenu()
+ShowTimedTooltip("mouse started", 800)
 
 ; 热键
 ^Ins::ExitApp

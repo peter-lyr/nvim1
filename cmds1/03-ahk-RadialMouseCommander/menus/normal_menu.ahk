@@ -29,6 +29,8 @@ MenuDefinitions := Map(
     ),
 )
 
+#HotIf g_CurrentMode != "null"
+
 ~LAlt::
 {
     global g_MenuMode, g_LastAltPress, g_DoubleClickTime
@@ -39,6 +41,8 @@ MenuDefinitions := Map(
     }
     g_LastAltPress := currentTime
 }
+
+#HotIf
 
 EnterMenuMode(menuType) {
     global g_MenuMode, g_CurrentMenu, g_MenuTimer, g_Timeout, MenuDefinitions
