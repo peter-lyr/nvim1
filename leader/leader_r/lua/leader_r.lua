@@ -42,7 +42,7 @@ function R.run_cur_file(no_console_window, auto_exit, force_cmd)
 		else
 			local _pluginlua, _ = require("f").get_plugin_lua(cur_file)
 			R.source(_pluginlua)
-			if cur_file ~= cur_file then
+			if cur_file ~= _pluginlua then
 				R.source(cur_file)
 			end
 		end
