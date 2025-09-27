@@ -1,21 +1,22 @@
-; 普通模式配置
-
 #Requires AutoHotkey v2.0
 
 global g_CurrentMode := "normal"
 
-; 初始化普通模式动作映射
 InitializeNormalModeActions() {
     ModeActionsSetDo("normal",
+        ;;以下3个最常用
+        "000RU", ["切换最大化窗口", ToggleTargetWindowMaximize],
+        "000RD", ["最小化窗口", MinimizeTargetWindow],
+        "000LD", ["Esc", Send.Bind("{Esc}")],
+        ;;各种模式
+        "000LU", ["窗口控制模式", EnterWindowControlMode],
+        "100LU", ["窗口控制模式2", EnterWindowControlMode2],
         "000U", ["窗口激活模式", EnterWindowActivateMode],
+        ;;待替换
         "000D", ["向下移动光标", Send.Bind("{Down}")],
         "000L", ["向左移动光标", Send.Bind("{Left}")],
         "000R", ["向右移动光标", Send.Bind("{Right}")],
-        "000LD", ["Esc", Send.Bind("{Esc}")],
-        "000RU", ["切换最大化窗口", ToggleTargetWindowMaximize],
-        "000RD", ["最小化窗口", MinimizeTargetWindow],
-        "000LU", ["窗口控制模式", EnterWindowControlMode],
-        "100LU", ["窗口控制模式2", EnterWindowControlMode2],
+        ;;配置
         "010R", ["切换菜单提示", ToggleUpdateRadialMenuTooltipEn],
         "010RU", ["切换2秒提示", ToggleShowTimedTooltipEn],
     )
