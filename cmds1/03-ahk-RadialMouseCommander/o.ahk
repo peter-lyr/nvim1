@@ -33,6 +33,21 @@ CheckExe() {
     CompileOAndRun()
 }
 
+~MButton:: {
+    MouseGetPos(&x, &y)
+    if (x >= 0 && x <= 20 && y >= 0 && y <= 20) {
+        if (A_ThisHotkey = A_PriorHotkey && A_TimeSincePriorHotkey < 500) {
+            mouseExe := A_ScriptDir "\mouse.exe"
+            if FileExist(mouseExe) != "A" {
+                CmdRunSilent(A_ScriptDir . "\mouse2exe.bat")
+            } else {
+                CmdRunSilent(mouseExe)
+            }
+            ExitApp
+        }
+    }
+}
+
 CheckExe()
 
 ^Ins::ExitApp
