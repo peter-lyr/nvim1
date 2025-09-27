@@ -98,6 +98,13 @@ require("which-key").register({
 		"log",
 		mode = { "n", "v" },
 	},
+	["<leader>gu"] = {
+		function()
+			G.status()
+		end,
+		"status",
+		mode = { "n", "v" },
+	},
 })
 
 require("which-key").register({
