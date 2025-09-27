@@ -11,19 +11,16 @@ global g_LastMousePos := {x: 0, y: 0}
 global g_LastActiveHwnd := 0
 
 EnterWindowActivateMode() {
-    global g_CurrentMode := "window_activate"
-    global g_ModeActionMappings
-    actionsMap := Map()
-    actionsMap["000U"] := ["切换窗口置顶", ToggleTargetWindowTopmost]
-    actionsMap["000D"] := ["激活窗口", ActivateTargetWindow]
-    actionsMap["000L"] := ["恢复普通模式", EnterNormalMode]
-    actionsMap["000R"] := ["单击目标", ClickAtTargetPosition]
-    actionsMap["000RU"] := ["切换最大化窗口", ToggleTargetWindowMaximize]
-    actionsMap["000RD"] := ["最小化窗口", MinimizeTargetWindow]
-    actionsMap["000LD"] := ["Esc", Send.Bind("{Esc}")]
-    actionsMap["000LU"] := ["窗口控制模式2", EnterWindowControlMode2]
-    global g_ModeActionMappings[g_CurrentMode] := actionsMap
-    ShowTimedTooltip("已切换到" g_CurrentMode "模式")
+    ModeActionsSet("window_activate",
+        "000U", ["切换窗口置顶", ToggleTargetWindowTopmost],
+        "000D", ["激活窗口", ActivateTargetWindow],
+        "000L", ["恢复普通模式", EnterNormalMode],
+        "000R", ["单击目标", ClickAtTargetPosition],
+        "000RU", ["切换最大化窗口", ToggleTargetWindowMaximize],
+        "000RD", ["最小化窗口", MinimizeTargetWindow],
+        "000LD", ["Esc", Send.Bind("{Esc}")],
+        "000LU", ["窗口控制模式2", EnterWindowControlMode2],
+    )
 }
 
 SwitchWindow(direction) {

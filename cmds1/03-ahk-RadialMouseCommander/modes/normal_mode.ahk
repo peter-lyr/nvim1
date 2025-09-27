@@ -22,6 +22,15 @@ InitializeNormalModeActions() {
     g_ModeActionMappings["normal"] := actionsMap
 }
 
+ModeActionsSet(modeName, actions*) {
+    global g_ModeActionMappings
+    global g_CurrentMode := modeName
+    actionsMap := Map()
+    actionsMap.Set(actions*)
+    g_ModeActionMappings[g_CurrentMode] := actionsMap
+    ShowTimedTooltip("已切换到" g_CurrentMode "模式")
+}
+
 EnterNormalMode() {
     global g_CurrentMode := "normal"
     ShowTimedTooltip("已恢复到normal模式")
