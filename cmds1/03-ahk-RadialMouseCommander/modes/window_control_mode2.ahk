@@ -2,6 +2,7 @@
 
 EnterWindowControlMode2() {
     global g_CurrentMode := "window_control2"
+    modeName := "窗口控制模式2"
     actionsMap := Map()
     actionsMap["000U"] := ["切换窗口置顶", ToggleTargetWindowTopmost]
     actionsMap["000D"] := ["激活窗口", ActivateTargetWindow]
@@ -11,8 +12,8 @@ EnterWindowControlMode2() {
     actionsMap["000RD"] := ["最小化窗口", MinimizeTargetWindow]
     actionsMap["000LD"] := ["Esc", Send.Bind("{Esc}")]
     actionsMap["000LU"] := ["窗口控制模式", EnterWindowControlMode]
-    g_ModeActionMappings["window_control2"] := actionsMap
-    ShowTimedTooltip("已切换到窗口控制模式2`n左键:移动窗口(限制在屏幕内) 中键:调整大小 滚轮:透明度")
+    global g_ModeActionMappings[g_CurrentMode] := actionsMap
+    ShowTimedTooltip("已切换到" modeName)
 }
 
 GetScreenWorkArea(winHwnd) {
