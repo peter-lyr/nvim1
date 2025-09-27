@@ -24,7 +24,7 @@ InitializeNormalModeActions() {
 
 EnterNormalMode() {
     global g_CurrentMode := "normal"
-    ShowTimedTooltip("已恢复原始热键模式")
+    ShowTimedTooltip("已恢复到normal模式")
 }
 
 ^!t:: {

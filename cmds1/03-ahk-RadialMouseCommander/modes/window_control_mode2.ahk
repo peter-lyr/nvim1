@@ -2,7 +2,6 @@
 
 EnterWindowControlMode2() {
     global g_CurrentMode := "window_control2"
-    modeName := "窗口控制模式2"
     actionsMap := Map()
     actionsMap["000U"] := ["切换窗口置顶", ToggleTargetWindowTopmost]
     actionsMap["000D"] := ["激活窗口", ActivateTargetWindow]
@@ -13,7 +12,7 @@ EnterWindowControlMode2() {
     actionsMap["000LD"] := ["Esc", Send.Bind("{Esc}")]
     actionsMap["000LU"] := ["窗口控制模式", EnterWindowControlMode]
     global g_ModeActionMappings[g_CurrentMode] := actionsMap
-    ShowTimedTooltip("已切换到" modeName)
+    ShowTimedTooltip("已切换到" g_CurrentMode "模式")
 }
 
 GetScreenWorkArea(winHwnd) {
