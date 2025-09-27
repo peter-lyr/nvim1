@@ -129,6 +129,10 @@ function G.pull()
 	require("f").async_run("git pull")
 end
 
+function G.push()
+	require("f").async_run("git push")
+end
+
 function G.log()
 	require("f").async_run("git log")
 end

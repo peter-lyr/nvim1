@@ -91,6 +91,13 @@ require("which-key").register({
 		"pull",
 		mode = { "n", "v" },
 	},
+	["<leader>gP"] = {
+		function()
+			G.push()
+		end,
+		"push",
+		mode = { "n", "v" },
+	},
 	["<leader>gl"] = {
 		function()
 			G.log()
