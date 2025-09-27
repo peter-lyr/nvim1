@@ -9,8 +9,7 @@ InitializeNormalModeActions() {
         "000RD", ["最小化窗口", MinimizeTargetWindow],
         "000LD", ["Esc", Send.Bind("{Esc}")],
         ;;各种模式
-        "000LU", ["窗口控制模式", EnterWindowControlMode],
-        "100LU", ["窗口控制模式2", EnterWindowControlMode2],
+        "000LU", ["窗口控制模式2", EnterWindowControlMode2],
         "000U", ["窗口激活模式", EnterWindowActivateMode],
         ;;待替换
         "000D", ["向下移动光标", Send.Bind("{Down}")],
