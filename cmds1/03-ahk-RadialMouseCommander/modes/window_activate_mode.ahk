@@ -5,6 +5,7 @@
 ;;避免误置顶窗口
 ;;已适配模式
 ;;滚动滚轮，所有窗口透明度设180，2秒后恢复原透明度
+;;解决边移鼠标边滚滚轮不激活下一窗口问题
 
 global g_WindowList := []
 global g_CurrentIndex := 0
@@ -49,14 +50,14 @@ SwitchWindow(direction) {
     if (g_WindowList.Length = 0)
         return
     if (g_CurrentIndex = 0) {
-        g_CurrentIndex := 1
+        g_CurrentIndex := 2
     } else {
         g_CurrentIndex += direction
-        if (g_CurrentIndex > g_WindowList.Length)
-            g_CurrentIndex := 1
-        else if (g_CurrentIndex < 1)
-            g_CurrentIndex := g_WindowList.Length
     }
+    if (g_CurrentIndex > g_WindowList.Length)
+        g_CurrentIndex := 1
+    else if (g_CurrentIndex < 1)
+        g_CurrentIndex := g_WindowList.Length
     try {
         hwnd := g_WindowList[g_CurrentIndex]
         if (hwnd = g_LastActiveHwnd) {
