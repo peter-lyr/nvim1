@@ -13,16 +13,16 @@ global g_LastActiveHwnd := 0
 EnterWindowActivateMode() {
     global g_CurrentMode := "window_activate"
     global g_ModeActionMappings
-    windowActivateActions := Map()
-    windowActivateActions["000U"] := ["切换窗口置顶", ToggleTargetWindowTopmost]
-    windowActivateActions["000D"] := ["激活窗口", ActivateTargetWindow]
-    windowActivateActions["000L"] := ["恢复普通模式", EnterNormalMode]
-    windowActivateActions["000R"] := ["单击目标", ClickAtTargetPosition]
-    windowActivateActions["000RU"] := ["切换最大化窗口", ToggleTargetWindowMaximize]
-    windowActivateActions["000RD"] := ["最小化窗口", MinimizeTargetWindow]
-    windowActivateActions["000LD"] := ["Esc", Send.Bind("{Esc}")]
-    windowActivateActions["000LU"] := ["窗口控制模式2", EnterWindowControlMode2]
-    g_ModeActionMappings["window_activate"] := windowActivateActions
+    actionsMap := Map()
+    actionsMap["000U"] := ["切换窗口置顶", ToggleTargetWindowTopmost]
+    actionsMap["000D"] := ["激活窗口", ActivateTargetWindow]
+    actionsMap["000L"] := ["恢复普通模式", EnterNormalMode]
+    actionsMap["000R"] := ["单击目标", ClickAtTargetPosition]
+    actionsMap["000RU"] := ["切换最大化窗口", ToggleTargetWindowMaximize]
+    actionsMap["000RD"] := ["最小化窗口", MinimizeTargetWindow]
+    actionsMap["000LD"] := ["Esc", Send.Bind("{Esc}")]
+    actionsMap["000LU"] := ["窗口控制模式2", EnterWindowControlMode2]
+    g_ModeActionMappings["window_activate"] := actionsMap
     ShowTimedTooltip("已切换到窗口激活模式`n左键:移动窗口 中键:调整大小 滚轮:透明度")
 }
 

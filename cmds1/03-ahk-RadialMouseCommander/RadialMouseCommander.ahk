@@ -46,17 +46,17 @@ global g_ModeActionMappings := Map()
 
 InitializeNormalModeActions() {
     global g_ModeActionMappings
-    normalModeActions := Map()
-    normalModeActions["000U"] := ["向上移动光标", Send.Bind("{Up}")]
-    normalModeActions["000D"] := ["向下移动光标", Send.Bind("{Down}")]
-    normalModeActions["000L"] := ["向左移动光标", Send.Bind("{Left}")]
-    normalModeActions["000R"] := ["向右移动光标", Send.Bind("{Right}")]
-    normalModeActions["000LD"] := ["Esc", Send.Bind("{Esc}")]
-    normalModeActions["000RU"] := ["切换最大化窗口", ToggleTargetWindowMaximize]
-    normalModeActions["000RD"] := ["最小化窗口", MinimizeTargetWindow]
-    normalModeActions["000LU"] := ["窗口控制模式", EnterWindowControlMode]
-    normalModeActions["100LU"] := ["窗口控制模式2", EnterWindowControlMode2]
-    g_ModeActionMappings["normal"] := normalModeActions
+    actionsMap := Map()
+    actionsMap["000U"] := ["向上移动光标", Send.Bind("{Up}")]
+    actionsMap["000D"] := ["向下移动光标", Send.Bind("{Down}")]
+    actionsMap["000L"] := ["向左移动光标", Send.Bind("{Left}")]
+    actionsMap["000R"] := ["向右移动光标", Send.Bind("{Right}")]
+    actionsMap["000LD"] := ["Esc", Send.Bind("{Esc}")]
+    actionsMap["000RU"] := ["切换最大化窗口", ToggleTargetWindowMaximize]
+    actionsMap["000RD"] := ["最小化窗口", MinimizeTargetWindow]
+    actionsMap["000LU"] := ["窗口控制模式", EnterWindowControlMode]
+    actionsMap["100LU"] := ["窗口控制模式2", EnterWindowControlMode2]
+    g_ModeActionMappings["normal"] := actionsMap
 }
 
 g_WindowsNoControl := [
@@ -85,16 +85,16 @@ ToggleTargetWindowMaximize() {
 EnterWindowControlMode() {
     global g_CurrentMode := "window_control"
     global g_ModeActionMappings
-    windowControlActions := Map()
-    windowControlActions["000U"] := ["切换窗口置顶", ToggleTargetWindowTopmost]
-    windowControlActions["000D"] := ["激活窗口", ActivateTargetWindow]
-    windowControlActions["000L"] := ["恢复普通模式", EnterNormalMode]
-    windowControlActions["000R"] := ["单击目标", ClickAtTargetPosition]
-    windowControlActions["000RU"] := ["切换最大化窗口", ToggleTargetWindowMaximize]
-    windowControlActions["000RD"] := ["最小化窗口", MinimizeTargetWindow]
-    windowControlActions["000LD"] := ["Esc", Send.Bind("{Esc}")]
-    windowControlActions["000LU"] := ["窗口控制模式2", EnterWindowControlMode2]
-    g_ModeActionMappings["window_control"] := windowControlActions
+    actionsMap := Map()
+    actionsMap["000U"] := ["切换窗口置顶", ToggleTargetWindowTopmost]
+    actionsMap["000D"] := ["激活窗口", ActivateTargetWindow]
+    actionsMap["000L"] := ["恢复普通模式", EnterNormalMode]
+    actionsMap["000R"] := ["单击目标", ClickAtTargetPosition]
+    actionsMap["000RU"] := ["切换最大化窗口", ToggleTargetWindowMaximize]
+    actionsMap["000RD"] := ["最小化窗口", MinimizeTargetWindow]
+    actionsMap["000LD"] := ["Esc", Send.Bind("{Esc}")]
+    actionsMap["000LU"] := ["窗口控制模式2", EnterWindowControlMode2]
+    g_ModeActionMappings["window_control"] := actionsMap
     ShowTimedTooltip("已切换到窗口控制模式`n左键:移动窗口 中键:调整大小 滚轮:透明度")
 }
 
@@ -327,16 +327,16 @@ WheelUp:: {
 
 EnterWindowControlMode2() {
     global g_CurrentMode := "window_control2"
-    windowControl2Actions := Map()
-    windowControl2Actions["000U"] := ["切换窗口置顶", ToggleTargetWindowTopmost]
-    windowControl2Actions["000D"] := ["激活窗口", ActivateTargetWindow]
-    windowControl2Actions["000L"] := ["恢复普通模式", EnterNormalMode]
-    windowControl2Actions["000R"] := ["单击目标", ClickAtTargetPosition]
-    windowControl2Actions["000RU"] := ["切换最大化窗口", ToggleTargetWindowMaximize]
-    windowControl2Actions["000RD"] := ["最小化窗口", MinimizeTargetWindow]
-    windowControl2Actions["000LD"] := ["Esc", Send.Bind("{Esc}")]
-    windowControl2Actions["000LU"] := ["窗口控制模式", EnterWindowControlMode]
-    g_ModeActionMappings["window_control2"] := windowControl2Actions
+    actionsMap := Map()
+    actionsMap["000U"] := ["切换窗口置顶", ToggleTargetWindowTopmost]
+    actionsMap["000D"] := ["激活窗口", ActivateTargetWindow]
+    actionsMap["000L"] := ["恢复普通模式", EnterNormalMode]
+    actionsMap["000R"] := ["单击目标", ClickAtTargetPosition]
+    actionsMap["000RU"] := ["切换最大化窗口", ToggleTargetWindowMaximize]
+    actionsMap["000RD"] := ["最小化窗口", MinimizeTargetWindow]
+    actionsMap["000LD"] := ["Esc", Send.Bind("{Esc}")]
+    actionsMap["000LU"] := ["窗口控制模式", EnterWindowControlMode]
+    g_ModeActionMappings["window_control2"] := actionsMap
     ShowTimedTooltip("已切换到窗口控制模式2`n左键:移动窗口(限制在屏幕内) 中键:调整大小 滚轮:透明度")
 }
 
