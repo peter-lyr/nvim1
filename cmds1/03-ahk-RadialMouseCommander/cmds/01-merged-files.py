@@ -103,3 +103,4 @@ if __name__ == "__main__":
     # CheckExe()
     # #include
     # 把global声明放到文件开头
+    # :FormatAhk

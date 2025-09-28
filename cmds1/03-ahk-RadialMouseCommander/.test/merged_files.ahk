@@ -1,10 +1,3 @@
-
-; ==================================================
-; 文件: main.ahk
-; 相对路径: main.ahk
-; 绝对路径: C:\Users\depei_liu\Dp1\lazy\nvim1\cmds1\03-ahk-RadialMouseCommander\main.ahk
-; ==================================================
-
 #Requires AutoHotkey v2.0
 
 global fileServExe := "ahk_exe Fileserv.exe"
@@ -27,7 +20,6 @@ global g_OriginalTransparency := Map()
 global g_ActivateTransparency := 180
 global g_OpacityTimer := 0
 
-; 全局变量
 global g_RadialMenuGui := ""
 global g_RadialMenuGuiHwnd := 0
 global g_RadialMenuRadius := 5
@@ -37,11 +29,9 @@ global g_TargetWindowHwnd := 0
 global g_TargetClickPosX := 0
 global g_TargetClickPosY := 0
 
-; 鼠标状态变量
 global g_LeftButtonState := 0, g_MiddleButtonState := 0, g_WheelButtonState := 0
 global g_MaxLeftButtonStates := 1, g_MaxMiddleButtonStates := 1, g_MaxWheelButtonStates := 1
 
-; 方向映射表
 global g_DirectionSymbols := Map(
     "R", "→",
     "RD", "↘",
@@ -64,40 +54,13 @@ global g_DirectionNames := Map(
     "RU", "右上"
 )
 
-; 动作映射表
 global g_ModeActionMappings := Map()
 
-; ; 包含其他文件
-; #Include menus/normal_menu.ahk
-; #Include modes/normal_mode.ahk
-; #Include modes/window_control_mode.ahk
-; #Include modes/window_control_mode2.ahk
-; #Include modes/window_activate_mode.ahk
-; #Include modes/window_kill_mode.ahk
-; #Include functions/radial_menu.ahk
-; #Include functions/tooltips.ahk
-; #Include functions/window_operations.ahk
-; #Include functions/window_activations.ahk
-; #Include functions/utils.ahk
-; #Include functions/fileserv.ahk
-; #Include hotkeys/window_operations.ahk
-
-; 初始化
 InitializeNormalModeActions()
 DisplayRadialMenuAtCursor()
 HideRadialMenu()
-; CheckExe()
 
-; 热键
 ^Ins::ExitApp
-
-
-
-; ==================================================
-; 文件: fileserv.ahk
-; 相对路径: functions\fileserv.ahk
-; 绝对路径: C:\Users\depei_liu\Dp1\lazy\nvim1\cmds1\03-ahk-RadialMouseCommander\functions\fileserv.ahk
-; ==================================================
 
 #Requires AutoHotkey v2.0
 
@@ -153,16 +116,6 @@ FileServUpClip() {
   ActivateMstscExe()
 }
 
-
-
-; ==================================================
-; 文件: radial_menu.ahk
-; 相对路径: functions\radial_menu.ahk
-; 绝对路径: C:\Users\depei_liu\Dp1\lazy\nvim1\cmds1\03-ahk-RadialMouseCommander\functions\radial_menu.ahk
-; ==================================================
-
-; 圆形菜单相关函数
-
 #Requires AutoHotkey v2.0
 
 CreateRadialMenuGui(centerX, centerY, width, height, transparency, backgroundColor) {
@@ -177,7 +130,6 @@ CreateRadialMenuGui(centerX, centerY, width, height, transparency, backgroundCol
     radialMenuGui.Show("x" positionX " y" positionY " w" width " h" height " NoActivate")
     WinSetTransparent(transparency, radialMenuGui.Hwnd)
     ellipticalRegion := DllCall("gdi32.dll\CreateEllipticRgn",
-        "Int", 0,
         "Int", 0,
         "Int", width,
         "Int", height, "Ptr")
@@ -390,16 +342,6 @@ ExecuteSelectedAction() {
     }
 }
 
-
-
-; ==================================================
-; 文件: tooltips.ahk
-; 相对路径: functions\tooltips.ahk
-; 绝对路径: C:\Users\depei_liu\Dp1\lazy\nvim1\cmds1\03-ahk-RadialMouseCommander\functions\tooltips.ahk
-; ==================================================
-
-; 工具提示相关函数
-
 #Requires AutoHotkey v2.0
 
 ToggleUpdateRadialMenuTooltipEn() {
@@ -449,29 +391,17 @@ ExitRadialMenuTooltip() {
     global g_PreviousTooltip := ""
 }
 
-
-
-; ==================================================
-; 文件: utils.ahk
-; 相对路径: functions\utils.ahk
-; 绝对路径: C:\Users\depei_liu\Dp1\lazy\nvim1\cmds1\03-ahk-RadialMouseCommander\functions\utils.ahk
-; ==================================================
-
 #Requires AutoHotkey v2.0
 
 remote_desktop_exes := [
     "ahk_exe mstsc.exe",
-    ; "ahk_exe SunloginClient.exe",
-    ; "ahk_exe WindowsSandboxClient.exe",
 ]
 
 remote_desktop_classes := [
-    "ahk_class TscShellContainerClass", ; mstsc.exe
+    "ahk_class TscShellContainerClass",
 ]
 
 remote_desktop_titles := [
-    ; "Windows 沙盒",
-    ; "Windows Sandbox",
 ]
 
 CmdRunSilent(cmd) {
@@ -565,14 +495,6 @@ ActivateMstscExe() {
     }
   }
 }
-
-
-
-; ==================================================
-; 文件: window_activations.ahk
-; 相对路径: functions\window_activations.ahk
-; 绝对路径: C:\Users\depei_liu\Dp1\lazy\nvim1\cmds1\03-ahk-RadialMouseCommander\functions\window_activations.ahk
-; ==================================================
 
 #Requires AutoHotkey v2.0
 
@@ -831,14 +753,6 @@ ActivateOrRunInWinR(windowTitle, appPath) {
     return false
 }
 
-
-
-; ==================================================
-; 文件: window_operations.ahk
-; 相对路径: functions\window_operations.ahk
-; 绝对路径: C:\Users\depei_liu\Dp1\lazy\nvim1\cmds1\03-ahk-RadialMouseCommander\functions\window_operations.ahk
-; ==================================================
-
 #Requires AutoHotkey v2.0
 
 ;;桌面不透明化
@@ -957,14 +871,6 @@ TransparencyUp(hwnd := 0) {
     ShowTimedTooltip("透明度: " newTransparency)
 }
 
-
-
-; ==================================================
-; 文件: window_operations.ahk
-; 相对路径: hotkeys\window_operations.ahk
-; 绝对路径: C:\Users\depei_liu\Dp1\lazy\nvim1\cmds1\03-ahk-RadialMouseCommander\hotkeys\window_operations.ahk
-; ==================================================
-
 #Requires AutoHotkey v2.0
 
 ^#k:: {
@@ -986,14 +892,6 @@ TransparencyUp(hwnd := 0) {
 ^#l:: {
     TransparencyUp("A")
 }
-
-
-
-; ==================================================
-; 文件: normal_menu.ahk
-; 相对路径: menus\normal_menu.ahk
-; 绝对路径: C:\Users\depei_liu\Dp1\lazy\nvim1\cmds1\03-ahk-RadialMouseCommander\menus\normal_menu.ahk
-; ==================================================
 
 #Requires AutoHotkey v2.0
 
@@ -1143,14 +1041,6 @@ SwitchMenu(targetMenu) {
 
 OnExit((*) => ExitMenuMode())
 
-
-
-; ==================================================
-; 文件: normal_mode.ahk
-; 相对路径: modes\normal_mode.ahk
-; 绝对路径: C:\Users\depei_liu\Dp1\lazy\nvim1\cmds1\03-ahk-RadialMouseCommander\modes\normal_mode.ahk
-; ==================================================
-
 #Requires AutoHotkey v2.0
 
 InitializeNormalModeActions() {
@@ -1264,14 +1154,6 @@ RButton Up:: {
 }
 
 #HotIf
-
-
-
-; ==================================================
-; 文件: window_activate_mode.ahk
-; 相对路径: modes\window_activate_mode.ahk
-; 绝对路径: C:\Users\depei_liu\Dp1\lazy\nvim1\cmds1\03-ahk-RadialMouseCommander\modes\window_activate_mode.ahk
-; ==================================================
 
 #Requires AutoHotkey v2.0
 
@@ -1518,14 +1400,6 @@ LButton:: {
 
 #HotIf
 
-
-
-; ==================================================
-; 文件: window_control_mode.ahk
-; 相对路径: modes\window_control_mode.ahk
-; 绝对路径: C:\Users\depei_liu\Dp1\lazy\nvim1\cmds1\03-ahk-RadialMouseCommander\modes\window_control_mode.ahk
-; ==================================================
-
 #Requires AutoHotkey v2.0
 
 g_WindowsNoControl := [
@@ -1728,14 +1602,6 @@ WheelUp:: {
 }
 
 #HotIf
-
-
-
-; ==================================================
-; 文件: window_control_mode2.ahk
-; 相对路径: modes\window_control_mode2.ahk
-; 绝对路径: C:\Users\depei_liu\Dp1\lazy\nvim1\cmds1\03-ahk-RadialMouseCommander\modes\window_control_mode2.ahk
-; ==================================================
 
 #Requires AutoHotkey v2.0
 
@@ -2049,14 +1915,6 @@ WheelUp:: {
 
 #HotIf
 
-
-
-; ==================================================
-; 文件: window_kill_mode.ahk
-; 相对路径: modes\window_kill_mode.ahk
-; 绝对路径: C:\Users\depei_liu\Dp1\lazy\nvim1\cmds1\03-ahk-RadialMouseCommander\modes\window_kill_mode.ahk
-; ==================================================
-
 #Requires AutoHotkey v2.0
 
 g_WindowsNoWinKillAndTaskKill := [
@@ -2109,5 +1967,3 @@ MButton:: {
 }
 
 #HotIf
-
-
