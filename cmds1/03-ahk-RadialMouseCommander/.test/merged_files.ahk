@@ -1,9 +1,9 @@
 
-==================================================
-文件: main.ahk
-相对路径: main.ahk
-绝对路径: C:\Users\depei_liu\Dp1\lazy\nvim1\cmds1\03-ahk-RadialMouseCommander\main.ahk
-==================================================
+; ==================================================
+; 文件: main.ahk
+; 相对路径: main.ahk
+; 绝对路径: C:\Users\depei_liu\Dp1\lazy\nvim1\cmds1\03-ahk-RadialMouseCommander\main.ahk
+; ==================================================
 
 #Requires AutoHotkey v2.0
 
@@ -33,78 +33,11 @@ CheckExe()
 
 
 
-==================================================
-文件: o.ahk
-相对路径: o.ahk
-绝对路径: C:\Users\depei_liu\Dp1\lazy\nvim1\cmds1\03-ahk-RadialMouseCommander\o.ahk
-==================================================
-
-#Requires AutoHotkey v2.0
-
-CmdRunSilent(cmd) {
-    shell := ComObject("WScript.Shell")
-    launch := "cmd.exe /c " . cmd
-    shell.Run(launch, 0, false)
-}
-
-CompileOAndRun() {
-    CmdRunSilent(A_ScriptDir . "\o2exe.bat")
-    ExitApp
-}
-
-CheckExe() {
-    if FileExist(A_ScriptDir "/o.exe") != "A" {
-        CompileOAndRun()
-    } else {
-        Tooltip("o started")
-        SetTimer(Tooltip, -800)
-    }
-}
-
-IsDoubleClick(timeout := 500) {
-    if (A_ThisHotkey = A_PriorHotkey && A_TimeSincePriorHotkey < timeout) {
-        return true
-    }
-    return false
-}
-
-ToggleToMouseExe() {
-    if FileExist(A_ScriptDir "\mouse.exe") != "A" {
-        CmdRunSilent(A_ScriptDir . "\mouse2exe.bat")
-    } else {
-        CmdRunSilent(A_ScriptDir . "\mouse.exe")
-    }
-    ExitApp
-}
-
-^!t:: {
-    ToggleToMouseExe()
-}
-
-^!c:: {
-    CompileOAndRun()
-}
-
-~LButton:: {
-    MouseGetPos(&x)
-    if (x >= 0 && x <= 10) {
-        if (IsDoubleClick()) {
-            ToggleToMouseExe()
-        }
-    }
-}
-
-CheckExe()
-
-^Ins::ExitApp
-
-
-
-==================================================
-文件: fileserv.ahk
-相对路径: functions\fileserv.ahk
-绝对路径: C:\Users\depei_liu\Dp1\lazy\nvim1\cmds1\03-ahk-RadialMouseCommander\functions\fileserv.ahk
-==================================================
+; ==================================================
+; 文件: fileserv.ahk
+; 相对路径: functions\fileserv.ahk
+; 绝对路径: C:\Users\depei_liu\Dp1\lazy\nvim1\cmds1\03-ahk-RadialMouseCommander\functions\fileserv.ahk
+; ==================================================
 
 #Requires AutoHotkey v2.0
 
@@ -165,11 +98,11 @@ FileServUpClip() {
 
 
 
-==================================================
-文件: radial_menu.ahk
-相对路径: functions\radial_menu.ahk
-绝对路径: C:\Users\depei_liu\Dp1\lazy\nvim1\cmds1\03-ahk-RadialMouseCommander\functions\radial_menu.ahk
-==================================================
+; ==================================================
+; 文件: radial_menu.ahk
+; 相对路径: functions\radial_menu.ahk
+; 绝对路径: C:\Users\depei_liu\Dp1\lazy\nvim1\cmds1\03-ahk-RadialMouseCommander\functions\radial_menu.ahk
+; ==================================================
 
 ; 圆形菜单相关函数
 
@@ -442,11 +375,11 @@ ExecuteSelectedAction() {
 
 
 
-==================================================
-文件: tooltips.ahk
-相对路径: functions\tooltips.ahk
-绝对路径: C:\Users\depei_liu\Dp1\lazy\nvim1\cmds1\03-ahk-RadialMouseCommander\functions\tooltips.ahk
-==================================================
+; ==================================================
+; 文件: tooltips.ahk
+; 相对路径: functions\tooltips.ahk
+; 绝对路径: C:\Users\depei_liu\Dp1\lazy\nvim1\cmds1\03-ahk-RadialMouseCommander\functions\tooltips.ahk
+; ==================================================
 
 ; 工具提示相关函数
 
@@ -505,11 +438,11 @@ ExitRadialMenuTooltip() {
 
 
 
-==================================================
-文件: utils.ahk
-相对路径: functions\utils.ahk
-绝对路径: C:\Users\depei_liu\Dp1\lazy\nvim1\cmds1\03-ahk-RadialMouseCommander\functions\utils.ahk
-==================================================
+; ==================================================
+; 文件: utils.ahk
+; 相对路径: functions\utils.ahk
+; 绝对路径: C:\Users\depei_liu\Dp1\lazy\nvim1\cmds1\03-ahk-RadialMouseCommander\functions\utils.ahk
+; ==================================================
 
 #Requires AutoHotkey v2.0
 
@@ -622,11 +555,11 @@ ActivateMstscExe() {
 
 
 
-==================================================
-文件: window_activations.ahk
-相对路径: functions\window_activations.ahk
-绝对路径: C:\Users\depei_liu\Dp1\lazy\nvim1\cmds1\03-ahk-RadialMouseCommander\functions\window_activations.ahk
-==================================================
+; ==================================================
+; 文件: window_activations.ahk
+; 相对路径: functions\window_activations.ahk
+; 绝对路径: C:\Users\depei_liu\Dp1\lazy\nvim1\cmds1\03-ahk-RadialMouseCommander\functions\window_activations.ahk
+; ==================================================
 
 #Requires AutoHotkey v2.0
 
@@ -887,11 +820,11 @@ ActivateOrRunInWinR(windowTitle, appPath) {
 
 
 
-==================================================
-文件: window_operations.ahk
-相对路径: functions\window_operations.ahk
-绝对路径: C:\Users\depei_liu\Dp1\lazy\nvim1\cmds1\03-ahk-RadialMouseCommander\functions\window_operations.ahk
-==================================================
+; ==================================================
+; 文件: window_operations.ahk
+; 相对路径: functions\window_operations.ahk
+; 绝对路径: C:\Users\depei_liu\Dp1\lazy\nvim1\cmds1\03-ahk-RadialMouseCommander\functions\window_operations.ahk
+; ==================================================
 
 #Requires AutoHotkey v2.0
 
@@ -1016,11 +949,11 @@ TransparencyUp(hwnd := 0) {
 
 
 
-==================================================
-文件: window_operations.ahk
-相对路径: hotkeys\window_operations.ahk
-绝对路径: C:\Users\depei_liu\Dp1\lazy\nvim1\cmds1\03-ahk-RadialMouseCommander\hotkeys\window_operations.ahk
-==================================================
+; ==================================================
+; 文件: window_operations.ahk
+; 相对路径: hotkeys\window_operations.ahk
+; 绝对路径: C:\Users\depei_liu\Dp1\lazy\nvim1\cmds1\03-ahk-RadialMouseCommander\hotkeys\window_operations.ahk
+; ==================================================
 
 #Requires AutoHotkey v2.0
 
@@ -1046,11 +979,11 @@ TransparencyUp(hwnd := 0) {
 
 
 
-==================================================
-文件: normal_menu.ahk
-相对路径: menus\normal_menu.ahk
-绝对路径: C:\Users\depei_liu\Dp1\lazy\nvim1\cmds1\03-ahk-RadialMouseCommander\menus\normal_menu.ahk
-==================================================
+; ==================================================
+; 文件: normal_menu.ahk
+; 相对路径: menus\normal_menu.ahk
+; 绝对路径: C:\Users\depei_liu\Dp1\lazy\nvim1\cmds1\03-ahk-RadialMouseCommander\menus\normal_menu.ahk
+; ==================================================
 
 #Requires AutoHotkey v2.0
 
@@ -1202,11 +1135,11 @@ OnExit((*) => ExitMenuMode())
 
 
 
-==================================================
-文件: normal_mode.ahk
-相对路径: modes\normal_mode.ahk
-绝对路径: C:\Users\depei_liu\Dp1\lazy\nvim1\cmds1\03-ahk-RadialMouseCommander\modes\normal_mode.ahk
-==================================================
+; ==================================================
+; 文件: normal_mode.ahk
+; 相对路径: modes\normal_mode.ahk
+; 绝对路径: C:\Users\depei_liu\Dp1\lazy\nvim1\cmds1\03-ahk-RadialMouseCommander\modes\normal_mode.ahk
+; ==================================================
 
 #Requires AutoHotkey v2.0
 
@@ -1326,11 +1259,11 @@ RButton Up:: {
 
 
 
-==================================================
-文件: window_activate_mode.ahk
-相对路径: modes\window_activate_mode.ahk
-绝对路径: C:\Users\depei_liu\Dp1\lazy\nvim1\cmds1\03-ahk-RadialMouseCommander\modes\window_activate_mode.ahk
-==================================================
+; ==================================================
+; 文件: window_activate_mode.ahk
+; 相对路径: modes\window_activate_mode.ahk
+; 绝对路径: C:\Users\depei_liu\Dp1\lazy\nvim1\cmds1\03-ahk-RadialMouseCommander\modes\window_activate_mode.ahk
+; ==================================================
 
 #Requires AutoHotkey v2.0
 
@@ -1587,11 +1520,11 @@ LButton:: {
 
 
 
-==================================================
-文件: window_control_mode.ahk
-相对路径: modes\window_control_mode.ahk
-绝对路径: C:\Users\depei_liu\Dp1\lazy\nvim1\cmds1\03-ahk-RadialMouseCommander\modes\window_control_mode.ahk
-==================================================
+; ==================================================
+; 文件: window_control_mode.ahk
+; 相对路径: modes\window_control_mode.ahk
+; 绝对路径: C:\Users\depei_liu\Dp1\lazy\nvim1\cmds1\03-ahk-RadialMouseCommander\modes\window_control_mode.ahk
+; ==================================================
 
 #Requires AutoHotkey v2.0
 
@@ -1798,11 +1731,11 @@ WheelUp:: {
 
 
 
-==================================================
-文件: window_control_mode2.ahk
-相对路径: modes\window_control_mode2.ahk
-绝对路径: C:\Users\depei_liu\Dp1\lazy\nvim1\cmds1\03-ahk-RadialMouseCommander\modes\window_control_mode2.ahk
-==================================================
+; ==================================================
+; 文件: window_control_mode2.ahk
+; 相对路径: modes\window_control_mode2.ahk
+; 绝对路径: C:\Users\depei_liu\Dp1\lazy\nvim1\cmds1\03-ahk-RadialMouseCommander\modes\window_control_mode2.ahk
+; ==================================================
 
 #Requires AutoHotkey v2.0
 
@@ -2118,11 +2051,11 @@ WheelUp:: {
 
 
 
-==================================================
-文件: window_kill_mode.ahk
-相对路径: modes\window_kill_mode.ahk
-绝对路径: C:\Users\depei_liu\Dp1\lazy\nvim1\cmds1\03-ahk-RadialMouseCommander\modes\window_kill_mode.ahk
-==================================================
+; ==================================================
+; 文件: window_kill_mode.ahk
+; 相对路径: modes\window_kill_mode.ahk
+; 绝对路径: C:\Users\depei_liu\Dp1\lazy\nvim1\cmds1\03-ahk-RadialMouseCommander\modes\window_kill_mode.ahk
+; ==================================================
 
 #Requires AutoHotkey v2.0
 
