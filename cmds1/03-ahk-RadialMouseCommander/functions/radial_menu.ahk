@@ -5,7 +5,7 @@
 ; 全局变量
 global g_RadialMenuGui := ""
 global g_RadialMenuGuiHwnd := 0
-global g_RadialMenuRadius := 50
+global g_RadialMenuRadius := 5
 global g_RadialMenuCenterX := 0
 global g_RadialMenuCenterY := 0
 global g_TargetWindowHwnd := 0
