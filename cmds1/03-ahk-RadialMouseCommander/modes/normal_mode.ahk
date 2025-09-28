@@ -62,6 +62,7 @@ RButtonDo() {
     ExitApp
 }
 
+#HotIf not RemoteDesktopActiveOrRButtonPressed()
 
 RButton:: {
     ResetButtonStates()
@@ -83,6 +84,8 @@ RButton Up:: {
     }
     ResetButtonStates()
 }
+
+#HotIf
 
 #HotIf g_CurrentMode = "normal"
 
