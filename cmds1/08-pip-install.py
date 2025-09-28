@@ -14,3 +14,4 @@ def pip_install(plugin):
 # pip_install("pywin32")
 # pip_install("psutil")
 # pip_install("pyautogui")
+# pip_install("xpinyin")
