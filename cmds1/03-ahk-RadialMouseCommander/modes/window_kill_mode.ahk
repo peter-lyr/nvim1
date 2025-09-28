@@ -31,7 +31,7 @@ LButton:: {
             }
         }
         if MyWinActivate(windowUnderCursor) {
-            Send("!{F4}")
+            WinClose(windowUnderCursor) ;;Send("!{F4}")有些窗口不顶用
         }
     }
 }
