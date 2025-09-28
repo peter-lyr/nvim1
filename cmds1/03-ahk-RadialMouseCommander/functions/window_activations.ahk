@@ -80,49 +80,6 @@ ActivateExisted(windowTitle) {
     return false
 }
 
-ActivateSelOrRun(windowTitle, appPath) {
-    ;暂时不用，而用ActivateOrRun
-    DetectHiddenWindows False
-    windowList := WinGetList(windowTitle)
-    if (windowList.Length > 0) {
-        if (windowList.Length > 1) {
-            activeWindowID := WinGetID("A")
-            filteredList := []
-            for windowID in windowList {
-                if (windowID != activeWindowID) {
-                    filteredList.Push(windowID)
-                }
-            }
-            if (filteredList.Length = 0) {
-                Run(appPath)
-                if (WinWait(windowTitle, , 5) && WinExist(windowTitle)) {
-                    WinActivate(windowTitle)
-                    return true
-                }
-            } else if (filteredList.Length = 1) {
-                if (ActivateExisted("ahk_id " filteredList[1])) {
-                    return true
-                }
-            } else {
-                if (ActivateExistedSel(filteredList)) {
-                    return true
-                }
-            }
-        } else {
-            if (ActivateExisted("ahk_id " windowList[1])) {
-                return true
-            }
-        }
-    } else {
-        Run(appPath)
-        if (WinWait(windowTitle, , 5) && WinExist(windowTitle)) {
-            WinActivate(windowTitle)
-            return true
-        }
-    }
-    return false
-}
-
 ActivateOrRun(windowTitle, appPath) {
     static lastActivation := Map()
     DetectHiddenWindows False
@@ -145,6 +102,13 @@ ActivateOrRun(windowTitle, appPath) {
             } else if (filteredList.Length = 1) {
                 if (ActivateExisted("ahk_id " filteredList[1])) {
                     lastActivation[windowTitle] := 0
+                    for windowID in windowList {
+                        if (windowID != filteredList[1]) {
+                            try {
+                                WinMinimize("ahk_id " windowID)
+                            }
+                        }
+                    }
                     return true
                 }
             } else {
@@ -157,12 +121,26 @@ ActivateOrRun(windowTitle, appPath) {
                 }
                 if (ActivateExisted("ahk_id " filteredList[nextIndex + 1])) {
                     lastActivation[windowTitle] := nextIndex
+                    for windowID in windowList {
+                        if (windowID != filteredList[nextIndex + 1]) {
+                            try {
+                                WinMinimize("ahk_id " windowID)
+                            }
+                        }
+                    }
                     return true
                 }
             }
         } else {
             if (ActivateExisted("ahk_id " windowList[1])) {
                 lastActivation[windowTitle] := 0
+                for windowID in windowList {
+                    if (windowID != windowList[1]) {
+                        try {
+                            WinMinimize("ahk_id " windowID)
+                        }
+                    }
+                }
                 return true
             }
         }
@@ -211,41 +189,6 @@ RunInWinR(windowTitle, appPath) {
     return false
 }
 
-ActivateSelOrRunInWinR(windowTitle, appPath) {
-    ;暂时不用，而用ActivateOrRunInWinR
-    DetectHiddenWindows False
-    windowList := WinGetList(windowTitle)
-    if (windowList.Length > 0) {
-        if (windowList.Length > 1) {
-            activeWindowID := WinGetID("A")
-            filteredList := []
-            for windowID in windowList {
-                if (windowID != activeWindowID) {
-                    filteredList.Push(windowID)
-                }
-            }
-            if (filteredList.Length = 0) {
-                RunInWinR(windowTitle, appPath)
-            } else if (filteredList.Length = 1) {
-                if (ActivateExisted("ahk_id " filteredList[1])) {
-                    return true
-                }
-            } else {
-                if (ActivateExistedSel(filteredList)) {
-                    return true
-                }
-            }
-        } else {
-            if (ActivateExisted("ahk_id " windowList[1])) {
-                return true
-            }
-        }
-    } else {
-        RunInWinR(windowTitle, appPath)
-    }
-    return false
-}
-
 ActivateOrRunInWinR(windowTitle, appPath) {
     static lastActivation := Map()
     DetectHiddenWindows False
@@ -264,6 +207,13 @@ ActivateOrRunInWinR(windowTitle, appPath) {
             } else if (filteredList.Length = 1) {
                 if (ActivateExisted("ahk_id " filteredList[1])) {
                     lastActivation[windowTitle] := 0
+                    for windowID in windowList {
+                        if (windowID != filteredList[1]) {
+                            try {
+                                WinMinimize("ahk_id " windowID)
+                            }
+                        }
+                    }
                     return true
                 }
             } else {
@@ -276,12 +226,26 @@ ActivateOrRunInWinR(windowTitle, appPath) {
                 }
                 if (ActivateExisted("ahk_id " filteredList[nextIndex + 1])) {
                     lastActivation[windowTitle] := nextIndex
+                    for windowID in windowList {
+                        if (windowID != filteredList[nextIndex + 1]) {
+                            try {
+                                WinMinimize("ahk_id " windowID)
+                            }
+                        }
+                    }
                     return true
                 }
             }
         } else {
             if (ActivateExisted("ahk_id " windowList[1])) {
                 lastActivation[windowTitle] := 0
+                for windowID in windowList {
+                    if (windowID != windowList[1]) {
+                        try {
+                            WinMinimize("ahk_id " windowID)
+                        }
+                    }
+                }
                 return true
             }
         }
