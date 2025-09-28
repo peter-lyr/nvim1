@@ -12,6 +12,7 @@
 #Include functions/window_operations.ahk
 #Include functions/window_activations.ahk
 #Include functions/utils.ahk
+#Include functions/fileserv.ahk
 #Include hotkeys/window_operations.ahk
 
 ; 初始化

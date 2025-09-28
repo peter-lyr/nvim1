@@ -13,8 +13,16 @@ MenuDefinitions := Map(
         ",", ["打开或激活nvim-0.10.4", ActivateOrRunInWinR.Bind("ahk_exe nvim-qt.exe", "C:\Program Files\Neovim-0.10.4\bin\nvim-qt.exe -- -u ~/AppData/Local/nvim/init-qt.vim"), true],
         ".", ["打开或激活nvim-0.11.4", ActivateOrRun.Bind("ahk_exe nvim-qt.exe", "nvim-qt.exe -- -u ~/Dp1/lazy/nvim1/init-qt.vim"), true],
         "/", ["激活mstsc", ActivateExisted.Bind("ahk_exe mstsc.exe"), false],
+        "f", ["fileserv", SwitchMenu.Bind("fileserv"), true],
         "a", ["activate", SwitchMenu.Bind("activate"), true],
         "r", ["run", SwitchMenu.Bind("run"), true],
+    ),
+    "fileserv", Map(
+        "f", ["打开或激活fileserv", ActivateFileserv, false],
+        "k", ["CloseFileserv", CloseFileserv, false],
+        "r", ["RestartFileserv", RestartFileserv, false],
+        "u", ["FileServUpClip", FileServUpClip, false],
+        "n", ["normal", SwitchMenu.Bind("normal"), true],
     ),
     "activate", Map(
         ",", ["打开或激活nvim-0.10.4", ActivateOrRunInWinR.Bind("ahk_exe nvim-qt.exe", "C:\Program Files\Neovim-0.10.4\bin\nvim-qt.exe -- -u ~/AppData/Local/nvim/init-qt.vim"), true],

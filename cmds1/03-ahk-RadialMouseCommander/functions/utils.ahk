@@ -74,3 +74,31 @@ ToggleToOExe() {
     }
     ExitApp
 }
+
+GetWkSw(file) {
+  Home := EnvGet("USERPROFILE")
+  return Home . "\w\wk-sw\" . file
+}
+
+WinWaitActivate(win) {
+  loop 100 {
+    if WinExist(win) {
+      WinActivate(win)
+      if WinActive(win) {
+        return 1
+      }
+    }
+  }
+  return 0
+}
+
+ActivateMstscExe() {
+  if WinExist("ahk_exe mstsc.exe") {
+    loop 6 {
+      WinActivate("ahk_exe mstsc.exe")
+      if WinActive("ahk_exe mstsc.exe") {
+        break
+      }
+    }
+  }
+}
