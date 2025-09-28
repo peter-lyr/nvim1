@@ -99,3 +99,7 @@ if __name__ == "__main__":
         file_extension="ahk",  # 要合并的文件类型
         output_filename="merged_files.ahk",  # 合并后的文件名
     )
+    # 需要手动注释掉：
+    # CheckExe()
+    # #include
+    # 把global声明放到文件开头
