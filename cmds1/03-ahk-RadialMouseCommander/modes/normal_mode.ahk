@@ -54,12 +54,7 @@ RButtonDo() {
 }
 
 ^!t:: {
-    if FileExist(A_ScriptDir "\o.exe") != "A" {
-        CmdRunSilent(A_ScriptDir . "\o2exe.bat")
-    } else {
-        CmdRunSilent(A_ScriptDir . "\o.exe")
-    }
-    ExitApp
+    ToggleToOExe()
 }
 
 #HotIf not RemoteDesktopActiveOrRButtonPressed()
@@ -94,6 +89,12 @@ RButton Up:: {
         CycleLeftButtonState()
         return
     }
+    MouseGetPos(&x)
+    if (x >= 0 && x <= 10) {
+        if (IsDoubleClick()) {
+            ToggleToOExe()
+        }
+    }
 }
 
 ~MButton:: {
@@ -101,19 +102,6 @@ RButton Up:: {
         CycleMiddleButtonState()
         return
     }
-    MouseGetPos(&x, &y)
-    if (x >= 0 && x <= 20 && y >= 0 && y <= 20) {
-        if (A_ThisHotkey = A_PriorHotkey && A_TimeSincePriorHotkey < 500) {
-            oExe := A_ScriptDir "\o.exe"
-            if FileExist(oExe) != "A" {
-                CmdRunSilent(A_ScriptDir . "\o2exe.bat")
-            } else {
-                CmdRunSilent(oExe)
-            }
-            ExitApp
-        }
-    }
-
 }
 
 ~WheelUp::

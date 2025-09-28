@@ -19,3 +19,4 @@ window_control不能对tooltip操作
 ~LButton & RButton::g_LeftButtonState := 1
 cmds1/03-ahk-RadialMouseCommander/menus/normal_menu.ahk
 增加内置双击检测：双击屏幕左上角切换o和mouse
+双击屏幕最左侧切换o和mouse

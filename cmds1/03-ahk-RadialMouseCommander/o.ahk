@@ -20,7 +20,14 @@ CheckExe() {
     }
 }
 
-^!t:: {
+IsDoubleClick(timeout := 500) {
+    if (A_ThisHotkey = A_PriorHotkey && A_TimeSincePriorHotkey < timeout) {
+        return true
+    }
+    return false
+}
+
+ToggleToMouseExe() {
     if FileExist(A_ScriptDir "\mouse.exe") != "A" {
         CmdRunSilent(A_ScriptDir . "\mouse2exe.bat")
     } else {
@@ -29,21 +36,19 @@ CheckExe() {
     ExitApp
 }
 
+^!t:: {
+    ToggleToMouseExe()
+}
+
 ^!c:: {
     CompileOAndRun()
 }
 
-~MButton:: {
-    MouseGetPos(&x, &y)
-    if (x >= 0 && x <= 20 && y >= 0 && y <= 20) {
-        if (A_ThisHotkey = A_PriorHotkey && A_TimeSincePriorHotkey < 500) {
-            mouseExe := A_ScriptDir "\mouse.exe"
-            if FileExist(mouseExe) != "A" {
-                CmdRunSilent(A_ScriptDir . "\mouse2exe.bat")
-            } else {
-                CmdRunSilent(mouseExe)
-            }
-            ExitApp
+~LButton:: {
+    MouseGetPos(&x)
+    if (x >= 0 && x <= 10) {
+        if (IsDoubleClick()) {
+            ToggleToMouseExe()
         }
     }
 }

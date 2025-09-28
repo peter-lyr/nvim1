@@ -58,3 +58,19 @@ IsCurWinAndMax(exes := [], titles := [], classes :=  []) {
 RemoteDesktopActiveOrRButtonPressed() {
     return IsCurWinAndMax(remote_desktop_exes, remote_desktop_titles, remote_desktop_classes)
 }
+
+IsDoubleClick(timeout := 500) {
+    if (A_ThisHotkey = A_PriorHotkey && A_TimeSincePriorHotkey < timeout) {
+        return true
+    }
+    return false
+}
+
+ToggleToOExe() {
+    if FileExist(A_ScriptDir "\o.exe") != "A" {
+        CmdRunSilent(A_ScriptDir . "\o2exe.bat")
+    } else {
+        CmdRunSilent(A_ScriptDir . "\o.exe")
+    }
+    ExitApp
+}
