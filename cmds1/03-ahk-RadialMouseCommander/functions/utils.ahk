@@ -36,7 +36,11 @@ CheckExe() {
 
 IsCurWinAndMax(exes := [], titles := [], classes :=  []) {
     MouseGetPos(, , &currentHwnd)
-    currentWinId := WinGetId(currentHwnd)
+    try {
+        currentWinId := WinGetId(currentHwnd)
+    } catch {
+        return 0
+    }
     for index, exe in exes {
         if (WinExist(exe) and WinGetId(exe) == currentWinId and WinGetMinMax(exe) == 1) {
             return 1
