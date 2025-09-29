@@ -30,7 +30,7 @@ CheckExe() {
     if FileExist(A_ScriptDir "\mouse.exe") != "A" {
         CompileMouseAndRun()
     } else {
-        ShowTimedTooltip("mouse started", 800)
+        ShowTimedTooltipDo("mouse started", 800)
     }
 }
 
