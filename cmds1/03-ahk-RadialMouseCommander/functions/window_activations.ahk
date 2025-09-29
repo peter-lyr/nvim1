@@ -1,6 +1,9 @@
 #Requires AutoHotkey v2.0
 
 MyWinActivate(winTitle) {
+    if not WinExist(winTitle) {
+        return false
+    }
     WinWaitActive(winTitle, , 0.1)
     if (!WinActive(winTitle)) {
         WinActivate(winTitle)
@@ -17,7 +20,7 @@ ActivateWXWorkExe() {
         Send("^!{Home}")
     }
     if (WinExist("ahk_exe WXWork.exe")) {
-        WinActivate("ahk_exe WXWork.exe")
+        MyWinActivate("ahk_exe WXWork.exe")
         Send("^!+{F1}")
         if (s_WxWorkFlag = 0) {
             SetTimer(ShowTimedTooltip.Bind("Set ShortCut For WXWork: <Ctrl-Alt-Shift-F1>"), -100)
@@ -29,9 +32,7 @@ ActivateWXWorkExe() {
 JumpOutSideOffMsTsc() {
     loop 10 {
         if WinActive("ahk_exe mstsc.exe") {
-            try {
-                WinActivate("ahk_class Shell_TrayWnd")
-            }
+            MyWinActivate("ahk_class Shell_TrayWnd")
             if (not WinActive("ahk_exe mstsc.exe")) {
                 if (MonitorGetCount() <= 1) {
                     WinMinimize("ahk_exe mstsc.exe")
