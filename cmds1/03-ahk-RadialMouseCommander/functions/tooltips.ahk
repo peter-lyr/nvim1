@@ -9,11 +9,13 @@ global g_ShowTimedTooltipEn := 0
 ToggleUpdateRadialMenuTooltipEn() {
     global g_UpdateRadialMenuTooltipEn
     g_UpdateRadialMenuTooltipEn := 1 -g_UpdateRadialMenuTooltipEn
+    SetTimer(ShowTimedTooltipDo.Bind("g_UpdateRadialMenuTooltipEn: " g_UpdateRadialMenuTooltipEn), -200)
 }
 
 ToggleShowTimedTooltipEn() {
     global g_ShowTimedTooltipEn
     g_ShowTimedTooltipEn := 1 -g_ShowTimedTooltipEn
+    SetTimer(ShowTimedTooltipDo.Bind("g_ShowTimedTooltipEn: " g_ShowTimedTooltipEn), -200)
 }
 
 ShowTimedTooltipDo(message, timeout := 2000) {
