@@ -20,6 +20,7 @@ function G.add_commit_push_do(py, file)
 		end
 	end, "python %s %s", py, file)
 end
+
 function G.add_commit_push_file(file)
 	if not require("f").is_file_exists(file) then
 		return
