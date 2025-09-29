@@ -5,7 +5,7 @@ g_CurrentMenu := "normal"
 g_LastAltPress := 0
 g_DoubleClickTime := 300
 g_MenuTimer := 0
-g_Timeout := 8000
+g_Timeout := 3000
 
 MenuDefinitions := Map(
     "normal", Map(
@@ -107,7 +107,7 @@ ShowMenuTooltip(hotkeyMap, menuName) {
         }
         tooltipText .= "`n"
     }
-    ToolTip(tooltipText)
+    ShowTimedTooltip(tooltipText, g_Timeout)
 }
 
 HandleMenuHotkey(key, menuType, *) {
