@@ -16,6 +16,12 @@ MenuDefinitions := Map(
         "f", ["fileserv", SwitchMenu.Bind("fileserv"), true],
         "a", ["activate", SwitchMenu.Bind("activate"), true],
         "r", ["run", SwitchMenu.Bind("run"), true],
+        "p", ["options", SwitchMenu.Bind("options"), true],
+    ),
+    "options", Map(
+        "r", ["切换右键提示", ToggleUpdateRadialMenuTooltipEn, false],
+        "t", ["切换超时提示", ToggleShowTimedTooltipEn, false],
+        "n", ["normal", SwitchMenu.Bind("normal"), true],
     ),
     "fileserv", Map(
         "f", ["打开或激活fileserv", ActivateFileserv, false],
