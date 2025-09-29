@@ -5,17 +5,22 @@
 global g_PreviousTooltip := ""
 global g_UpdateRadialMenuTooltipEn := 0
 global g_ShowTimedTooltipEn := 0
+global g_LaterTooltipTime := 100
+
+ShowTimedTooltipLaterDo(message, timeout := 2000) {
+    SetTimer(ShowTimedTooltipDo.Bind(message, timeout), -g_LaterTooltipTime)
+}
 
 ToggleUpdateRadialMenuTooltipEn() {
     global g_UpdateRadialMenuTooltipEn
     g_UpdateRadialMenuTooltipEn := 1 -g_UpdateRadialMenuTooltipEn
-    SetTimer(ShowTimedTooltipDo.Bind("g_UpdateRadialMenuTooltipEn: " g_UpdateRadialMenuTooltipEn), -200)
+    ShowTimedTooltipLaterDo("g_UpdateRadialMenuTooltipEn: " g_UpdateRadialMenuTooltipEn)
 }
 
 ToggleShowTimedTooltipEn() {
     global g_ShowTimedTooltipEn
     g_ShowTimedTooltipEn := 1 -g_ShowTimedTooltipEn
-    SetTimer(ShowTimedTooltipDo.Bind("g_ShowTimedTooltipEn: " g_ShowTimedTooltipEn), -200)
+    ShowTimedTooltipLaterDo("g_ShowTimedTooltipEn: " g_ShowTimedTooltipEn)
 }
 
 ShowTimedTooltipDo(message, timeout := 2000) {
