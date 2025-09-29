@@ -56,67 +56,124 @@ global g_DirectionNames := Map(
 
 global g_OperationModeActionMap := Map()
 
+global g_WindowsExemptFromCloseAndKill := [
+    "ahk_exe explorer.exe",
+]
+
+global g_WindowsExemptFromWindowControl := [
+    "ahk_class tooltips_class32",
+]
+
+global g_WindowsExemptFromTransparency := [
+    "ahk_class tooltips_class32",
+    GetDesktopWindowClass(),
+]
+
+global g_RemoteDesktopExeList := [
+    "ahk_exe mstsc.exe",
+]
+
+global g_RemoteDesktopClassList := [
+    "ahk_class TscShellContainerClass",
+]
+
+global g_RemoteDesktopTitleList := [
+]
+
+global g_IsMenuModeActive := false
+global g_CurrentMenuType := "normal"
+global g_LastAltKeyPressTime := 0
+global g_MenuDoubleClickTimeoutMs := 300
+global g_MenuAutoExitTimer := 0
+global g_MenuAutoExitTimeoutMs := 8000
+
+global g_MenuDefinitionsMap := Map(
+    "normal", Map(
+        "q", ["打开企业微信", ActivateWXWorkApp, false],
+        ",", ["打开或激活nvim-0.10.4", ActivateOrLaunchWindowInWinR.Bind("ahk_exe nvim-qt.exe", "C:\Program Files\Neovim-0.10.4\bin\nvim-qt.exe -- -u ~/AppData/Local/nvim/init-qt.vim"), true],
+        ".", ["打开或激活nvim-0.11.4", ActivateOrLaunchWindow.Bind("ahk_exe nvim-qt.exe", "nvim-qt.exe -- -u ~/Dp1/lazy/nvim1/init-qt.vim"), true],
+        "/", ["激活mstsc", TryActivateExistingWindow.Bind("ahk_exe mstsc.exe"), false],
+        "f", ["fileserv", SwitchToTargetMenuType.Bind("fileserv"), true],
+        "a", ["activate", SwitchToTargetMenuType.Bind("activate"), true],
+        "r", ["run", SwitchToTargetMenuType.Bind("run"), true],
+    ),
+    "fileserv", Map(
+        "f", ["打开或激活fileserv", ActivateFileServWindow, false],
+        "k", ["CloseFileServWindow", CloseFileServWindow, false],
+        "r", ["RestartFileServProcess", RestartFileServProcess, false],
+        "u", ["UploadClipboardToFileServ", UploadClipboardToFileServ, false],
+        "n", ["normal", SwitchToTargetMenuType.Bind("normal"), true],
+    ),
+    "activate", Map(
+        ",", ["打开或激活nvim-0.10.4", ActivateOrLaunchWindowInWinR.Bind("ahk_exe nvim-qt.exe", "C:\Program Files\Neovim-0.10.4\bin\nvim-qt.exe -- -u ~/AppData/Local/nvim/init-qt.vim"), true],
+        ".", ["打开或激活nvim-0.11.4", ActivateOrLaunchWindow.Bind("ahk_exe nvim-qt.exe", "nvim-qt.exe -- -u ~/Dp1/lazy/nvim1/init-qt.vim"), true],
+        "/", ["激活mstsc", TryActivateExistingWindow.Bind("ahk_exe mstsc.exe"), false],
+        "n", ["normal", SwitchToTargetMenuType.Bind("normal"), true],
+    ),
+    "run", Map(
+        ",", ["打开nvim-0.10.4", LaunchAppViaWinRDialog.Bind("ahk_exe nvim-qt.exe", "C:\Program Files\Neovim-0.10.4\bin\nvim-qt.exe -- -u ~/AppData/Local/nvim/init-qt.vim"), false],
+        ".", ["打开nvim-0.11.4", Run.Bind("nvim-qt.exe -- -u ~/Dp1/lazy/nvim1/init-qt.vim"), false],
+        "n", ["normal", SwitchToTargetMenuType.Bind("normal"), true],
+    ),
+)
+
 InitNormalOperationModeActions()
 ShowRadialMenuAtCursorPos()
 HideRadialMenu()
 
 ^Ins::ExitApp
 
-#Requires AutoHotkey v2.0
-
 ActivateFileServWindow() {
-  if WinExist(fileServExe) {
-    WinActivate(fileServExe)
-  } else {
-    Run(GetWkSwFilePath("Fileserv\Fileserv.exe"))
-  }
-  WaitForWindowAndActivate(fileServExe)
+    if WinExist(fileServExe) {
+        WinActivate(fileServExe)
+    } else {
+        Run(GetWkSwFilePath("Fileserv\Fileserv.exe"))
+    }
+    WaitForWindowAndActivate(fileServExe)
 }
 
 CloseFileServWindow() {
-  if not WinExist(fileServExe) {
-    return
-  }
-  wid := WinGetId("A")
-  ActivateFileServWindow()
-  WinKill(fileServExe)
-  WaitForWindowAndActivate(wid)
+    if not WinExist(fileServExe) {
+        return
+    }
+    wid := WinGetId("A")
+    ActivateFileServWindow()
+    WinKill(fileServExe)
+    WaitForWindowAndActivate(wid)
 }
 
 RestartFileServProcess() {
-  CloseFileServWindow()
-  ActivateFileServWindow()
+    CloseFileServWindow()
+    ActivateFileServWindow()
 }
 
 RestorePreviouslyActiveWindow() {
-  global fileServActiveWin
-  If (fileServActiveWin) {
-    WaitForWindowAndActivate(fileServActiveWin)
-    ActivateRemoteDesktopExe()
-  }
+    global fileServActiveWin
+    If (fileServActiveWin) {
+        WaitForWindowAndActivate(fileServActiveWin)
+        ActivateRemoteDesktopExe()
+    }
 }
 
 UploadClipboardToFileServ() {
-  global fileServActiveWin
-  wid := WinGetId("A")
-  ActivateFileServWindow()
-  Try {
-    WinGetPos(&x1, &y1, , , fileServExe)
-    MouseGetPos(&x0, &y0)
-    MouseClick("Left", x1 + 76, y1 + 36, , 0, "D")
-    Sleep(50)
-    MouseMove(x0, y0)
-    Sleep(50)
-    ControlFocus(ControlGetClassNN("上传剪贴板"))
-    Sleep(50)
-    Send("{Space}")
-  }
-  fileServActiveWin := wid
-  SetTimer(RestorePreviouslyActiveWindow, -2000)
-  ActivateRemoteDesktopExe()
+    global fileServActiveWin
+    wid := WinGetId("A")
+    ActivateFileServWindow()
+    Try {
+        WinGetPos(&x1, &y1, , , fileServExe)
+        MouseGetPos(&x0, &y0)
+        MouseClick("Left", x1 + 76, y1 + 36, , 0, "D")
+        Sleep(50)
+        MouseMove(x0, y0)
+        Sleep(50)
+        ControlFocus(ControlGetClassNN("上传剪贴板"))
+        Sleep(50)
+        Send("{Space}")
+    }
+    fileServActiveWin := wid
+    SetTimer(RestorePreviouslyActiveWindow, -2000)
+    ActivateRemoteDesktopExe()
 }
-
-#Requires AutoHotkey v2.0
 
 CreateRadialMenuGuiObj(centerX, centerY, width, height, transparency, backgroundColor) {
     if (width <= 0 || height <= 0)
@@ -342,8 +399,6 @@ ExecuteSelectedRadialMenuAction() {
     }
 }
 
-#Requires AutoHotkey v2.0
-
 ToggleRadialMenuTooltipUpdate() {
     global g_IsRadialMenuTooltipUpdateEnabled
     g_IsRadialMenuTooltipUpdateEnabled := 1 -g_IsRadialMenuTooltipUpdateEnabled
@@ -390,19 +445,6 @@ CleanupRadialMenuTooltip() {
     SetTimer(UpdateRadialMenuTooltipContent, 0)
     global g_PreviousRadialMenuTooltip := ""
 }
-
-#Requires AutoHotkey v2.0
-
-g_RemoteDesktopExeList := [
-    "ahk_exe mstsc.exe",
-]
-
-g_RemoteDesktopClassList := [
-    "ahk_class TscShellContainerClass",
-]
-
-g_RemoteDesktopTitleList := [
-]
 
 RunCommandSilently(cmd) {
     shell := ComObject("WScript.Shell")
@@ -469,34 +511,32 @@ ToggleOrRunOExe() {
 }
 
 GetWkSwFilePath(file) {
-  Home := EnvGet("USERPROFILE")
-  return Home . "\w\wk-sw\" . file
+    Home := EnvGet("USERPROFILE")
+    return Home . "\w\wk-sw\" . file
 }
 
 WaitForWindowAndActivate(win) {
-  loop 100 {
-    if WinExist(win) {
-      WinActivate(win)
-      if WinActive(win) {
-        return 1
-      }
+    loop 100 {
+        if WinExist(win) {
+            WinActivate(win)
+            if WinActive(win) {
+                return 1
+            }
+        }
     }
-  }
-  return 0
+    return 0
 }
 
 ActivateRemoteDesktopExe() {
-  if WinExist("ahk_exe mstsc.exe") {
-    loop 6 {
-      WinActivate("ahk_exe mstsc.exe")
-      if WinActive("ahk_exe mstsc.exe") {
-        break
-      }
+    if WinExist("ahk_exe mstsc.exe") {
+        loop 6 {
+            WinActivate("ahk_exe mstsc.exe")
+            if WinActive("ahk_exe mstsc.exe") {
+                break
+            }
+        }
     }
-  }
 }
-
-#Requires AutoHotkey v2.0
 
 TryActivateWindow(winTitle) {
     WinWaitActive(winTitle, , 0.1)
@@ -753,14 +793,6 @@ ActivateOrLaunchWindowInWinR(windowTitle, appPath) {
     return false
 }
 
-#Requires AutoHotkey v2.0
-
-;;桌面不透明化
-g_WindowsExemptFromTransparency := [
-    "ahk_class tooltips_class32",
-    GetDesktopWindowClass(),
-]
-
 GetDesktopWindowClass() {
     Loop {
         hwnd := WinExist("ahk_class WorkerW")
@@ -871,8 +903,6 @@ IncreaseWindowOpacity(hwnd := 0) {
     ShowTemporaryTooltip("透明度: " newTransparency)
 }
 
-#Requires AutoHotkey v2.0
-
 ^#k:: {
     ToggleCapturedWindowMaximize("A")
 }
@@ -892,45 +922,6 @@ IncreaseWindowOpacity(hwnd := 0) {
 ^#l:: {
     IncreaseWindowOpacity("A")
 }
-
-#Requires AutoHotkey v2.0
-
-g_IsMenuModeActive := false
-g_CurrentMenuType := "normal"
-g_LastAltKeyPressTime := 0
-g_MenuDoubleClickTimeoutMs := 300
-g_MenuAutoExitTimer := 0
-g_MenuAutoExitTimeoutMs := 8000
-
-g_MenuDefinitionsMap := Map(
-    "normal", Map(
-        "q", ["打开企业微信", ActivateWXWorkApp, false],
-        ",", ["打开或激活nvim-0.10.4", ActivateOrLaunchWindowInWinR.Bind("ahk_exe nvim-qt.exe", "C:\Program Files\Neovim-0.10.4\bin\nvim-qt.exe -- -u ~/AppData/Local/nvim/init-qt.vim"), true],
-        ".", ["打开或激活nvim-0.11.4", ActivateOrLaunchWindow.Bind("ahk_exe nvim-qt.exe", "nvim-qt.exe -- -u ~/Dp1/lazy/nvim1/init-qt.vim"), true],
-        "/", ["激活mstsc", TryActivateExistingWindow.Bind("ahk_exe mstsc.exe"), false],
-        "f", ["fileserv", SwitchToTargetMenuType.Bind("fileserv"), true],
-        "a", ["activate", SwitchToTargetMenuType.Bind("activate"), true],
-        "r", ["run", SwitchToTargetMenuType.Bind("run"), true],
-    ),
-    "fileserv", Map(
-        "f", ["打开或激活fileserv", ActivateFileServWindow, false],
-        "k", ["CloseFileServWindow", CloseFileServWindow, false],
-        "r", ["RestartFileServProcess", RestartFileServProcess, false],
-        "u", ["UploadClipboardToFileServ", UploadClipboardToFileServ, false],
-        "n", ["normal", SwitchToTargetMenuType.Bind("normal"), true],
-    ),
-    "activate", Map(
-        ",", ["打开或激活nvim-0.10.4", ActivateOrLaunchWindowInWinR.Bind("ahk_exe nvim-qt.exe", "C:\Program Files\Neovim-0.10.4\bin\nvim-qt.exe -- -u ~/AppData/Local/nvim/init-qt.vim"), true],
-        ".", ["打开或激活nvim-0.11.4", ActivateOrLaunchWindow.Bind("ahk_exe nvim-qt.exe", "nvim-qt.exe -- -u ~/Dp1/lazy/nvim1/init-qt.vim"), true],
-        "/", ["激活mstsc", TryActivateExistingWindow.Bind("ahk_exe mstsc.exe"), false],
-        "n", ["normal", SwitchToTargetMenuType.Bind("normal"), true],
-    ),
-    "run", Map(
-        ",", ["打开nvim-0.10.4", LaunchAppViaWinRDialog.Bind("ahk_exe nvim-qt.exe", "C:\Program Files\Neovim-0.10.4\bin\nvim-qt.exe -- -u ~/AppData/Local/nvim/init-qt.vim"), false],
-        ".", ["打开nvim-0.11.4", Run.Bind("nvim-qt.exe -- -u ~/Dp1/lazy/nvim1/init-qt.vim"), false],
-        "n", ["normal", SwitchToTargetMenuType.Bind("normal"), true],
-    ),
-)
 
 ~LAlt:: {
     global g_IsMenuModeActive, g_LastAltKeyPressTime, g_MenuDoubleClickTimeoutMs
@@ -1040,8 +1031,6 @@ SwitchToTargetMenuType(targetMenu) {
 }
 
 OnExit((*) => ExitMenuOperationMode())
-
-#Requires AutoHotkey v2.0
 
 InitNormalOperationModeActions() {
     SetOperationModeActions("normal",
@@ -1154,8 +1143,6 @@ RButton Up:: {
 }
 
 #HotIf
-
-#Requires AutoHotkey v2.0
 
 ;;优化GetWindowsUnderCursorPos性能
 ;;彻底修复切换激活窗口导致任务栏图标闪烁的问题
@@ -1400,12 +1387,6 @@ LButton:: {
 
 #HotIf
 
-#Requires AutoHotkey v2.0
-
-g_WindowsExemptFromWindowControl := [
-    "ahk_class tooltips_class32",
-]
-
 EnterBasicWindowControlMode() {
     SetAndNotifyOperationMode("window_control",
         "000RU", ["切换最大化窗口", ToggleCapturedWindowMaximize],
@@ -1602,8 +1583,6 @@ WheelUp:: {
 }
 
 #HotIf
-
-#Requires AutoHotkey v2.0
 
 EnterBasicWindowControlMode2() {
     SetAndNotifyOperationMode("window_control2",
@@ -1914,12 +1893,6 @@ WheelUp:: {
 }
 
 #HotIf
-
-#Requires AutoHotkey v2.0
-
-g_WindowsExemptFromCloseAndKill := [
-    "ahk_exe explorer.exe",
-]
 
 EnterWindowCloseKillMode() {
     SetAndNotifyOperationMode("window_kill",
