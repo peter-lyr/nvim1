@@ -118,7 +118,7 @@ def push_with_retry(max_retries=5):
         safe_print(f"Pushing (attempt {i+1}/{max_retries})...")
         success, output = run_command("git push")
         if success:
-            safe_print("Push succeeded")
+            safe_print(f"Push succeeded:\n{output}")
             return True
         safe_print(f"Push failed: {output}")
         if i < max_retries - 1:
