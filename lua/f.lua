@@ -676,7 +676,7 @@ function F.async_run(cmd, opts)
 	end
 	local stdout_cache = {}
 	local timer = nil
-	local interval = opts.interval or 5000
+	local interval = opts.interval or 20000
 	local title = opts.title or "Command Output"
 	local function process_cache()
 		if #stdout_cache == 0 then
