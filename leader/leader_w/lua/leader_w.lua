@@ -277,4 +277,12 @@ function W.work_summary_day(morning)
 	require("f").ui_input("work_summary_day", vim.fn.strftime("%Y-%m-%d"), W.work_summary_day_do)
 end
 
+function W.work_day_append_do(day)
+	vim.fn.append(".", require("f").format("## %s", day))
+end
+
+function W.work_day_append()
+	require("f").ui_input("work_day_append", vim.fn.strftime("%Y-%m-%d"), W.work_day_append_do)
+end
+
 return W

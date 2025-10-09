@@ -195,4 +195,11 @@ require("which-key").register({
 		"work_summary_day evening",
 		mode = { "n", "v" },
 	},
+	["<leader>wwp"] = {
+		function()
+			W.work_day_append()
+		end,
+		"work_day_append",
+		mode = { "n", "v" },
+	},
 })
