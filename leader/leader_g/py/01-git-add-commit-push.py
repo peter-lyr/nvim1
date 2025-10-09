@@ -16,38 +16,38 @@ import os
 import sys
 import time
 
-# 常量定义
-MAX_BATCH_SIZE = 500 * 1024 * 1024  # 500MB（批次最大总大小）
-MAX_SINGLE_FILE_SIZE = 500 * 1024 * 1024  # 单个文件最大500MB
-MAX_RETRIES = 5  # Git Push最大重试次数
+# Constant definitions
+MAX_BATCH_SIZE = 500 * 1024 * 1024  # 500MB (max total size per batch)
+MAX_SINGLE_FILE_SIZE = 500 * 1024 * 1024  # Max size per file: 500MB
+MAX_RETRIES = 5  # Max retries for Git Push
 
 
 def run_command(command):
-    """直接执行命令，输出实时显示在控制台，返回命令是否成功（True/False）"""
-    print(f"[执行命令]：{command}")
-    # 配置Git编码环境变量（避免中文乱码）
+    """Execute command directly, output to console in real-time. Return success status (True/False)."""
+    print(f"[Executing command]: {command}")
+    # Configure Git encoding environment variables (avoid garbled text)
     env_cmd = ""
-    if os.name == "nt":  # Windows系统
+    if os.name == "nt":  # Windows system
         env_cmd = (
             "set GIT_COMMITTER_ENCODING=utf-8 && set GIT_AUTHOR_ENCODING=utf-8 && "
         )
-    else:  # 非Windows系统
+    else:  # Non-Windows system
         env_cmd = "GIT_COMMITTER_ENCODING=utf-8 GIT_AUTHOR_ENCODING=utf-8 "
 
-    # 执行命令（输出直接显示在控制台）
+    # Execute command (output shown in console directly)
     exit_code = os.system(f"{env_cmd}{command}")
-    return exit_code == 0  # 0表示成功，非0表示失败
+    return exit_code == 0  # 0 = success, non-0 = failure
 
 
 def get_command_output(command):
-    """仅用于需要解析输出的命令（如获取文件列表），返回命令输出内容"""
+    """Only for commands needing output parsing (e.g., get file list). Return command output."""
     import tempfile
 
-    # 创建临时文件存储输出（仅用于解析，不影响控制台显示）
+    # Create temp file to store output (for parsing only, no impact on console display)
     with tempfile.NamedTemporaryFile(mode="w+", delete=False, encoding="utf-8") as f:
         temp_file = f.name
 
-    # 执行命令并捕获输出
+    # Execute command and capture output
     env_cmd = ""
     if os.name == "nt":
         env_cmd = (
@@ -55,7 +55,7 @@ def get_command_output(command):
         )
     os.system(f'{env_cmd}{command} > "{temp_file}" 2>&1')
 
-    # 读取输出内容
+    # Read output content
     output = ""
     try:
         with open(temp_file, "r", encoding="utf-8") as f:
@@ -64,28 +64,28 @@ def get_command_output(command):
         with open(temp_file, "r", encoding="gbk") as f:
             output = f.read()
     finally:
-        os.remove(temp_file)  # 清理临时文件
+        os.remove(temp_file)  # Clean up temp file
     return output
 
 
 def get_file_size(file_path):
-    """获取文件大小（字节），返回大小数值"""
+    """Get file size (in bytes). Return size value."""
     try:
-        # 处理路径编码，避免特殊字符导致的路径错误
+        # Handle path encoding to avoid errors from special characters
         file_path = file_path.encode("utf-8", errors="replace").decode("utf-8")
         return os.path.getsize(file_path)
     except OSError as e:
-        print(f"[警告]：无法获取文件 '{file_path}' 的大小 - {str(e)}")
+        print(f"[Warning]: Failed to get size of file '{file_path}' - {str(e)}")
         return 0
 
 
 def get_uncommitted_files():
-    """获取已修改文件和未跟踪文件列表，返回(modified_files, untracked_files)"""
-    # 获取已修改文件（需解析输出）
+    """Get lists of modified and untracked files. Return (modified_files, untracked_files)."""
+    # Get modified files (needs output parsing)
     modified_output = get_command_output("git diff --name-only")
     modified_files = [f.strip() for f in modified_output.splitlines() if f.strip()]
 
-    # 获取未跟踪文件（需解析输出）
+    # Get untracked files (needs output parsing)
     untracked_output = get_command_output("git ls-files --others --exclude-standard")
     untracked_files = [f.strip() for f in untracked_output.splitlines() if f.strip()]
 
@@ -93,158 +93,164 @@ def get_uncommitted_files():
 
 
 def commit_and_push(files, commit_msg_file):
-    """提交指定文件并推送，含Push重试机制，返回是否成功（True/False）"""
+    """Commit specified files and push with retry mechanism. Return success status (True/False)."""
     if not files:
-        print("[信息]：没有文件需要提交")
+        print("[Info]: No files need to be committed")
         return True
 
-    # 1. Git Add：添加文件（输出直接显示）
-    files_quoted = [f'"{f}"' for f in files]  # 处理含空格的文件名
+    # 1. Git Add: Add files (output shown directly)
+    files_quoted = [f'"{f}"' for f in files]  # Handle filenames with spaces
     add_cmd = f"git add {' '.join(files_quoted)}"
     if not run_command(add_cmd):
-        print("[失败]：添加文件失败")
+        print("[Error]: Failed to add files")
         return False
 
-    # 2. Git Commit：提交文件（输出直接显示）
+    # 2. Git Commit: Commit files (output shown directly)
     commit_cmd = f'git commit -F "{commit_msg_file}"'
     if not run_command(commit_cmd):
-        print("[失败]：提交文件失败")
+        print("[Error]: Failed to commit files")
         return False
 
-    print(f"[成功]：成功提交 {len(files)} 个文件")
+    print(f"[Success]: Successfully committed {len(files)} files")
 
-    # 3. Git Push：推送（失败重试，输出直接显示）
+    # 3. Git Push: Push with retry (output shown directly)
     for retry in range(MAX_RETRIES):
-        print(f"[推送]：正在推送（尝试 {retry+1}/{MAX_RETRIES}）...")
+        print(f"[Pushing]: Attempt {retry+1}/{MAX_RETRIES}...")
         push_cmd = "git push"
         if run_command(push_cmd):
-            print("[成功]：推送成功")
+            print("[Success]: Push completed successfully")
             return True
-        print(f"[失败]：第 {retry+1} 次推送失败")
+        print(f"[Error]: Attempt {retry+1} failed")
         if retry < MAX_RETRIES - 1:
-            print("[等待]：2秒后重试...")
+            print("[Waiting]: Retrying in 2 seconds...")
             time.sleep(2)
 
-    print(f"[失败]：达到最大重试次数（{MAX_RETRIES}次），推送失败")
+    print(f"[Error]: Maximum retries ({MAX_RETRIES}) reached. Push failed.")
     return False
 
 
 def main():
-    # 初始化：强制设置控制台编码为UTF-8（Windows）
+    # Initialize: Force console encoding to UTF-8 (Windows)
     if os.name == "nt":
-        # 先执行chcp 65001，再验证编码（避免切换不生效）
+        # Execute chcp 65001 and verify encoding (avoid switch failure)
         os.system("chcp 65001 > nul")
-        # 额外设置环境变量，强化UTF-8输出
+        # Additional env var to enforce UTF-8 output
         os.environ["PYTHONIOENCODING"] = "utf-8"
 
-    # 1. 检查命令行参数
+    # 1. Check command line arguments
     if len(sys.argv) < 2:
-        print("[错误]：缺少参数！用法：python git_batch_commit.py 提交信息文件.txt")
+        print(
+            "[Error]: Missing argument! Usage: python git_batch_commit.py commit_message_file.txt"
+        )
         sys.exit(1)
     original_commit_file = sys.argv[1]
 
-    # 2. 处理提交信息文件（过滤注释和空行）
+    # 2. Process commit message file (filter comments and blank lines)
     if not os.path.exists(original_commit_file):
-        print(f"[错误]：提交信息文件 '{original_commit_file}' 不存在")
+        print(f"[Error]: Commit message file '{original_commit_file}' does not exist")
         sys.exit(1)
 
-    commit_msg_file = f"{original_commit_file}.tmp"  # 临时提交文件
+    commit_msg_file = f"{original_commit_file}.tmp"  # Temp commit file
     push_allow = False
     try:
         with open(original_commit_file, "rb") as f:
             lines = f.readlines()
         with open(commit_msg_file, "wb") as f:
             for line in lines:
-                if line[:2] == b"# ":  # 跳过注释行（# 开头）
+                if line[:2] == b"# ":  # Skip comment lines (starting with #)
                     continue
-                if not line.strip():  # 跳过空行
+                if not line.strip():  # Skip blank lines
                     continue
-                # 确保写入的内容是UTF-8编码，避免特殊字符
+                # Ensure content is UTF-8 encoded to avoid special character issues
                 f.write(line.strip() + b"\n")
                 push_allow = True
     except Exception as e:
-        print(f"[错误]：处理提交信息文件失败 - {str(e)}")
-        # 清理临时文件（若存在）
+        print(f"[Error]: Failed to process commit message file - {str(e)}")
+        # Clean up temp file if it exists
         if os.path.exists(commit_msg_file):
             os.remove(commit_msg_file)
         sys.exit(1)
 
     if not push_allow:
         print(
-            f"[错误]：提交信息文件 '{original_commit_file}' 内容为空（已过滤注释和空行）"
+            f"[Error]: Commit message file '{original_commit_file}' is empty (comments/blank lines filtered)"
         )
         os.remove(commit_msg_file)
         sys.exit(1)
 
-    # 3. 获取未提交文件列表
+    # 3. Get list of uncommitted files
     modified_files, untracked_files = get_uncommitted_files()
     print(
-        f"[信息]：检测到：{len(modified_files)} 个已修改文件，{len(untracked_files)} 个未跟踪文件"
+        f"[Info]: Detected {len(modified_files)} modified files, {len(untracked_files)} untracked files"
     )
 
-    # 4. 先提交已修改文件
+    # 4. Commit modified files first
     if modified_files:
-        print(f"\n[提交]：开始提交 {len(modified_files)} 个已修改文件...")
+        print(
+            f"\n[Committing]: Starting to commit {len(modified_files)} modified files..."
+        )
         if not commit_and_push(modified_files, commit_msg_file):
-            print("[错误]：已修改文件提交失败，程序退出")
+            print("[Error]: Failed to commit modified files. Exiting.")
             os.remove(commit_msg_file)
             sys.exit(1)
 
-    # 5. 处理未跟踪文件（无则退出）
+    # 5. Handle untracked files (exit if none)
     if not untracked_files:
-        print("\n[信息]：没有未跟踪文件需要提交，程序结束")
+        print("\n[Info]: No untracked files to commit. Exiting.")
         os.remove(commit_msg_file)
         sys.exit(0)
 
-    # 6. 过滤未跟踪文件（跳过超500MB的文件）
+    # 6. Filter untracked files (skip files over 500MB)
     filtered_files = []
     for file in untracked_files:
         file_size = get_file_size(file)
         if file_size > MAX_SINGLE_FILE_SIZE:
             print(
-                f"[警告]：文件 '{file}' 大小 {file_size/1024/1024:.2f}MB（超500MB），已跳过"
+                f"[Warning]: File '{file}' is {file_size/1024/1024:.2f}MB (exceeds 500MB). Skipped."
             )
             continue
         filtered_files.append((file, file_size))
 
-    # 按文件大小从小到大排序
+    # Sort files by size (ascending)
     filtered_files.sort(key=lambda x: x[1])
-    print(f"\n[信息]：过滤后剩余 {len(filtered_files)} 个未跟踪文件（按大小排序）")
+    print(
+        f"\n[Info]: {len(filtered_files)} untracked files remaining after filtering (sorted by size)"
+    )
 
-    # 7. 分批次提交未跟踪文件
+    # 7. Commit untracked files in batches
     current_batch = []
-    current_batch_size = 0  # 当前批次总大小（字节）
+    current_batch_size = 0  # Total size of current batch (bytes)
 
     for file, file_size in filtered_files:
-        # 若添加当前文件超批次大小，先提交现有批次
+        # Submit current batch if adding new file exceeds max batch size
         if current_batch_size + file_size > MAX_BATCH_SIZE:
             print(
-                f"\n[提交]：提交当前批次（{len(current_batch)} 个文件，总大小 {current_batch_size/1024/1024:.2f}MB）..."
+                f"\n[Committing]: Submitting current batch ({len(current_batch)} files, {current_batch_size/1024/1024:.2f}MB)..."
             )
             if not commit_and_push(current_batch, commit_msg_file):
-                print("[错误]：批次提交失败，程序退出")
+                print("[Error]: Batch commit failed. Exiting.")
                 os.remove(commit_msg_file)
                 sys.exit(1)
-            # 重置批次
+            # Reset batch
             current_batch = []
             current_batch_size = 0
 
         current_batch.append(file)
         current_batch_size += file_size
 
-    # 提交最后一批未提交的文件
+    # Commit the final batch (if any)
     if current_batch:
         print(
-            f"\n[提交]：提交最后一批（{len(current_batch)} 个文件，总大小 {current_batch_size/1024/1024:.2f}MB）..."
+            f"\n[Committing]: Submitting final batch ({len(current_batch)} files, {current_batch_size/1024/1024:.2f}MB)..."
         )
         if not commit_and_push(current_batch, commit_msg_file):
-            print("[错误]：最后一批提交失败，程序退出")
+            print("[Error]: Final batch commit failed. Exiting.")
             os.remove(commit_msg_file)
             sys.exit(1)
 
-    # 8. 清理临时文件，结束程序
+    # 8. Clean up temp file and exit
     os.remove(commit_msg_file)
-    print("\n[完成]：所有文件均已成功提交并推送！")
+    print("\n[Complete]: All files have been successfully committed and pushed!")
 
 
 if __name__ == "__main__":
