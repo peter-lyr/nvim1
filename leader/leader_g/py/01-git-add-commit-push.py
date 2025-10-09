@@ -130,21 +130,16 @@ def get_uncommitted_files():
     valid_modified = [f for f in modified_files if os.path.exists(os.path.abspath(f))]
     invalid_modified = set(modified_files) - set(valid_modified)
     if invalid_modified:
-        safe_print(f"[Testing]: modified_files: {modified_files}")
-        safe_print(f"[Testing]: valid_modified: {valid_modified}")
-        safe_print(
-            f"[Testing]: VALID_MODIFIED: {[os.path.abspath(f) for f in modified_files]}"
-        )
-        safe_print(
-            f"[Warning]: Invalid modified file paths (encoding issue): {invalid_modified}"
-        )
+        safe_print("[Warning]: Invalid modified file paths (encoding issue):")
+        for modified in invalid_modified:
+            safe_print(f"{modified}")
 
     valid_untracked = [f for f in untracked_files if os.path.exists(os.path.abspath(f))]
     invalid_untracked = set(untracked_files) - set(valid_untracked)
     if invalid_untracked:
-        safe_print(
-            f"[Warning]: Invalid untracked file paths (encoding issue): {invalid_untracked}"
-        )
+        safe_print("[Warning]: Invalid untracked file paths (encoding issue):")
+        for untracked in invalid_untracked:
+            safe_print(f"{untracked}")
 
     return valid_modified, valid_untracked
 
