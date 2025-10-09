@@ -36,7 +36,7 @@ def safe_print(text):
 
 
 def run_command(command, check=True):
-    """Execute shell command with unified UTF-8 encoding, return result"""
+    """Execute shell command and return combined stdout + stderr"""
     try:
         result = subprocess.run(
             command,
@@ -47,10 +47,14 @@ def run_command(command, check=True):
             text=True,
             encoding=GLOBAL_ENCODING,
         )
-        return True, result.stdout
+        # 合并stdout和stderr，确保所有输出都被捕获
+        combined_output = result.stdout + result.stderr
+        return True, combined_output
     except subprocess.CalledProcessError as e:
-        safe_print(f"Command execution error: {e.stderr}")
-        return False, e.stderr
+        # 错误时同样合并两者输出
+        combined_output = e.stdout + e.stderr
+        safe_print(f"Command execution error: {combined_output}")
+        return False, combined_output
     except UnicodeDecodeError:
         try:
             result = subprocess.run(
@@ -62,7 +66,8 @@ def run_command(command, check=True):
                 text=True,
                 encoding=WINDOWS_TERMINAL_ENCODING,
             )
-            return True, result.stdout
+            combined_output = result.stdout + result.stderr
+            return True, combined_output
         except Exception as e:
             safe_print(f"Encoding/decoding failed: {str(e)}")
             return False, str(e)
@@ -108,7 +113,7 @@ def commit_files(files, commit_msg_file):
     if not success:
         safe_print(f"Commit failed: {output}")
         return False
-    safe_print(f"Successfully committed {len(files)} files")
+    safe_print(f"Successfully committed {len(files)} files:\n{output}")
     return True
 
 
@@ -117,10 +122,11 @@ def push_with_retry(max_retries=5):
     for i in range(max_retries):
         safe_print(f"Pushing (attempt {i+1}/{max_retries})...")
         success, output = run_command("git push")
+        # 无论成功失败都打印完整输出
         if success:
             safe_print(f"Push succeeded:\n{output}")
             return True
-        safe_print(f"Push failed: {output}")
+        safe_print(f"Push failed (attempt {i+1}):\n{output}")
         if i < max_retries - 1:
             safe_print("Waiting 2 seconds before retrying...")
             time.sleep(2)
