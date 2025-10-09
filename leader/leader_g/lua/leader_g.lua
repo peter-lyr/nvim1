@@ -140,6 +140,10 @@ function G.log()
 	require("f").async_run("git log")
 end
 
+function G.log_oneline()
+	require("f").async_run("git log --oneline --graph --all")
+end
+
 function G.status()
 	require("f").async_run("git status")
 end
