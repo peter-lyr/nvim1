@@ -3,56 +3,87 @@ import sys
 import time
 import tempfile
 
-MAX_BATCH_SIZE = 500 * 1024 * 1024
-MAX_SINGLE_FILE_SIZE = 500 * 1024 * 1024
-MAX_RETRIES = 5
+# 强制Python stdout/stderr为UTF-8并禁用缓冲（适配Neovim输出）
+sys.stdout.reconfigure(encoding="utf-8", line_buffering=True)
+sys.stderr.reconfigure(encoding="utf-8", line_buffering=True)
+
+MAX_BATCH_SIZE = 500 * 1024 * 1024  # 500MB per batch
+MAX_SINGLE_FILE_SIZE = 500 * 1024 * 1024  # Max size per file
+MAX_RETRIES = 5  # Max retries for push
 
 
 def safe_print(text):
-    """安全打印含中文的文本，自动适配控制台编码（解决乱码）"""
-    # 获取控制台实际编码（优先stdout编码，无则用UTF-8）
-    console_encoding = sys.stdout.encoding if sys.stdout.encoding else "utf-8"
+    """适配Neovim-Qt的UTF-8输出，避免乱码"""
     try:
-        # 按控制台编码输出（支持UTF-8/GBK）
-        print(text.encode(console_encoding, errors="replace").decode(console_encoding))
-    except:
-        # 兜底：强制用UTF-8输出
-        print(text.encode("utf-8", errors="replace").decode("utf-8"))
+        print(text, flush=True)  # 实时输出到Neovim
+    except Exception as e:
+        print(text.encode("utf-8", errors="replace").decode("utf-8"), flush=True)
+
+
+def get_git_env():
+    """强制Git输出UTF-8的环境变量（核心修复路径乱码）"""
+    env = os.environ.copy()
+    # 强制Git所有输出为UTF-8（通过环境变量，兼容旧版本Git）
+    env["GIT_COMMITTER_ENCODING"] = "utf-8"
+    env["GIT_AUTHOR_ENCODING"] = "utf-8"
+    env["LANG"] = "en_US.UTF-8"  # 全局语言编码
+    env["PYTHONIOENCODING"] = "utf-8"
+    return env
 
 
 def run_command(command):
-    """Execute command directly, output to console in real-time. Return success status (True/False)."""
-    # 用safe_print替代print，处理中文命令乱码
+    """执行命令，强制Git环境为UTF-8，输出适配Neovim"""
     safe_print(f"[Executing command]: {command}")
-    env_cmd = ""
+    env = get_git_env()
+    # 拼接环境变量命令（Windows用set，Linux用export）
     if os.name == "nt":
-        env_cmd = (
-            "set GIT_COMMITTER_ENCODING=utf-8 && set GIT_AUTHOR_ENCODING=utf-8 && "
+        env_cmd = " && ".join(
+            [f"set {k}={v}" for k, v in env.items() if k not in os.environ]
         )
+        full_cmd = f"{env_cmd} && {command}" if env_cmd else command
     else:
-        env_cmd = "GIT_COMMITTER_ENCODING=utf-8 GIT_AUTHOR_ENCODING=utf-8 "
-    exit_code = os.system(f"{env_cmd}{command}")
+        env_cmd = " ; ".join(
+            [f"export {k}={v}" for k, v in env.items() if k not in os.environ]
+        )
+        full_cmd = f"{env_cmd} ; {command}" if env_cmd else command
+
+    exit_code = os.system(full_cmd)
     return exit_code == 0
 
 
 def get_command_output(command):
-    """Only for commands needing output parsing. Return command output."""
+    """获取Git命令输出（强制UTF-8），避免路径乱码"""
+    env = get_git_env()
     with tempfile.NamedTemporaryFile(mode="w+", delete=False, encoding="utf-8") as f:
         temp_file = f.name
-    env_cmd = ""
+
+    # 执行命令时强制Git输出UTF-8（通过环境变量，不使用--encoding选项）
     if os.name == "nt":
-        env_cmd = (
-            "set GIT_COMMITTER_ENCODING=utf-8 && set GIT_AUTHOR_ENCODING=utf-8 && "
+        env_cmd = " && ".join(
+            [f"set {k}={v}" for k, v in env.items() if k not in os.environ]
         )
-    # 执行命令时用safe_print显示含中文的命令
+        full_cmd = (
+            f'{env_cmd} && {command} > "{temp_file}" 2>&1'
+            if env_cmd
+            else f'{command} > "{temp_file}" 2>&1'
+        )
+    else:
+        env_cmd = " ; ".join(
+            [f"export {k}={v}" for k, v in env.items() if k not in os.environ]
+        )
+        full_cmd = (
+            f'{env_cmd} ; {command} > "{temp_file}" 2>&1'
+            if env_cmd
+            else f'{command} > "{temp_file}" 2>&1'
+        )
+
     safe_print(f"[Parsing output]: {command}")
-    os.system(f'{env_cmd}{command} > "{temp_file}" 2>&1')
+    os.system(full_cmd)
+
+    # 读取输出（强制UTF-8，避免Neovim环境影响）
     output = ""
     try:
-        with open(temp_file, "r", encoding="utf-8") as f:
-            output = f.read()
-    except UnicodeDecodeError:
-        with open(temp_file, "r", encoding="gbk") as f:
+        with open(temp_file, "r", encoding="utf-8", errors="replace") as f:
             output = f.read()
     finally:
         os.remove(temp_file)
@@ -60,43 +91,71 @@ def get_command_output(command):
 
 
 def get_file_size(file_path):
-    """Get file size (in bytes). Return size value."""
+    """获取文件大小（处理UTF-8路径，避免找不到文件）"""
     try:
-        # 处理含中文的文件路径编码
-        file_path = file_path.encode("utf-8", errors="replace").decode("utf-8")
+        file_path = file_path.strip()
+        file_path = os.path.abspath(file_path)  # 转换为绝对路径，避免相对路径解析错误
+        if not os.path.exists(file_path):
+            safe_print(f"[Warning]: File not found (check path encoding): {file_path}")
+            return 0
         return os.path.getsize(file_path)
     except OSError as e:
-        # 用safe_print显示含中文的错误信息
         safe_print(f"[Warning]: Failed to get size of file '{file_path}' - {str(e)}")
         return 0
 
 
 def get_uncommitted_files():
-    """Get lists of modified and untracked files. Return (modified_files, untracked_files)."""
-    modified_output = get_command_output("git diff --name-only")
+    """获取未提交文件（兼容旧Git版本，不使用--encoding选项）"""
+    # 1. 获取已修改文件（通过环境变量确保UTF-8输出）
+    modified_output = get_command_output("git diff --name-only")  # 移除--encoding选项
     modified_files = [f.strip() for f in modified_output.splitlines() if f.strip()]
-    untracked_output = get_command_output("git ls-files --others --exclude-standard")
+
+    # 2. 获取未跟踪文件（同样通过环境变量控制编码）
+    untracked_output = get_command_output(
+        "git ls-files --others --exclude-standard"
+    )  # 移除--encoding选项
     untracked_files = [f.strip() for f in untracked_output.splitlines() if f.strip()]
-    return modified_files, untracked_files
+
+    # 验证路径有效性（过滤乱码路径）
+    valid_modified = [f for f in modified_files if os.path.exists(os.path.abspath(f))]
+    invalid_modified = set(modified_files) - set(valid_modified)
+    if invalid_modified:
+        safe_print(
+            f"[Warning]: Invalid modified file paths (encoding issue): {invalid_modified}"
+        )
+
+    valid_untracked = [f for f in untracked_files if os.path.exists(os.path.abspath(f))]
+    invalid_untracked = set(untracked_files) - set(valid_untracked)
+    if invalid_untracked:
+        safe_print(
+            f"[Warning]: Invalid untracked file paths (encoding issue): {invalid_untracked}"
+        )
+
+    return valid_modified, valid_untracked
 
 
 def commit_and_push(files, commit_msg_file):
-    """Commit specified files and push with retry mechanism. Return success status."""
+    """提交文件（适配中文路径和Neovim输出，移除不兼容选项）"""
     if not files:
         safe_print("[Info]: No files need to be committed")
         return True
-    # 处理含中文的文件路径（用引号包裹）
-    files_quoted = [f'"{file}"' for file in files]
+
+    # 处理中文/特殊字符路径（用双引号包裹）
+    files_quoted = [f'"{os.path.abspath(f)}"' for f in files]
     add_cmd = f"git add {' '.join(files_quoted)}"
     if not run_command(add_cmd):
         safe_print("[Error]: Failed to add files")
         return False
-    commit_cmd = f'git commit -F "{commit_msg_file}"'
+
+    # 提交时移除--encoding选项（通过环境变量GIT_COMMITTER_ENCODING控制）
+    commit_cmd = f'git commit -F "{os.path.abspath(commit_msg_file)}"'
     if not run_command(commit_cmd):
         safe_print("[Error]: Failed to commit files")
         return False
-    # 显示含中文的文件数量信息
+
     safe_print(f"[Success]: Successfully committed {len(files)} files")
+
+    # 推送重试
     for retry in range(MAX_RETRIES):
         safe_print(f"[Pushing]: Attempt {retry+1}/{MAX_RETRIES}...")
         push_cmd = "git push"
@@ -107,44 +166,36 @@ def commit_and_push(files, commit_msg_file):
         if retry < MAX_RETRIES - 1:
             safe_print("[Waiting]: Retrying in 2 seconds...")
             time.sleep(2)
+
     safe_print(f"[Error]: Maximum retries ({MAX_RETRIES}) reached. Push failed.")
     return False
 
 
 def main():
-    if os.name == "nt":
-        # 1. 强制设置控制台为UTF-8编码（解决Windows默认GBK问题）
-        os.system("chcp 65001 > nul")
-        # 2. 强制Python输出编码为UTF-8
-        os.environ["PYTHONIOENCODING"] = "utf-8"
-        os.environ["LC_ALL"] = "en_US.UTF-8"  # 额外适配部分终端
-
-    # Check command line arguments
+    # 1. 检查参数
     if len(sys.argv) < 2:
         safe_print(
             "[Error]: Missing argument! Usage: python git_batch_commit.py commit_message_file.txt"
         )
         sys.exit(1)
     original_commit_file = sys.argv[1]
+    original_commit_file = os.path.abspath(original_commit_file)
     if not os.path.exists(original_commit_file):
-        safe_print(
-            f"[Error]: Commit message file '{original_commit_file}' does not exist"
-        )
+        safe_print(f"[Error]: Commit message file not found: '{original_commit_file}'")
         sys.exit(1)
 
-    # Process commit message file
+    # 2. 处理提交信息文件（强制UTF-8）
     commit_msg_file = f"{original_commit_file}.tmp"
     push_allow = False
     try:
-        with open(original_commit_file, "rb") as f:
+        with open(original_commit_file, "r", encoding="utf-8", errors="replace") as f:
             lines = f.readlines()
-        with open(commit_msg_file, "wb") as f:
+        with open(commit_msg_file, "w", encoding="utf-8") as f:
             for line in lines:
-                if line[:2] == b"# ":
+                line_stripped = line.strip()
+                if line_stripped.startswith("#") or not line_stripped:
                     continue
-                if not line.strip():
-                    continue
-                f.write(line.strip() + b"\n")
+                f.write(f"{line_stripped}\n")
                 push_allow = True
     except Exception as e:
         safe_print(f"[Error]: Failed to process commit message file - {str(e)}")
@@ -153,50 +204,50 @@ def main():
         sys.exit(1)
     if not push_allow:
         safe_print(
-            f"[Error]: Commit message file '{original_commit_file}' is empty (comments/blank lines filtered)"
+            f"[Error]: Commit message file is empty (comments/blank lines filtered): {original_commit_file}"
         )
         os.remove(commit_msg_file)
         sys.exit(1)
 
-    # Get all uncommitted files (modified + untracked)
+    # 3. 获取有效未提交文件（过滤乱码路径）
     modified_files, untracked_files = get_uncommitted_files()
     safe_print(
-        f"[Info]: Detected {len(modified_files)} modified files, {len(untracked_files)} untracked files"
+        f"[Info]: Detected {len(modified_files)} valid modified files, {len(untracked_files)} valid untracked files"
     )
 
-    # Collect all files to commit (with size info)
+    # 4. 合并文件列表并过滤
     all_files = []
-    # Add modified files with size
+    # 添加已修改文件
     for file in modified_files:
         file_size = get_file_size(file)
         all_files.append((file, file_size))
-    # Add untracked files (filtering oversize ones)
+    # 添加未跟踪文件（过滤超500MB）
     for file in untracked_files:
         file_size = get_file_size(file)
         if file_size > MAX_SINGLE_FILE_SIZE:
             safe_print(
-                f"[Warning]: File '{file}' is {file_size/1024/1024:.2f}MB (exceeds 500MB). Skipped."
+                f"[Warning]: File exceeds 500MB (skipped): '{file}' ({file_size/1024/1024:.2f}MB)"
             )
             continue
         all_files.append((file, file_size))
 
-    # If no files to commit, exit
+    # 无文件则退出
     if not all_files:
-        safe_print("[Info]: No files to commit. Exiting.")
+        safe_print("[Info]: No valid files to commit. Exiting.")
         os.remove(commit_msg_file)
         sys.exit(0)
 
-    # Calculate total size and sort files by size
+    # 5. 计算总大小并排序
     total_size = sum(size for _, size in all_files)
-    all_files.sort(key=lambda x: x[1])  # Sort by size (smallest first)
+    all_files.sort(key=lambda x: x[1])  # 从小到大排序
     safe_print(
-        f"[Info]: Total files to commit: {len(all_files)} (total size: {total_size/1024/1024:.2f}MB)"
+        f"[Info]: Total valid files to commit: {len(all_files)} (total size: {total_size/1024/1024:.2f}MB)"
     )
 
-    # Commit logic: one batch if total size <= 500MB, else multiple batches
+    # 6. 提交逻辑
     if total_size <= MAX_BATCH_SIZE:
         safe_print(
-            f"[Committing]: All files (total size {total_size/1024/1024:.2f}MB) will be committed in one batch..."
+            f"[Committing]: All files in one batch (total size: {total_size/1024/1024:.2f}MB)"
         )
         files_to_commit = [file for file, _ in all_files]
         if not commit_and_push(files_to_commit, commit_msg_file):
@@ -204,16 +255,13 @@ def main():
             os.remove(commit_msg_file)
             sys.exit(1)
     else:
-        safe_print(
-            f"[Committing]: Total size exceeds 500MB - starting batch commits..."
-        )
+        safe_print(f"[Committing]: Batch mode (total size exceeds 500MB)")
         current_batch = []
         current_batch_size = 0
-
         for file, file_size in all_files:
             if current_batch_size + file_size > MAX_BATCH_SIZE:
                 safe_print(
-                    f"\n[Committing]: Submitting current batch ({len(current_batch)} files, {current_batch_size/1024/1024:.2f}MB)..."
+                    f"\n[Committing]: Current batch ({len(current_batch)} files, {current_batch_size/1024/1024:.2f}MB)"
                 )
                 if not commit_and_push(current_batch, commit_msg_file):
                     safe_print("[Error]: Batch commit failed. Exiting.")
@@ -221,21 +269,19 @@ def main():
                     sys.exit(1)
                 current_batch = []
                 current_batch_size = 0
-
             current_batch.append(file)
             current_batch_size += file_size
-
-        # Commit final batch
+        # 提交最后一批
         if current_batch:
             safe_print(
-                f"\n[Committing]: Submitting final batch ({len(current_batch)} files, {current_batch_size/1024/1024:.2f}MB)..."
+                f"\n[Committing]: Final batch ({len(current_batch)} files, {current_batch_size/1024/1024:.2f}MB)"
             )
             if not commit_and_push(current_batch, commit_msg_file):
                 safe_print("[Error]: Final batch commit failed. Exiting.")
                 os.remove(commit_msg_file)
                 sys.exit(1)
 
-    # Cleanup and exit
+    # 7. 清理临时文件
     os.remove(commit_msg_file)
     safe_print("\n[Complete]: All files have been successfully committed and pushed!")
 
