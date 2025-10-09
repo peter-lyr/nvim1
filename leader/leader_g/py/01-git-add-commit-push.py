@@ -290,7 +290,7 @@ def main():
         for file, file_size in all_files:
             if current_batch_size + file_size > MAX_BATCH_SIZE:
                 safe_print(
-                    f"\n[Committing]: Current batch ({len(current_batch)} files, {current_batch_size/1024/1024:.2f}MB)"
+                    f"[Committing]: Current batch ({len(current_batch)} files, {current_batch_size/1024/1024:.2f}MB)"
                 )
                 if not commit_and_push(current_batch, commit_msg_file):
                     safe_print("[Error]: Batch commit failed. Exiting.")
@@ -302,7 +302,7 @@ def main():
             current_batch_size += file_size
         if current_batch:
             safe_print(
-                f"\n[Committing]: Final batch ({len(current_batch)} files, {current_batch_size/1024/1024:.2f}MB)"
+                f"[Committing]: Final batch ({len(current_batch)} files, {current_batch_size/1024/1024:.2f}MB)"
             )
             if not commit_and_push(current_batch, commit_msg_file):
                 safe_print("[Error]: Final batch commit failed. Exiting.")
@@ -310,7 +310,7 @@ def main():
                 sys.exit(1)
     os.remove(commit_msg_file)
     safe_print(
-        "\n[Complete]: All files (including deleted) have been successfully committed and pushed!"
+        "[Complete]: All files (including deleted) have been successfully committed and pushed!"
     )
 
 
