@@ -129,11 +129,11 @@ function G.git_reset_clean_fd()
 end
 
 function G.pull()
-	require("f").run_and_notify("git pull")
+	require("f").run_and_notify_pty("git pull")
 end
 
 function G.push()
-	require("f").run_and_notify("git push")
+	require("f").run_and_notify_pty("git push")
 end
 
 function G.log()

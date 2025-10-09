@@ -660,6 +660,8 @@ end
 function F.async_run(cmd, opts)
 	F.lazy_load("nvim-notify")
 	opts = opts or {}
+	local use_pty = opts.use_pty ~= nil and opts.use_pty or false
+	local interval = opts.interval or 30000
 	local output_file = opts.output_file or StdOutTxt
 	local fd = nil
 	local dir
@@ -677,7 +679,6 @@ function F.async_run(cmd, opts)
 	local partial_line = ""
 	local stdout_cache = {}
 	local timer = nil
-	local interval = opts.interval or 5000
 	local title = opts.title or "Command Output"
 	local function process_cache()
 		if partial_line ~= "" then
@@ -708,12 +709,17 @@ function F.async_run(cmd, opts)
 		timer:start(interval, interval, vim.schedule_wrap(process_cache))
 	end
 	local job_id = vim.fn.jobstart(cmd, {
-		pty = false,
+		pty = use_pty,
 		stdout_buffered = false,
 		stderr_buffered = false,
 		on_stdout = function(_, data, _)
+			if not data or vim.tbl_isempty(data) then
+				return
+			end
 			for _, chunk in ipairs(data) do
-				local combined = partial_line .. "\n" .. chunk
+				local temp = use_pty and "" or "\n"
+				local combined = partial_line .. temp .. chunk
+				partial_line = ""
 				local parts = {}
 				local start = 1
 				while start <= #combined do
@@ -728,17 +734,21 @@ function F.async_run(cmd, opts)
 					if not pos then
 						break
 					end
-					table.insert(parts, string.sub(combined, start, pos - 1))
+					local part = string.sub(combined, start, pos - 1)
+					if part ~= "" then
+						table.insert(parts, part)
+					end
 					start = pos + 1
-					if combined:sub(start, start) == "\n" or combined:sub(start, start) == "\r" then
-						start = start + 1
+					if start <= #combined then
+						local next_char = combined:sub(start, start)
+						if next_char == "\n" or next_char == "\r" then
+							start = start + 1
+						end
 					end
 				end
 				partial_line = string.sub(combined, start)
 				for _, part in ipairs(parts) do
-					if part ~= "" then
-						table.insert(stdout_cache, part)
-					end
+					table.insert(stdout_cache, part)
 				end
 			end
 		end,
@@ -777,6 +787,7 @@ function F.async_run(cmd, opts)
 		end,
 	})
 	if job_id <= 0 then
+		vim.notify("failed to run " .. vim.inspect(cmd), vim.log.levels.ERROR, { title = "Command Error" })
 		if fd then
 			vim.loop.fs_close(fd)
 		end
@@ -810,6 +821,11 @@ end
 function F.run_and_notify(...)
 	local cmd = string.format(...)
 	F.async_run(cmd, { title = cmd })
+end
+
+function F.run_and_notify_pty(...)
+	local cmd = string.format(...)
+	F.async_run(cmd, { title = cmd, use_pty = true, interval = 5000 })
 end
 
 function F.run_and_notify_title(title, ...)
