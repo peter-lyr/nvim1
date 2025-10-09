@@ -19,23 +19,19 @@ import sys
 import argparse
 import time
 
-# Global unified encoding: Prioritize UTF-8 for multi-language support
 GLOBAL_ENCODING = "utf-8"
-# Windows terminal default encoding (for log output adaptation)
 WINDOWS_TERMINAL_ENCODING = "gbk"
 
 
 def safe_print(text):
     """Safely print text, auto-adapt to terminal encoding to avoid garbled characters"""
     try:
-        # Prioritize printing with terminal encoding (GBK by default on Windows)
         print(
             text.encode(WINDOWS_TERMINAL_ENCODING, errors="replace").decode(
                 WINDOWS_TERMINAL_ENCODING
             )
         )
     except:
-        # Fallback to UTF-8 if adaptation fails
         print(text.encode(GLOBAL_ENCODING, errors="replace").decode(GLOBAL_ENCODING))
 
 
@@ -49,16 +45,13 @@ def run_command(command, check=True):
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
-            encoding=GLOBAL_ENCODING,  # Force UTF-8 decoding for command output
+            encoding=GLOBAL_ENCODING,
         )
         return True, result.stdout
     except subprocess.CalledProcessError as e:
-        safe_print(
-            f"Command execution error: {e.stderr}"
-        )  # Use safe_print to avoid garbled error info
+        safe_print(f"Command execution error: {e.stderr}")
         return False, e.stderr
     except UnicodeDecodeError:
-        # Extreme case: Command output is GBK, fallback to GBK decoding
         try:
             result = subprocess.run(
                 command,
@@ -80,25 +73,18 @@ def run_command(command, check=True):
 
 def get_uncommitted_files():
     """Get uncommitted files, safely handle results to avoid None"""
-    # Get modified files
     success, modified = run_command("git diff --name-only")
-    modified = modified if success else ""  # Ensure not None
-
-    # Get untracked files
+    modified = modified if success else ""
     success, untracked = run_command("git ls-files --others --exclude-standard")
-    untracked = untracked if success else ""  # Ensure not None
-
-    # Filter empty file paths
+    untracked = untracked if success else ""
     modified_files = [f.strip() for f in modified.splitlines() if f.strip()]
     untracked_files = [f.strip() for f in untracked.splitlines() if f.strip()]
-
     return modified_files, untracked_files
 
 
 def get_file_size(file_path):
     """Get file size (in bytes), safely handle garbled file paths"""
     try:
-        # Decode file path with UTF-8 if there are special characters (avoid size fetch failure)
         file_path = file_path.encode(GLOBAL_ENCODING).decode(GLOBAL_ENCODING)
         return os.path.getsize(file_path)
     except OSError as e:
@@ -111,22 +97,17 @@ def commit_files(files, commit_msg_file):
     if not files:
         safe_print("No files need to be committed")
         return True
-
-    # Wrap filenames in quotes to avoid issues with spaces/special characters
     files_quoted = [f'"{f}"' for f in files]
     add_cmd = f'git add {" ".join(files_quoted)}'
     success, output = run_command(add_cmd)
     if not success:
         safe_print(f"Failed to add files: {output}")
         return False
-
-    # Commit command: Wrap file path in quotes
     commit_cmd = f'git commit -F "{commit_msg_file}"'
     success, output = run_command(commit_cmd)
     if not success:
         safe_print(f"Commit failed: {output}")
         return False
-
     safe_print(f"Successfully committed {len(files)} files")
     return True
 
@@ -143,7 +124,6 @@ def push_with_retry(max_retries=5):
         if i < max_retries - 1:
             safe_print("Waiting 2 seconds before retrying...")
             time.sleep(2)
-
     safe_print(f"Reached maximum retries ({max_retries}), push failed")
     return False
 
@@ -156,22 +136,15 @@ def main():
         "commit_msg_file", help="Path to file containing commit message (UTF-8 encoded)"
     )
     args = parser.parse_args()
-
     commit_msg_file = args.commit_msg_file
-    # Check if commit message file exists
     if not os.path.exists(commit_msg_file):
         safe_print(f"Error: Commit message file {commit_msg_file} does not exist")
         sys.exit(1)
-
-    # Process commit message file: Read/write in UTF-8 text mode, filter comments and empty lines (core garble fix)
     temp_commit_file = f"{commit_msg_file}.tmp"
     push_allow = False
     try:
-        # Read original file with UTF-8 (avoid implicit encoding issues from binary mode)
         with open(commit_msg_file, "rt", encoding=GLOBAL_ENCODING) as f:
             lines = f.readlines()
-
-        # Filter comments (starting with #) and empty lines, write to temp file with UTF-8
         with open(temp_commit_file, "wt", encoding=GLOBAL_ENCODING) as f:
             for line in lines:
                 line_stripped = line.strip()
@@ -179,14 +152,12 @@ def main():
                     continue
                 f.write(f"{line_stripped}\n")
                 push_allow = True
-
         if not push_allow:
             safe_print(
                 f"Error: Commit message file {commit_msg_file} is empty (comments and empty lines filtered out)"
             )
             os.remove(temp_commit_file)
             sys.exit(2)
-
     except UnicodeDecodeError:
         safe_print(
             f"Error: Commit message file {commit_msg_file} is not UTF-8 encoded, please convert encoding and try again"
@@ -197,18 +168,12 @@ def main():
         if os.path.exists(temp_commit_file):
             os.remove(temp_commit_file)
         sys.exit(1)
-
-    # Configuration parameters
-    MAX_BATCH_SIZE = 500 * 1024 * 1024  # 500MB
-    MAX_SINGLE_FILE_SIZE = 500 * 1024 * 1024  # Maximum size per file: 500MB
-
-    # Get uncommitted files
+    MAX_BATCH_SIZE = 500 * 1024 * 1024
+    MAX_SINGLE_FILE_SIZE = 500 * 1024 * 1024
     modified_files, untracked_files = get_uncommitted_files()
     safe_print(
         f"Found {len(modified_files)} modified files, {len(untracked_files)} untracked files"
     )
-
-    # Commit modified files first
     if modified_files:
         safe_print(f"Committing {len(modified_files)} modified files...")
         if commit_files(modified_files, temp_commit_file):
@@ -222,14 +187,10 @@ def main():
             safe_print("Failed to commit modified files, program exiting")
             os.remove(temp_commit_file)
             sys.exit(1)
-
-    # Exit if no untracked files
     if not untracked_files:
         safe_print("No untracked files need to be committed")
         os.remove(temp_commit_file)
         sys.exit(0)
-
-    # Filter files that exceed maximum size
     filtered_files = []
     for file in untracked_files:
         file_size = get_file_size(file)
@@ -239,12 +200,8 @@ def main():
             )
             continue
         filtered_files.append((file, file_size))
-
-    # Sort files by size (ascending)
     filtered_files.sort(key=lambda x: x[1])
     safe_print(f"{len(filtered_files)} untracked files remaining after filtering")
-
-    # Batch commit
     current_batch = []
     current_size = 0
     for file, size in filtered_files:
@@ -262,14 +219,10 @@ def main():
                     safe_print("Commit failed, program exiting")
                     os.remove(temp_commit_file)
                     sys.exit(1)
-                # Reset batch
                 current_batch = []
                 current_size = 0
-
         current_batch.append(file)
         current_size += size
-
-    # Commit the last batch
     if current_batch:
         safe_print(
             f"Committing last batch ({len(current_batch)} files, total size {current_size/1024/1024:.2f}MB)..."
@@ -283,8 +236,6 @@ def main():
             safe_print("Commit failed, program exiting")
             os.remove(temp_commit_file)
             sys.exit(1)
-
-    # Clean up temporary file
     os.remove(temp_commit_file)
     safe_print("All files committed successfully")
 
