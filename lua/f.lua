@@ -689,7 +689,7 @@ function F.async_run(cmd, opts)
 			end
 			if #output > 0 then
 				local message = table.concat(output, "\n")
-				F.notify(message, vim.log.levels.INFO, { title = title })
+				vim.notify(message, vim.log.levels.INFO, { title = title })
 				if opts.on_stdout then
 					opts.on_stdout(output)
 				end
@@ -708,7 +708,7 @@ function F.async_run(cmd, opts)
 			end
 			if #errors > 0 then
 				local message = table.concat(errors, "\n")
-				F.notify(message, vim.log.levels.ERROR, { title = title .. " (Error)" })
+				vim.notify(message, vim.log.levels.ERROR, { title = title .. " (Error)" })
 				if opts.on_stderr then
 					opts.on_stderr(errors)
 				end
@@ -720,7 +720,7 @@ function F.async_run(cmd, opts)
 			end
 			-- local message = string.format("cmd done: '%s'", cmd)
 			-- local level = exit_code == 0 and vim.log.levels.INFO or vim.log.levels.WARN
-			-- F.notify(message, level, { title = F.format("%s (Exit: %d)", title, exit_code) })
+			-- vim.notify(message, level, { title = F.format("%s (Exit: %d)", title, exit_code) })
 			if opts.on_exit then
 				opts.on_exit(exit_code, signal, output_file)
 			end
@@ -732,7 +732,7 @@ function F.async_run(cmd, opts)
 		if fd then
 			vim.loop.fs_close(fd)
 		end
-		F.notify("failed to run " .. vim.inspect(cmd), vim.log.levels.ERROR, { title = "Command Error" })
+		vim.notify("failed to run " .. vim.inspect(cmd), vim.log.levels.ERROR, { title = "Command Error" })
 	else
 		F.fidget_notify("running: " .. cmd, vim.log.levels.INFO)
 	end
