@@ -17,8 +17,7 @@ def safe_print(text):
         print(text, flush=True)
     except Exception as e:
         text_encoded = text.encode("utf-8", errors="replace").decode("utf-8")
-        text_clean = text_encoded.rstrip("\r\n").rstrip("\n")
-        print(text_clean, flush=True)
+        print(text_encoded, flush=True)
 
 
 def get_git_env():
@@ -49,6 +48,44 @@ def run_command(command):
     return exit_code == 0
 
 
+def get_uncommitted_files():
+    """获取未提交文件（含删除文件！），清理路径中的\r字符"""
+    modified_output = get_command_output("git diff --name-only --diff-filter=ADM")
+    modified_files = [
+        f.strip().replace("\r", "") for f in modified_output.splitlines() if f.strip()
+    ]
+    untracked_output = get_command_output("git ls-files --others --exclude-standard")
+    untracked_files = [
+        f.strip().replace("\r", "") for f in untracked_output.splitlines() if f.strip()
+    ]
+    valid_modified = []
+    invalid_modified = []
+    for file in modified_files:
+        file_abspath = os.path.abspath(file)
+        if os.path.exists(file_abspath) or is_file_deleted_by_git(file):
+            valid_modified.append(file)
+        else:
+            invalid_modified.append(file)
+    if invalid_modified:
+        safe_print("[Warning]: Invalid modified file paths (encoding issue):")
+        for modified in invalid_modified:
+            safe_print(f" {modified}")
+    valid_untracked = [f for f in untracked_files if os.path.exists(os.path.abspath(f))]
+    invalid_untracked = set(untracked_files) - set(valid_untracked)
+    if invalid_untracked:
+        safe_print("[Warning]: Invalid untracked file paths (encoding issue):")
+        for untracked in invalid_untracked:
+            safe_print(f" {untracked}")
+    return valid_modified, valid_untracked
+
+
+def is_file_deleted_by_git(file_path):
+    """判断文件是否被Git标记为删除（解决删除文件无法检测的问题）"""
+    command = f'git diff --name-only --diff-filter=D -- "{file_path}"'
+    output = get_command_output(command)
+    return output.strip() == file_path.strip()
+
+
 def get_command_output(command):
     """获取Git命令输出，清理\r字符，避免^M残留"""
     env = get_git_env()
@@ -74,7 +111,8 @@ def get_command_output(command):
             if env_cmd
             else f'{command} > "{temp_file}" 2>&1'
         )
-    safe_print(f"[Parsing output]: {command}")
+    if not command.startswith("git diff --name-only --diff-filter=D"):
+        safe_print(f"[Parsing output]: {command}")
     os.system(full_cmd)
     output = ""
     try:
@@ -86,46 +124,23 @@ def get_command_output(command):
 
 
 def get_file_size(file_path):
-    """获取文件大小（处理UTF-8路径，避免找不到文件）"""
+    """获取文件大小（删除文件直接返回0，无需报错）"""
     try:
         file_path = file_path.strip().replace("\r", "")
-        file_path = os.path.abspath(file_path)
-        if not os.path.exists(file_path):
-            safe_print(f"[Warning]: File not found (check path encoding): {file_path}")
+        file_abspath = os.path.abspath(file_path)
+        if is_file_deleted_by_git(file_path):
             return 0
-        return os.path.getsize(file_path)
+        if not os.path.exists(file_abspath):
+            safe_print(f"[Warning]: File not found (not deleted by Git): {file_path}")
+            return 0
+        return os.path.getsize(file_abspath)
     except OSError as e:
         safe_print(f"[Warning]: Failed to get size of file '{file_path}' - {str(e)}")
         return 0
 
 
-def get_uncommitted_files():
-    """获取未提交文件，清理路径中的\r字符"""
-    modified_output = get_command_output("git diff --name-only")
-    modified_files = [
-        f.strip().replace("\r", "") for f in modified_output.splitlines() if f.strip()
-    ]
-    untracked_output = get_command_output("git ls-files --others --exclude-standard")
-    untracked_files = [
-        f.strip().replace("\r", "") for f in untracked_output.splitlines() if f.strip()
-    ]
-    valid_modified = [f for f in modified_files if os.path.exists(os.path.abspath(f))]
-    invalid_modified = set(modified_files) - set(valid_modified)
-    if invalid_modified:
-        safe_print("[Warning]: Invalid modified file paths (encoding issue):")
-        for modified in invalid_modified:
-            safe_print(f" {modified}")
-    valid_untracked = [f for f in untracked_files if os.path.exists(os.path.abspath(f))]
-    invalid_untracked = set(untracked_files) - set(valid_untracked)
-    if invalid_untracked:
-        safe_print("[Warning]: Invalid untracked file paths (encoding issue):")
-        for untracked in invalid_untracked:
-            safe_print(f" {untracked}")
-    return valid_modified, valid_untracked
-
-
 def commit_and_push(files, commit_msg_file):
-    """提交文件，清理路径中的\r字符"""
+    """提交文件（支持删除文件，清理路径中的\r字符）"""
     if not files:
         safe_print("[Info]: No files need to be committed")
         return True
@@ -133,14 +148,16 @@ def commit_and_push(files, commit_msg_file):
     files_quoted = [f'"{os.path.abspath(f)}"' for f in files_clean]
     add_cmd = f"git add {' '.join(files_quoted)}"
     if not run_command(add_cmd):
-        safe_print("[Error]: Failed to add files")
+        safe_print("[Error]: Failed to add files (including deleted files)")
         return False
     commit_msg_file_clean = commit_msg_file.replace("\r", "")
     commit_cmd = f'git commit -F "{os.path.abspath(commit_msg_file_clean)}"'
     if not run_command(commit_cmd):
-        safe_print("[Error]: Failed to commit files")
+        safe_print("[Error]: Failed to commit files (including deleted files)")
         return False
-    safe_print(f"[Success]: Successfully committed {len(files)} files")
+    safe_print(
+        f"[Success]: Successfully committed {len(files)} files (including deleted)"
+    )
     for retry in range(MAX_RETRIES):
         safe_print(f"[Pushing]: Attempt {retry+1}/{MAX_RETRIES}...")
         push_cmd = "git push"
@@ -191,7 +208,7 @@ def main():
         sys.exit(1)
     modified_files, untracked_files = get_uncommitted_files()
     safe_print(
-        f"[Info]: Detected {len(modified_files)} valid modified files, {len(untracked_files)} valid untracked files"
+        f"[Info]: Detected {len(modified_files)} valid modified/deleted files, {len(untracked_files)} valid untracked files"
     )
     all_files = []
     for file in modified_files:
@@ -206,17 +223,17 @@ def main():
             continue
         all_files.append((file, file_size))
     if not all_files:
-        safe_print("[Info]: No valid files to commit. Exiting.")
+        safe_print("[Info]: No valid files to commit (including deleted). Exiting.")
         os.remove(commit_msg_file)
         sys.exit(0)
     total_size = sum(size for _, size in all_files)
     all_files.sort(key=lambda x: x[1])
     safe_print(
-        f"[Info]: Total valid files to commit: {len(all_files)} (total size: {total_size/1024/1024:.2f}MB)"
+        f"[Info]: Total valid files to commit: {len(all_files)} (total size: {total_size/1024/1024:.2f}MB, including deleted files)"
     )
     if total_size <= MAX_BATCH_SIZE:
         safe_print(
-            f"[Committing]: All files in one batch (total size: {total_size/1024/1024:.2f}MB)"
+            f"[Committing]: All files in one batch (total size: {total_size/1024/1024:.2f}MB, including deleted)"
         )
         files_to_commit = [file for file, _ in all_files]
         if not commit_and_push(files_to_commit, commit_msg_file):
@@ -249,7 +266,9 @@ def main():
                 os.remove(commit_msg_file)
                 sys.exit(1)
     os.remove(commit_msg_file)
-    safe_print("\n[Complete]: All files have been successfully committed and pushed!")
+    safe_print(
+        "\n[Complete]: All files (including deleted) have been successfully committed and pushed!"
+    )
 
 
 if __name__ == "__main__":
