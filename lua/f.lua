@@ -676,10 +676,11 @@ function F.async_run(cmd, opts)
 	end
 	local stdout_cache = {}
 	local timer = nil
-	local interval = opts.interval or 20000
+	local interval = opts.interval or 5000
 	local title = opts.title or "Command Output"
 	local function process_cache()
 		if #stdout_cache == 0 then
+			vim.notify("no output", vim.log.levels.INFO, { title = title .. "..." })
 			return
 		end
 		local output = vim.list_slice(stdout_cache)
@@ -691,7 +692,7 @@ function F.async_run(cmd, opts)
 		if #output > 0 then
 			local message = table.concat(output, "\n")
 			message = string.gsub(message, "\r", "")
-			vim.notify(message, vim.log.levels.INFO, { title = title })
+			vim.notify(message, vim.log.levels.INFO, { title = title .. "..." })
 			if opts.on_stdout then
 				opts.on_stdout(output)
 			end
