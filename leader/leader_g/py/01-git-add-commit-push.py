@@ -108,7 +108,7 @@ def commit_files(files, commit_msg_file):
         return False
 
     # 提交文件（指定编码）
-    commit_cmd = f'git -c i18n.commitencoding=utf-8 commit -F "{commit_msg_file}"'
+    commit_cmd = f'git -c i18n.commitencoding=gbk commit -F "{commit_msg_file}"'
     success, output = run_command(commit_cmd)
     if not success:
         safe_print(f"Commit failed: {output}")
