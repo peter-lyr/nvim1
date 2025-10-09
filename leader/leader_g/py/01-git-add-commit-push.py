@@ -102,7 +102,7 @@ def commit_files(files, commit_msg_file):
 
     # 添加文件
     files_quoted = [f'"{f}"' for f in files]
-    add_cmd = f'git add {" ".join(files_quoted)}'
+    add_cmd = f'chcp 65001>nul & git add {" ".join(files_quoted)}'
     success, output = run_command(add_cmd)
     if not success:
         safe_print(f"Failed to add files: {output}")
