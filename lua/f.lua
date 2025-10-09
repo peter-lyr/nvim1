@@ -825,4 +825,11 @@ function F.ui(arr, opts, callback)
 	end
 end
 
+function F.windo(...)
+	local wid = vim.fn.win_getid(vim.fn.winnr())
+	local cmd = string.format(...)
+	F.cmd([[windo %d]], cmd)
+	vim.fn.win_gotoid(wid)
+end
+
 return F
