@@ -677,7 +677,7 @@ function F.async_run(cmd, opts)
 	local partial_line = ""
 	local stdout_cache = {}
 	local timer = nil
-	local interval = opts.interval or 2000
+	local interval = opts.interval or 5000
 	local title = opts.title or "Command Output"
 	local function process_cache()
 		if partial_line ~= "" then
