@@ -10,6 +10,14 @@ require("which-key").register({
 		mode = { "n", "v" },
 		silent = true,
 	},
+	["<leader>od"] = {
+		function()
+			O.open_work_summary_day()
+		end,
+		"open: work_summary_day.md",
+		mode = { "n", "v" },
+		silent = true,
+	},
 	["<leader>oi"] = {
 		function()
 			O.open_init_lua()

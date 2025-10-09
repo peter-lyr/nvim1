@@ -6,6 +6,10 @@ function O.open_work_md()
 	require("f").jump_or_split(w .. "\\work.md")
 end
 
+function O.open_work_summary_day()
+	require("f").jump_or_split(w .. "\\work_summary_day.md")
+end
+
 function O.open_init_lua()
 	require("f").jump_or_split(Nvim1 .. "\\init.lua")
 end
