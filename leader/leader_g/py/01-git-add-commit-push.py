@@ -29,22 +29,36 @@ def get_git_env():
     return env
 
 
-def run_command(command):
-    """执行命令，强制Git环境为UTF-8，输出适配Neovim"""
-    safe_print(f"[Executing command]: {command}")
-    env = get_git_env()
-    if os.name == "nt":
-        env_cmd = " && ".join(
-            [f"set {k}={v}" for k, v in env.items() if k not in os.environ]
+def run_command(cmd, cwd=None):
+    """执行命令，强制Git环境为UTF-8，支持指定工作目录，输出适配Neovim"""
+    original_cwd = os.getcwd()
+    try:
+        if cwd:
+            os.chdir(cwd)
+            safe_print(f"[Working directory]: {cwd}")
+        safe_print(f"[Executing command]: {cmd}")
+        env = get_git_env()
+        if os.name == "nt":
+            env_cmd = " && ".join(
+                [f"set {k}={v}" for k, v in env.items() if k not in os.environ]
+            )
+        else:
+            env_cmd = " ; ".join(
+                [f"export {k}={v}" for k, v in env.items() if k not in os.environ]
+            )
+        full_cmd = (
+            f"{env_cmd} && {cmd}"
+            if env_cmd
+            else cmd if os.name == "nt" else f"{env_cmd} ; {cmd}" if env_cmd else cmd
         )
-        full_cmd = f"{env_cmd} && {command}" if env_cmd else command
-    else:
-        env_cmd = " ; ".join(
-            [f"export {k}={v}" for k, v in env.items() if k not in os.environ]
-        )
-        full_cmd = f"{env_cmd} ; {command}" if env_cmd else command
-    exit_code = os.system(full_cmd)
-    return exit_code == 0
+        exit_code = os.system(full_cmd)
+        return exit_code == 0
+    except Exception as e:
+        safe_print(f"[Error] Command execution failed: {str(e)}")
+        return False
+    finally:
+        if cwd:
+            os.chdir(original_cwd)
 
 
 def get_uncommitted_files():
@@ -138,20 +152,45 @@ def get_file_size(file_path):
         return 0
 
 
+def find_git_root(start_path=None):
+    """查找Git仓库的根目录（包含.git的目录）"""
+    current_path = start_path or os.getcwd()
+    while True:
+        git_dir = os.path.join(current_path, ".git")
+        if os.path.exists(git_dir) and os.path.isdir(git_dir):
+            return current_path
+        parent_path = os.path.dirname(current_path)
+        if parent_path == current_path:
+            return None
+        current_path = parent_path
+
+
 def commit_and_push(files, commit_msg_file):
-    """提交文件（支持删除文件，清理路径中的\r字符）"""
+    """提交文件（支持删除文件，使用相对路径）"""
     if not files:
         safe_print("[Info]: No files need to be committed")
         return True
+    git_root = find_git_root()
+    if not git_root:
+        safe_print("[Error]: Could not find Git repository root (.git directory)")
+        return False
     files_clean = [f.replace("\r", "") for f in files]
-    files_quoted = [f'"{os.path.abspath(f)}"' for f in files_clean]
+    try:
+        files_relative = [
+            os.path.relpath(os.path.abspath(f), git_root) for f in files_clean
+        ]
+        files_quoted = [f'"{f}"' for f in files_relative]
+    except ValueError as e:
+        safe_print(f"[Error]: Failed to calculate relative paths: {e}")
+        return False
     add_cmd = f"git add {' '.join(files_quoted)}"
-    if not run_command(add_cmd):
+    if not run_command(add_cmd, cwd=git_root):
         safe_print("[Error]: Failed to add files (including deleted files)")
         return False
     commit_msg_file_clean = commit_msg_file.replace("\r", "")
-    commit_cmd = f'git commit -F "{os.path.abspath(commit_msg_file_clean)}"'
-    if not run_command(commit_cmd):
+    commit_msg_abs = os.path.abspath(commit_msg_file_clean)
+    commit_cmd = f'git commit -F "{commit_msg_abs}"'
+    if not run_command(commit_cmd, cwd=git_root):
         safe_print("[Error]: Failed to commit files (including deleted files)")
         return False
     safe_print(
@@ -160,7 +199,7 @@ def commit_and_push(files, commit_msg_file):
     for retry in range(MAX_RETRIES):
         safe_print(f"[Pushing]: Attempt {retry+1}/{MAX_RETRIES}...")
         push_cmd = "git push"
-        if run_command(push_cmd):
+        if run_command(push_cmd, cwd=git_root):
             safe_print("[Success]: Push completed successfully")
             return True
         safe_print(f"[Error]: Attempt {retry+1} failed")
