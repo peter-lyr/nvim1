@@ -130,6 +130,8 @@ def get_uncommitted_files():
     valid_modified = [f for f in modified_files if os.path.exists(os.path.abspath(f))]
     invalid_modified = set(modified_files) - set(valid_modified)
     if invalid_modified:
+        safe_print(f"[Testing]: modified_files: {modified_files}")
+        safe_print(f"[Testing]: valid_modified: {valid_modified}")
         safe_print(
             f"[Warning]: Invalid modified file paths (encoding issue): {invalid_modified}"
         )
