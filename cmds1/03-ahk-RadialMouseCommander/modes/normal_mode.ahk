@@ -7,7 +7,7 @@ InitializeNormalModeActions() {
         ;;以下3个最常用
         "000RU", ["切换最大化窗口", ToggleTargetWindowMaximize],
         "000RD", ["最小化窗口", MinimizeTargetWindow],
-        "000LD", ["Esc", Send.Bind("{Esc}")],
+        "000LD", ["Esc", SendAfterActivate.Bind("{Esc}")],
         ;;各种模式
         "000LU", ["窗口控制模式2", EnterWindowControlMode2],
         "000U", ["窗口激活模式", EnterWindowActivateMode],

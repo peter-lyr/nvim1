@@ -23,9 +23,16 @@ GetDesktopClass() {
     return 0
 }
 
+IsTargetWindowActive() {
+    global g_TargetWindowHwnd
+    if WinActive(g_TargetWindowHwnd)
+        return 1
+    return 0
+}
+
 ActivateTargetWindow() {
     global g_TargetWindowHwnd
-    WinActivate(g_TargetWindowHwnd)
+    return MyWinActivate(g_TargetWindowHwnd)
 }
 
 ToggleTargetWindowTopmost(hwnd := 0) {

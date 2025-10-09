@@ -106,3 +106,8 @@ ActivateMstscExe() {
     }
   }
 }
+
+SendAfterActivate(keys) {
+    if ActivateTargetWindow()
+        Send(keys)
+}
