@@ -677,6 +677,7 @@ function F.async_run(cmd, opts)
 	local stdout_cache = {}
 	local timer = nil
 	local interval = opts.interval or 20000
+	local title = opts.title or "Command Output"
 	local function process_cache()
 		if #stdout_cache == 0 then
 			return
@@ -700,7 +701,6 @@ function F.async_run(cmd, opts)
 	if timer then
 		timer:start(interval, interval, vim.schedule_wrap(process_cache))
 	end
-	local title = opts.title or "Command Output"
 	local job_id = vim.fn.jobstart(cmd, {
 		on_stdout = function(_, data, _)
 			for _, line in ipairs(data) do
