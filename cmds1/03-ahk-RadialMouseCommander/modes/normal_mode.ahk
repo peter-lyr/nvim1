@@ -18,6 +18,7 @@ InitializeNormalModeActions() {
         ;;配置
         "010R", ["切换菜单提示", ToggleUpdateRadialMenuTooltipEn],
         "010RU", ["切换2秒提示", ToggleShowTimedTooltipEn],
+        "010RD", ["切换画圆", ToggleRadialMenuGuiEn],
     )
 }
 

@@ -13,13 +13,13 @@ ShowTimedTooltipLaterDo(message, timeout := 2000) {
 
 ToggleUpdateRadialMenuTooltipEn() {
     global g_UpdateRadialMenuTooltipEn
-    g_UpdateRadialMenuTooltipEn := 1 -g_UpdateRadialMenuTooltipEn
+    g_UpdateRadialMenuTooltipEn := 1 - g_UpdateRadialMenuTooltipEn
     ShowTimedTooltipLaterDo("g_UpdateRadialMenuTooltipEn: " g_UpdateRadialMenuTooltipEn)
 }
 
 ToggleShowTimedTooltipEn() {
     global g_ShowTimedTooltipEn
-    g_ShowTimedTooltipEn := 1 -g_ShowTimedTooltipEn
+    g_ShowTimedTooltipEn := 1 - g_ShowTimedTooltipEn
     ShowTimedTooltipLaterDo("g_ShowTimedTooltipEn: " g_ShowTimedTooltipEn)
 }
 

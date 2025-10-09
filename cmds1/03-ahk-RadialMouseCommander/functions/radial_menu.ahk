@@ -3,6 +3,7 @@
 #Requires AutoHotkey v2.0
 
 ; 全局变量
+global g_RadialMenuGuiEn := 0
 global g_RadialMenuGui := ""
 global g_RadialMenuGuiHwnd := 0
 global g_RadialMenuRadius := 5
@@ -63,7 +64,7 @@ CreateRadialMenuGui(centerX, centerY, width, height, transparency, backgroundCol
 }
 
 DisplayRadialMenuAtCursor() {
-    global g_RadialMenuGui, g_RadialMenuGuiHwnd, g_RadialMenuRadius, g_RadialMenuCenterX, g_RadialMenuCenterY
+    global g_RadialMenuGui, g_RadialMenuGuiHwnd, g_RadialMenuRadius, g_RadialMenuCenterX, g_RadialMenuCenterY, g_RadialMenuGuiEn
     CoordMode("Mouse", "Screen")
     MouseGetPos(&cursorX, &cursorY)
     g_RadialMenuCenterX := cursorX
@@ -72,14 +73,15 @@ DisplayRadialMenuAtCursor() {
     if (g_RadialMenuGui && IsObject(g_RadialMenuGui)) {
         menuX := cursorX - g_RadialMenuRadius
         menuY := cursorY - g_RadialMenuRadius
-        g_RadialMenuGui.Show("x" menuX " y" menuY " w" menuDiameter " h" menuDiameter " NoActivate")
+        if g_RadialMenuGuiEn {
+            g_RadialMenuGui.Show("x" menuX " y" menuY " w" menuDiameter " h" menuDiameter " NoActivate")
+        }
         g_RadialMenuGuiHwnd := g_RadialMenuGui.Hwnd
     } else {
         try {
             g_RadialMenuGui := CreateRadialMenuGui(cursorX, cursorY, menuDiameter, menuDiameter, 180, "FF0000")
             g_RadialMenuGuiHwnd := g_RadialMenuGui.Hwnd
-        }
-        catch as e {
+        } catch as e {
             ShowTimedTooltip("创建圆形菜单失败: " . e.Message)
             g_RadialMenuGui := ""
             g_RadialMenuGuiHwnd := 0
@@ -92,6 +94,12 @@ HideRadialMenu() {
     if (g_RadialMenuGui && IsObject(g_RadialMenuGui)) {
         g_RadialMenuGui.Hide()
     }
+}
+
+ToggleRadialMenuGuiEn() {
+    global g_RadialMenuGuiEn
+    g_RadialMenuGuiEn := 1 - g_RadialMenuGuiEn
+    ShowTimedTooltipLaterDo("g_RadialMenuGuiEn: " g_RadialMenuGuiEn)
 }
 
 IsCursorInsideRadialMenu() {
