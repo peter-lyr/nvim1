@@ -357,8 +357,8 @@ function F.jump_or_split(file, no_split)
 	end
 	file = F.rep(file)
 	if F.is_dir(file) then
-		F.lazy_load("nvim-tree.lua")
-		vim.cmd("wincmd s")
+		-- F.lazy_load("nvim-tree.lua")
+		-- vim.cmd("wincmd s")
 		F.cmd("e %s", file)
 		return
 	end
@@ -761,6 +761,40 @@ end
 function F.run_and_notify_on_err(on_stderr, ...)
 	local cmd = string.format(...)
 	F.async_run(cmd, { on_stderr = on_stderr })
+end
+
+function F.ui_input(prompt, default, callback)
+	vim.ui.input({ prompt = prompt, default = default }, function(input)
+		if input then
+			callback(input)
+		end
+	end)
+end
+
+function F.ui_sel(items, opts, callback)
+	if type(opts) == "string" then
+		opts = { prompt = opts }
+	end
+	if items and #items > 0 then
+		if vim.g.ui_select ~= vim.ui.select then
+			require("telescope").load_extension("ui-select")
+			vim.g.ui_select = vim.ui.select
+		end
+		vim.ui.select(items, opts, callback)
+	end
+end
+
+function F.ui(arr, opts, callback)
+	F.lazy_load("telescope.nvim")
+	if arr and #arr == 1 then
+		callback(arr[1])
+	else
+		F.ui_sel(arr, opts, function(choose, index)
+			if choose then
+				callback(choose, index)
+			end
+		end)
+	end
 end
 
 return F

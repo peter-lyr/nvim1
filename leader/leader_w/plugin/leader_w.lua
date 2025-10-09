@@ -181,4 +181,18 @@ require("which-key").register({
 		"cycle_notify_windows",
 		mode = { "n", "v" },
 	},
+	["<leader>wwm"] = {
+		function()
+			W.work_summary_day("morning")
+		end,
+		"work_summary_day morning",
+		mode = { "n", "v" },
+	},
+	["<leader>wwe"] = {
+		function()
+			W.work_summary_day("evening")
+		end,
+		"work_summary_day evening",
+		mode = { "n", "v" },
+	},
 })

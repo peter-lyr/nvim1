@@ -1,5 +1,12 @@
 local W = {}
 
+local function get_py(py)
+	local info = debug.getinfo(1, "S")
+	local relative_path = info.source:sub(2)
+	relative_path = require("f").rep(relative_path)
+	return vim.fn.fnamemodify(relative_path, ":p:h:h") .. "\\py\\" .. py
+end
+
 function W.window_go(dir)
 	require("f").cmd("wincmd %s", dir)
 end
@@ -255,6 +262,19 @@ function W.cycle_notify_windows()
 	end
 	vim.api.nvim_set_current_win(notify_wins[_G.notify_win_index])
 	return true
+end
+
+function W.work_summary_day_do(day)
+	if not day or #day == 0 then
+		return
+	end
+	local work_summary_day_py = get_py("01-work-summary-day.py")
+	require("f").run_and_silent("%s %s %s %s", work_summary_day_py, WORK .. "\\work.md", day, vim.g.morning)
+end
+
+function W.work_summary_day(morning)
+	vim.g.morning = morning
+	require("f").ui_input("work_summary_day", vim.fn.strftime("%Y-%m-%d"), W.work_summary_day_do)
 end
 
 return W

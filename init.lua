@@ -7,6 +7,8 @@ Email = "llydrp.ldp@gmail.com"
 Home = vim.fn.expand("$HOME")
 Dp1 = Home .. "\\Dp1"
 
+WORK = Home .. "\\w"
+
 Dp1Temp = Dp1 .. "\\temp"
 TempTxt = Dp1Temp .. "\\temp.txt"
 StdOutTxt = Dp1Temp .. "\\stdout.txt"
