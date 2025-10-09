@@ -620,6 +620,7 @@ end
 function F.notify(...)
 	F.lazy_load("nvim-notify")
 	local info = string.format(...)
+	info = string.gsub(info, "\r", "")
 	vim.notify(info)
 end
 
@@ -669,7 +670,7 @@ function F.async_run(cmd, opts)
 		end
 		fd = vim.loop.fs_open(output_file, "w", 438)
 		if not fd then
-			vim.notify("failed to touch file: " .. output_file, vim.log.levels.ERROR)
+			F.notify("failed to touch file: " .. output_file, vim.log.levels.ERROR)
 			return
 		end
 	end
@@ -688,7 +689,7 @@ function F.async_run(cmd, opts)
 			end
 			if #output > 0 then
 				local message = table.concat(output, "\n")
-				vim.notify(message, vim.log.levels.INFO, { title = title })
+				F.notify(message, vim.log.levels.INFO, { title = title })
 				if opts.on_stdout then
 					opts.on_stdout(output)
 				end
@@ -707,7 +708,7 @@ function F.async_run(cmd, opts)
 			end
 			if #errors > 0 then
 				local message = table.concat(errors, "\n")
-				vim.notify(message, vim.log.levels.ERROR, { title = title .. " (Error)" })
+				F.notify(message, vim.log.levels.ERROR, { title = title .. " (Error)" })
 				if opts.on_stderr then
 					opts.on_stderr(errors)
 				end
@@ -719,7 +720,7 @@ function F.async_run(cmd, opts)
 			end
 			-- local message = string.format("cmd done: '%s'", cmd)
 			-- local level = exit_code == 0 and vim.log.levels.INFO or vim.log.levels.WARN
-			-- vim.notify(message, level, { title = F.format("%s (Exit: %d)", title, exit_code) })
+			-- F.notify(message, level, { title = F.format("%s (Exit: %d)", title, exit_code) })
 			if opts.on_exit then
 				opts.on_exit(exit_code, signal, output_file)
 			end
@@ -731,7 +732,7 @@ function F.async_run(cmd, opts)
 		if fd then
 			vim.loop.fs_close(fd)
 		end
-		vim.notify("failed to run " .. vim.inspect(cmd), vim.log.levels.ERROR, { title = "Command Error" })
+		F.notify("failed to run " .. vim.inspect(cmd), vim.log.levels.ERROR, { title = "Command Error" })
 	else
 		F.fidget_notify("running: " .. cmd, vim.log.levels.INFO)
 	end
