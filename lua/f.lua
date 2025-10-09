@@ -579,7 +579,7 @@ function F.delete_files(files)
 		if F.is_file_exists(file) then
 			if 0 ~= vim.fn.confirm(F.format("Delete %s?", file)) then
 				F.cmd("Bwipeout! %d", bnr)
-				F.run_and_notify("del /f /s %s", file)
+				F.run_and_notify_title("del /f /s", "del /f /s %s", file)
 			end
 		end
 	end
