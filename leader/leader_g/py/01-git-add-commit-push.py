@@ -37,6 +37,10 @@ def safe_print(text):
 
 def run_command(command, check=True):
     """Execute shell command and return combined stdout + stderr"""
+    # 设置Git编码为UTF-8，确保提交信息正确解析
+    env = os.environ.copy()
+    env["GIT_COMMITTER_ENCODING"] = "utf-8"
+    env["GIT_AUTHOR_ENCODING"] = "utf-8"
     try:
         result = subprocess.run(
             command,
@@ -46,6 +50,7 @@ def run_command(command, check=True):
             stderr=subprocess.PIPE,
             text=True,
             encoding=GLOBAL_ENCODING,
+            env=env,  # 传递包含Git编码设置的环境变量
         )
         # 合并stdout和stderr，确保所有输出都被捕获
         combined_output = result.stdout + result.stderr
@@ -65,6 +70,7 @@ def run_command(command, check=True):
                 stderr=subprocess.PIPE,
                 text=True,
                 encoding=WINDOWS_TERMINAL_ENCODING,
+                env=env,
             )
             combined_output = result.stdout + result.stderr
             return True, combined_output
@@ -108,7 +114,7 @@ def commit_files(files, commit_msg_file):
     if not success:
         safe_print(f"Failed to add files: {output}")
         return False
-    commit_cmd = f'git commit -F "{commit_msg_file}"'
+    commit_cmd = f'git -c i18n.commitencoding=utf-8 commit -F "{commit_msg_file}"'
     success, output = run_command(commit_cmd)
     if not success:
         safe_print(f"Commit failed: {output}")
