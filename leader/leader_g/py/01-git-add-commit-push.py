@@ -133,19 +133,10 @@ def main():
     print(
         f"[Info]: Detected {len(modified_files)} modified files, {len(untracked_files)} untracked files"
     )
-    if modified_files:
-        print(
-            f"\n[Committing]: Starting to commit {len(modified_files)} modified files..."
-        )
-        if not commit_and_push(modified_files, commit_msg_file):
-            print("[Error]: Failed to commit modified files. Exiting.")
-            os.remove(commit_msg_file)
-            sys.exit(1)
-    if not untracked_files:
-        print("\n[Info]: No untracked files to commit. Exiting.")
-        os.remove(commit_msg_file)
-        sys.exit(0)
-    filtered_files = []
+    all_files = []
+    for file in modified_files:
+        file_size = get_file_size(file)
+        all_files.append((file, file_size))
     for file in untracked_files:
         file_size = get_file_size(file)
         if file_size > MAX_SINGLE_FILE_SIZE:
@@ -153,31 +144,32 @@ def main():
                 f"[Warning]: File '{file}' is {file_size/1024/1024:.2f}MB (exceeds 500MB). Skipped."
             )
             continue
-        filtered_files.append((file, file_size))
-    total_untracked_size = sum(size for _, size in filtered_files)
-    filtered_files.sort(key=lambda x: x[1])
+        all_files.append((file, file_size))
+    if not all_files:
+        print("[Info]: No files to commit. Exiting.")
+        os.remove(commit_msg_file)
+        sys.exit(0)
+    total_size = sum(size for _, size in all_files)
+    all_files.sort(key=lambda x: x[1])  # Sort by size (smallest first)
     print(
-        f"\n[Info]: {len(filtered_files)} untracked files remaining after filtering (total size: {total_untracked_size/1024/1024:.2f}MB)"
+        f"[Info]: Total files to commit: {len(all_files)} (total size: {total_size/1024/1024:.2f}MB)"
     )
-    if total_untracked_size <= MAX_BATCH_SIZE:
-        # Total size is within limit - commit all at once
+    if total_size <= MAX_BATCH_SIZE:
+        # Commit all files in one batch
         print(
-            f"\n[Committing]: All untracked files (total size {total_untracked_size/1024/1024:.2f}MB) can be committed in one batch..."
+            f"[Committing]: All files (total size {total_size/1024/1024:.2f}MB) will be committed in one batch..."
         )
-        all_untracked = [file for file, _ in filtered_files]
-        if not commit_and_push(all_untracked, commit_msg_file):
-            print("[Error]: Failed to commit untracked files. Exiting.")
+        files_to_commit = [file for file, _ in all_files]
+        if not commit_and_push(files_to_commit, commit_msg_file):
+            print("[Error]: Failed to commit files. Exiting.")
             os.remove(commit_msg_file)
             sys.exit(1)
     else:
-        # Total size exceeds limit - commit in batches
-        print(
-            f"\n[Committing]: Untracked files total size exceeds 500MB - starting batch commits..."
-        )
+        # Commit in batches (each <= 500MB)
+        print(f"[Committing]: Total size exceeds 500MB - starting batch commits...")
         current_batch = []
         current_batch_size = 0
-
-        for file, file_size in filtered_files:
+        for file, file_size in all_files:
             if current_batch_size + file_size > MAX_BATCH_SIZE:
                 print(
                     f"\n[Committing]: Submitting current batch ({len(current_batch)} files, {current_batch_size/1024/1024:.2f}MB)..."
@@ -188,7 +180,6 @@ def main():
                     sys.exit(1)
                 current_batch = []
                 current_batch_size = 0
-
             current_batch.append(file)
             current_batch_size += file_size
         if current_batch:
