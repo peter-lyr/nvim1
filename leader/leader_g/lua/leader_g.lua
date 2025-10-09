@@ -25,9 +25,9 @@ function G.add_commit_push_file(file)
 	if not require("f").is_file_exists(file) then
 		return
 	end
-	local git_status_py = get_py("02-git-status.py")
+	-- local git_status_py = get_py("02-git-status.py")
 	local git_add_commit_push_py = get_py("01-git-add-commit-push.py")
-	require("f").run_and_notify_title("git status", "python %s", git_status_py)
+	-- require("f").run_and_notify_title("git status", "python %s", git_status_py)
 	_G.add_commit_push_retry_cnt = 50
 	G.add_commit_push_do(git_add_commit_push_py, file)
 end
