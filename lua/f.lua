@@ -763,9 +763,9 @@ function F.run_and_notify_title(title, ...)
 	F.async_run(cmd, { title = title })
 end
 
-function F.run_and_notify_on_err(on_stderr, ...)
+function F.run_and_notify_title_on_err(title, on_stderr, ...)
 	local cmd = string.format(...)
-	F.async_run(cmd, { on_stderr = on_stderr })
+	F.async_run(cmd, { title = title, on_stderr = on_stderr })
 end
 
 function F.ui_input(prompt, default, callback)
