@@ -23,7 +23,7 @@ def run_command(command):
 
 
 def get_command_output(command):
-    """Only for commands needing output parsing (e.g., get file list). Return command output."""
+    """Only for commands needing output parsing. Return command output."""
     with tempfile.NamedTemporaryFile(mode="w+", delete=False, encoding="utf-8") as f:
         temp_file = f.name
     env_cmd = ""
@@ -64,7 +64,7 @@ def get_uncommitted_files():
 
 
 def commit_and_push(files, commit_msg_file):
-    """Commit specified files and push with retry mechanism. Return success status (True/False)."""
+    """Commit specified files and push with retry mechanism. Return success status."""
     if not files:
         print("[Info]: No files need to be committed")
         return True
@@ -154,33 +154,51 @@ def main():
             )
             continue
         filtered_files.append((file, file_size))
+    total_untracked_size = sum(size for _, size in filtered_files)
     filtered_files.sort(key=lambda x: x[1])
     print(
-        f"\n[Info]: {len(filtered_files)} untracked files remaining after filtering (sorted by size)"
+        f"\n[Info]: {len(filtered_files)} untracked files remaining after filtering (total size: {total_untracked_size/1024/1024:.2f}MB)"
     )
-    current_batch = []
-    current_batch_size = 0
-    for file, file_size in filtered_files:
-        if current_batch_size + file_size > MAX_BATCH_SIZE:
-            print(
-                f"\n[Committing]: Submitting current batch ({len(current_batch)} files, {current_batch_size/1024/1024:.2f}MB)..."
-            )
-            if not commit_and_push(current_batch, commit_msg_file):
-                print("[Error]: Batch commit failed. Exiting.")
-                os.remove(commit_msg_file)
-                sys.exit(1)
-            current_batch = []
-            current_batch_size = 0
-        current_batch.append(file)
-        current_batch_size += file_size
-    if current_batch:
+    if total_untracked_size <= MAX_BATCH_SIZE:
+        # Total size is within limit - commit all at once
         print(
-            f"\n[Committing]: Submitting final batch ({len(current_batch)} files, {current_batch_size/1024/1024:.2f}MB)..."
+            f"\n[Committing]: All untracked files (total size {total_untracked_size/1024/1024:.2f}MB) can be committed in one batch..."
         )
-        if not commit_and_push(current_batch, commit_msg_file):
-            print("[Error]: Final batch commit failed. Exiting.")
+        all_untracked = [file for file, _ in filtered_files]
+        if not commit_and_push(all_untracked, commit_msg_file):
+            print("[Error]: Failed to commit untracked files. Exiting.")
             os.remove(commit_msg_file)
             sys.exit(1)
+    else:
+        # Total size exceeds limit - commit in batches
+        print(
+            f"\n[Committing]: Untracked files total size exceeds 500MB - starting batch commits..."
+        )
+        current_batch = []
+        current_batch_size = 0
+
+        for file, file_size in filtered_files:
+            if current_batch_size + file_size > MAX_BATCH_SIZE:
+                print(
+                    f"\n[Committing]: Submitting current batch ({len(current_batch)} files, {current_batch_size/1024/1024:.2f}MB)..."
+                )
+                if not commit_and_push(current_batch, commit_msg_file):
+                    print("[Error]: Batch commit failed. Exiting.")
+                    os.remove(commit_msg_file)
+                    sys.exit(1)
+                current_batch = []
+                current_batch_size = 0
+
+            current_batch.append(file)
+            current_batch_size += file_size
+        if current_batch:
+            print(
+                f"\n[Committing]: Submitting final batch ({len(current_batch)} files, {current_batch_size/1024/1024:.2f}MB)..."
+            )
+            if not commit_and_push(current_batch, commit_msg_file):
+                print("[Error]: Final batch commit failed. Exiting.")
+                os.remove(commit_msg_file)
+                sys.exit(1)
     os.remove(commit_msg_file)
     print("\n[Complete]: All files have been successfully committed and pushed!")
 
