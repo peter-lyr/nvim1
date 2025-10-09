@@ -105,10 +105,16 @@ RButton Up:: {
     }
 }
 
-~WheelUp::
+~WheelUp:: {
+    if (IsCursorInsideRadialMenu() && GetKeyState("RButton", "P")) {
+        CycleWheelButtonStateInc()
+        return
+    }
+}
+
 ~WheelDown:: {
     if (IsCursorInsideRadialMenu() && GetKeyState("RButton", "P")) {
-        CycleWheelButtonState()
+        CycleWheelButtonStateDec()
         return
     }
 }

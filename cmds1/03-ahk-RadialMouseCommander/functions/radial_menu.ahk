@@ -6,7 +6,7 @@
 global g_RadialMenuGuiEn := 0
 global g_RadialMenuGui := ""
 global g_RadialMenuGuiHwnd := 0
-global g_RadialMenuRadius := 5
+global g_RadialMenuRadius := 15
 global g_RadialMenuCenterX := 0
 global g_RadialMenuCenterY := 0
 global g_TargetWindowHwnd := 0
@@ -242,9 +242,18 @@ CycleMiddleButtonState() {
     g_MiddleButtonState := Mod(g_MiddleButtonState + 1, g_MaxMiddleButtonStates + 1)
 }
 
-CycleWheelButtonState() {
+CycleWheelButtonStateInc() {
     global g_WheelButtonState, g_MaxWheelButtonStates
-    g_WheelButtonState := Mod(g_WheelButtonState + 1, g_MaxWheelButtonStates + 1)
+    g_WheelButtonState := g_WheelButtonState + 1
+    if g_WheelButtonState > g_MaxWheelButtonStates
+        g_WheelButtonState := g_MaxWheelButtonStates
+}
+
+CycleWheelButtonStateDec() {
+    global g_WheelButtonState, g_MaxWheelButtonStates
+    g_WheelButtonState := g_WheelButtonState - 1
+    if g_WheelButtonState < 0
+        g_WheelButtonState := 0
 }
 
 CaptureWindowUnderCursor() {

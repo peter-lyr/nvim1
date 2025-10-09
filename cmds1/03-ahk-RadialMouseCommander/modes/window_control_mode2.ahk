@@ -264,7 +264,7 @@ MButton Up:: {
 
 WheelDown:: {
     if (IsCursorInsideRadialMenu() && GetKeyState("RButton", "P")) {
-        CycleWheelButtonState()
+        CycleWheelButtonStateDec()
         return
     }
     MouseGetPos , , &windowUnderCursor
@@ -287,7 +287,7 @@ WheelDown:: {
 
 WheelUp:: {
     if (IsCursorInsideRadialMenu() && GetKeyState("RButton", "P")) {
-        CycleWheelButtonState()
+        CycleWheelButtonStateInc()
         return
     }
     MouseGetPos , , &windowUnderCursor
