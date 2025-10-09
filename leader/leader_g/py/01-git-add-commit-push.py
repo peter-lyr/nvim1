@@ -10,6 +10,8 @@ MAX_BATCH_SIZE = 500 * 1024 * 1024
 MAX_SINGLE_FILE_SIZE = 500 * 1024 * 1024
 MAX_RETRIES = 5
 
+cur_working_directory = ""
+
 
 def safe_print(text):
     try:
@@ -31,11 +33,14 @@ def get_git_env():
 
 def run_command(cmd, cwd=None):
     """执行命令，强制Git环境为UTF-8，支持指定工作目录，输出适配Neovim"""
+    global cur_working_directory
     original_cwd = os.getcwd()
     try:
         if cwd:
             os.chdir(cwd)
-            safe_print(f"[Working directory]: {cwd}")
+            if cur_working_directory != cwd:
+                cur_working_directory = cwd
+                safe_print(f"[Working directory]: {cwd}")
         safe_print(f"[Executing command]: {cmd}")
         env = get_git_env()
         if os.name == "nt":
