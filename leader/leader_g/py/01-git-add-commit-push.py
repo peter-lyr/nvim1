@@ -53,6 +53,7 @@ def run_command(command):
         else (f"GIT_COMMITTER_ENCODING=utf-8 " f"GIT_AUTHOR_ENCODING=utf-8 ")
     )
 
+    os.system("chcp")
     exit_code = os.system(f"{env_vars}{cmd}")
     success = exit_code == 0
 
