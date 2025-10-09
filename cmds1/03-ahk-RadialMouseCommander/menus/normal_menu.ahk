@@ -22,6 +22,7 @@ MenuDefinitions := Map(
         "r", ["切换右键提示", ToggleUpdateRadialMenuTooltipEn, false],
         "t", ["切换超时提示", ToggleShowTimedTooltipEn, false],
         "c", ["切换画圆", ToggleRadialMenuGuiEn, false],
+        "s", ["Sound", Run.Bind("mmsys.cpl"), false],
         "n", ["normal", SwitchMenu.Bind("normal"), true],
     ),
     "fileserv", Map(
