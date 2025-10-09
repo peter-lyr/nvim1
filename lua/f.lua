@@ -713,43 +713,28 @@ function F.async_run(cmd, opts)
 		stderr_buffered = false,
 		on_stdout = function(_, data, _)
 			for _, chunk in ipairs(data) do
-				-- 移除强制添加的换行符，保留原始输出的换行逻辑
-				-- local combined = partial_line .. chunk
 				local combined = partial_line .. "\n" .. chunk
 				local parts = {}
 				local start = 1
-
-				-- 同时处理\n、\r和\r\n三种换行格式
 				while start <= #combined do
 					local pos_n = string.find(combined, "\n", start, true)
 					local pos_r = string.find(combined, "\r", start, true)
 					local pos = nil
-
-					-- 优先选择最早出现的换行符
 					if pos_n and pos_r then
 						pos = math.min(pos_n, pos_r)
 					else
 						pos = pos_n or pos_r
 					end
-
 					if not pos then
 						break
 					end
-
-					-- 提取换行符前的内容
 					table.insert(parts, string.sub(combined, start, pos - 1))
-
-					-- 跳过所有连续的换行符（处理\r\n的情况）
 					start = pos + 1
 					if combined:sub(start, start) == "\n" or combined:sub(start, start) == "\r" then
 						start = start + 1
 					end
 				end
-
-				-- 保存未处理完的内容
 				partial_line = string.sub(combined, start)
-
-				-- 过滤空行（解决多余空行问题）
 				for _, part in ipairs(parts) do
 					if part ~= "" then
 						table.insert(stdout_cache, part)
