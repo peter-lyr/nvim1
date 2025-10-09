@@ -12,10 +12,9 @@ MAX_RETRIES = 5
 
 
 def safe_print(text):
-    """适配Neovim-Qt，清理^M字符（\r残留），避免换行符乱码"""
     try:
         print(text, flush=True)
-    except Exception as e:
+    except:
         text_encoded = text.encode("utf-8", errors="replace").decode("utf-8")
         print(text_encoded, flush=True)
 

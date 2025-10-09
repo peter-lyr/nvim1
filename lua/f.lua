@@ -674,24 +674,38 @@ function F.async_run(cmd, opts)
 			return
 		end
 	end
+	local stdout_cache = {}
+	local timer = nil
+	local interval = opts.interval or 20000
+	local function process_cache()
+		if #stdout_cache == 0 then
+			return
+		end
+		local output = vim.list_slice(stdout_cache)
+		stdout_cache = {}
+		if fd and #output > 0 then
+			local content = table.concat(output, "\n") .. "\n"
+			vim.loop.fs_write(fd, content, nil, function() end)
+		end
+		if #output > 0 then
+			local message = table.concat(output, "\n")
+			message = string.gsub(message, "\r", "")
+			vim.notify(message, vim.log.levels.INFO, { title = title })
+			if opts.on_stdout then
+				opts.on_stdout(output)
+			end
+		end
+	end
+	timer = vim.loop.new_timer()
+	if timer then
+		timer:start(interval, interval, vim.schedule_wrap(process_cache))
+	end
 	local title = opts.title or "Command Output"
 	local job_id = vim.fn.jobstart(cmd, {
 		on_stdout = function(_, data, _)
-			local output = {}
 			for _, line in ipairs(data) do
 				if line ~= "" then
-					table.insert(output, line)
-				end
-			end
-			if fd and #output > 0 then
-				local content = table.concat(output, "\n") .. "\n"
-				vim.loop.fs_write(fd, content, nil, function() end)
-			end
-			if #output > 0 then
-				local message = table.concat(output, "\n")
-				vim.notify(message, vim.log.levels.INFO, { title = title })
-				if opts.on_stdout then
-					opts.on_stdout(output)
+					table.insert(stdout_cache, line)
 				end
 			end
 		end,
@@ -715,22 +729,30 @@ function F.async_run(cmd, opts)
 			end
 		end,
 		on_exit = function(_, exit_code, signal)
+			process_cache()
 			if fd then
 				vim.loop.fs_close(fd)
 			end
-			-- local message = string.format("cmd done: '%s'", cmd)
-			-- local level = exit_code == 0 and vim.log.levels.INFO or vim.log.levels.WARN
-			-- vim.notify(message, level, { title = F.format("%s (Exit: %d)", title, exit_code) })
+			if timer then
+				timer:stop()
+				timer:close()
+				timer = nil
+			end
 			if opts.on_exit then
 				opts.on_exit(exit_code, signal, output_file)
 			end
 		end,
-		stdout_buffered = opts.stdout_buffered ~= nil and opts.stdout_buffered or true,
+		stdout_buffered = false,
 		stderr_buffered = opts.stderr_buffered ~= nil and opts.stderr_buffered or true,
 	})
 	if job_id <= 0 then
 		if fd then
 			vim.loop.fs_close(fd)
+		end
+		if timer then
+			timer:stop()
+			timer:close()
+			timer = nil
 		end
 		vim.notify("failed to run " .. vim.inspect(cmd), vim.log.levels.ERROR, { title = "Command Error" })
 	else
