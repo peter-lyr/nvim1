@@ -133,6 +133,9 @@ def get_uncommitted_files():
         safe_print(f"[Testing]: modified_files: {modified_files}")
         safe_print(f"[Testing]: valid_modified: {valid_modified}")
         safe_print(
+            f"[Testing]: VALID_MODIFIED: {[os.path.abspath(f) for f in modified_files]}"
+        )
+        safe_print(
             f"[Warning]: Invalid modified file paths (encoding issue): {invalid_modified}"
         )
 
