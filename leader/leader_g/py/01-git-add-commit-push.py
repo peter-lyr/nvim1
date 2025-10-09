@@ -3,8 +3,8 @@ import sys
 import time
 import tempfile
 
-sys.stdout.reconfigure(encoding="utf-8", line_buffering=True)
-sys.stderr.reconfigure(encoding="utf-8", line_buffering=True)
+# sys.stdout.reconfigure(encoding="utf-8", line_buffering=True)
+# sys.stderr.reconfigure(encoding="utf-8", line_buffering=True)
 
 MAX_BATCH_SIZE = 500 * 1024 * 1024
 MAX_SINGLE_FILE_SIZE = 500 * 1024 * 1024
