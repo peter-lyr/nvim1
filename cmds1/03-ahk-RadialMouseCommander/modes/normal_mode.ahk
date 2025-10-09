@@ -16,9 +16,9 @@ InitializeNormalModeActions() {
         "000L", ["向左移动光标", Send.Bind("{Left}")],
         "000R", ["向右移动光标", Send.Bind("{Right}")],
         ;;配置
-        "010R", ["切换菜单提示", ToggleUpdateRadialMenuTooltipEn],
-        "010RU", ["切换2秒提示", ToggleShowTimedTooltipEn],
-        "010RD", ["切换画圆", ToggleRadialMenuGuiEn],
+        "001R", ["切换菜单提示", ToggleUpdateRadialMenuTooltipEn],
+        "001RU", ["切换2秒提示", ToggleShowTimedTooltipEn],
+        "001RD", ["切换画圆", ToggleRadialMenuGuiEn],
     )
 }
 
