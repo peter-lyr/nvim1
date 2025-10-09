@@ -54,7 +54,7 @@ def run_command(command):
     )
 
     os.system("chcp")
-    exit_code = os.system(f"{env_vars}{cmd}")
+    exit_code = os.system(f"chcp 65001&{env_vars}{cmd}")
     success = exit_code == 0
 
     # 读取输出内容
