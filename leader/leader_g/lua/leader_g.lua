@@ -117,13 +117,15 @@ function G.git_reset_buffer()
 end
 
 function G.git_reset_hard()
-	require("f").run_and_notify_title("git reset --hard", "git reset --hard")
-	require("f").windo("e!")
+	require("f").run_and_notify_title_on_exit("git reset --hard", function()
+		require("f").windo("e!")
+	end, "git reset --hard")
 end
 
 function G.git_reset_clean_fd()
-	require("f").run_and_notify_title("git clean -fd", "git clean -fd")
-	require("f").windo("e!")
+	require("f").run_and_notify_title_on_exit("git clean -fd", function()
+		require("f").windo("e!")
+	end, "git clean -fd")
 end
 
 function G.pull()

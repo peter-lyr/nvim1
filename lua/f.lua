@@ -791,6 +791,11 @@ function F.run_and_notify_title_on_err(title, on_stderr, ...)
 	F.async_run(cmd, { title = title, on_stderr = on_stderr })
 end
 
+function F.run_and_notify_title_on_exit(title, on_exit, ...)
+	local cmd = string.format(...)
+	F.async_run(cmd, { title = title, on_exit = on_exit })
+end
+
 function F.ui_input(prompt, default, callback)
 	vim.ui.input({ prompt = prompt, default = default }, function(input)
 		if input then
