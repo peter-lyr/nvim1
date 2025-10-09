@@ -674,11 +674,16 @@ function F.async_run(cmd, opts)
 			return
 		end
 	end
+	local partial_line = ""
 	local stdout_cache = {}
 	local timer = nil
-	local interval = opts.interval or 20000
+	local interval = opts.interval or 2000
 	local title = opts.title or "Command Output"
 	local function process_cache()
+		if partial_line ~= "" then
+			table.insert(stdout_cache, partial_line)
+			partial_line = ""
+		end
 		if #stdout_cache == 0 then
 			vim.notify("no output", vim.log.levels.INFO, { title = title .. "..." })
 			return
@@ -703,10 +708,25 @@ function F.async_run(cmd, opts)
 		timer:start(interval, interval, vim.schedule_wrap(process_cache))
 	end
 	local job_id = vim.fn.jobstart(cmd, {
+		pty = false,
+		stdout_buffered = false,
+		stderr_buffered = false,
 		on_stdout = function(_, data, _)
-			for _, line in ipairs(data) do
-				if line ~= "" then
-					table.insert(stdout_cache, line)
+			for _, chunk in ipairs(data) do
+				local combined = partial_line .. "\n" .. chunk
+				local parts = {}
+				local start = 1
+				while true do
+					local pos = string.find(combined, "[\r\n]", start, true)
+					if not pos then
+						break
+					end
+					table.insert(parts, string.sub(combined, start, pos - 1))
+					start = pos + 1
+				end
+				partial_line = string.sub(combined, start)
+				for _, part in ipairs(parts) do
+					table.insert(stdout_cache, part)
 				end
 			end
 		end,
@@ -743,8 +763,6 @@ function F.async_run(cmd, opts)
 				opts.on_exit(exit_code, signal, output_file)
 			end
 		end,
-		stdout_buffered = false,
-		stderr_buffered = opts.stderr_buffered ~= nil and opts.stderr_buffered or true,
 	})
 	if job_id <= 0 then
 		if fd then
@@ -779,7 +797,7 @@ end
 
 function F.run_and_notify(...)
 	local cmd = string.format(...)
-	F.async_run(cmd)
+	F.async_run(cmd, { title = cmd })
 end
 
 function F.run_and_notify_title(title, ...)

@@ -129,23 +129,23 @@ function G.git_reset_clean_fd()
 end
 
 function G.pull()
-	require("f").async_run("git pull")
+	require("f").run_and_notify("git pull")
 end
 
 function G.push()
-	require("f").async_run("git push")
+	require("f").run_and_notify("git push")
 end
 
 function G.log()
-	require("f").async_run("git log")
+	require("f").run_and_notify("git log")
 end
 
 function G.log_oneline()
-	require("f").async_run("git log --oneline --graph --all")
+	require("f").run_and_notify("git log --oneline --graph --all")
 end
 
 function G.status()
-	require("f").async_run("git status")
+	require("f").run_and_notify("git status")
 end
 
 function G.diffview_stash()
