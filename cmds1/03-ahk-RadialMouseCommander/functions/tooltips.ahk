@@ -3,8 +3,8 @@
 #Requires AutoHotkey v2.0
 
 global g_PreviousTooltip := ""
-global g_UpdateRadialMenuTooltipEn := 0
-global g_ShowTimedTooltipEn := 0
+global g_UpdateRadialMenuTooltipEn := 1
+global g_ShowTimedTooltipEn := 1
 global g_LaterTooltipTime := 100
 
 ShowTimedTooltipLaterDo(message, timeout := 2000) {
