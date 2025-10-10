@@ -15,42 +15,42 @@ MAX_RETRIES = 5
 
 
 def ultra_clean(text):
-    """终极清理函数 - 确保彻底清除所有控制字符"""
+    """终极清理函数 - 使用简单直接的方法"""
     if not isinstance(text, str):
         text = str(text)
 
-    # 方法1: 直接替换所有已知的控制序列
-    replacements = [
-        (r"\x1b\[\?9001[hl]", ""),  # 私有模式序列
-        (r"\x1b\[\?1004[hl]", ""),  # 私有模式序列
-        (r"\x1b\[\?25[hl]", ""),  # 光标显示/隐藏
-        (r"\x1b\[2J", ""),  # 清屏
-        (r"\x1b\[H", ""),  # 光标归位
-        (r"\x1b\[m", ""),  # 重置属性
-        (r"\x1b\[[\d;]*m", ""),  # 所有SGR序列
-        (r"\x1b\]0;[^\x07]*\x07", ""),  # 窗口标题
+    # 直接替换所有已知的控制序列
+    sequences_to_remove = [
+        # 私有模式序列
+        "\x1b[?9001h",
+        "\x1b[?9001l",
+        "\x1b[?1004h",
+        "\x1b[?1004l",
+        "\x1b[?25h",
+        "\x1b[?25l",
+        # 屏幕控制序列
+        "\x1b[2J",
+        "\x1b[H",
+        "\x1b[m",
+        # 窗口标题序列
+        "\x1b]0;",
+        "\x07",
     ]
 
-    for pattern, replacement in replacements:
-        text = re.sub(pattern, replacement, text)
+    for seq in sequences_to_remove:
+        text = text.replace(seq, "")
 
-    # 方法2: 移除所有其他控制字符
-    # 保留: \t (0x09), \n (0x0A), \r (0x0D)
-    control_chars = "".join(
-        chr(i)
-        for i in list(range(0, 9)) + list(range(11, 13)) + list(range(14, 32)) + [127]
-    )
-    for char in control_chars:
-        text = text.replace(char, "")
-
-    # 方法3: 移除所有剩余的ESC字符
-    text = text.replace("\x1b", "")
+    # 移除所有控制字符（除了换行和制表符）
+    cleaned = ""
+    for char in text:
+        if char == "\n" or char == "\t" or (ord(char) >= 32 and ord(char) != 127):
+            cleaned += char
 
     # 清理空白
-    text = re.sub(r"\s+", " ", text).strip()
-    text = re.sub(r" +", " ", text)
+    cleaned = re.sub(r"\s+", " ", cleaned).strip()
+    cleaned = re.sub(r" +", " ", cleaned)
 
-    return text
+    return cleaned
 
 
 def safe_quote_path(path):
