@@ -5,9 +5,26 @@ import tempfile
 import re
 import subprocess
 
-# 确保标准输出/错误使用UTF-8编码
-sys.stdout.reconfigure(encoding="utf-8", line_buffering=True)
-sys.stderr.reconfigure(encoding="utf-8", line_buffering=True)
+
+# 重定向标准输出和标准错误，确保所有输出都经过过滤
+class FilteredStream:
+    def __init__(self, original_stream):
+        self.original_stream = original_stream
+
+    def write(self, text):
+        if text.strip():  # 只处理非空文本
+            cleaned_text = ultra_clean(text)
+            if cleaned_text.strip():
+                self.original_stream.write(cleaned_text + "\n")
+                self.original_stream.flush()
+
+    def flush(self):
+        self.original_stream.flush()
+
+
+# 应用过滤流
+sys.stdout = FilteredStream(sys.stdout)
+sys.stderr = FilteredStream(sys.stderr)
 
 MAX_BATCH_SIZE = 500 * 1024 * 1024
 MAX_SINGLE_FILE_SIZE = 100 * 1024 * 1024
@@ -19,36 +36,42 @@ def ultra_clean(text):
     if not isinstance(text, str):
         text = str(text)
 
-    # 直接替换所有已知的控制序列
-    sequences_to_remove = [
-        # 私有模式序列
-        "\x1b[?9001h",
-        "\x1b[?9001l",
-        "\x1b[?1004h",
-        "\x1b[?1004l",
-        "\x1b[?25h",
-        "\x1b[?25l",
-        # 屏幕控制序列
-        "\x1b[2J",
-        "\x1b[H",
-        "\x1b[m",
-        # 窗口标题序列
-        "\x1b]0;",
-        "\x07",
-    ]
-
-    for seq in sequences_to_remove:
-        if seq in text:
-            print(f"<<{seq}>> is in <<{text}>>")
-        else:
-            print(f"<<{seq}>> is not in <<{text}>>")
-        text = text.replace(seq, "")
-
-    # 移除所有控制字符（除了换行和制表符）
+    # 首先移除所有控制字符（除了换行和制表符）
     cleaned = ""
     for char in text:
         if char == "\n" or char == "\t" or (ord(char) >= 32 and ord(char) != 127):
             cleaned += char
+
+    # 然后处理ANSI转义序列
+    # 使用正则表达式匹配所有ANSI转义序列
+    ansi_escape = re.compile(
+        r"""
+        \x1B  # ESC
+        (?:   # 开始非捕获组
+            [@-Z\\-_]    # 所有有效的ESC序列字符
+        |     # 或
+            \[           # CSI序列
+            [0-?]*       # 参数字节
+            [ -/]*       # 中间字节  
+            [@-~]        # 最终字节
+        )
+    """,
+        re.VERBOSE,
+    )
+
+    cleaned = ansi_escape.sub("", cleaned)
+
+    # 特别处理一些顽固的序列
+    stubborn_patterns = [
+        r"\x1b\[\?[\d;]*[hl]",  # 私有模式序列
+        r"\x1b\]0;[^\x07]*\x07",  # 窗口标题
+    ]
+
+    for pattern in stubborn_patterns:
+        cleaned = re.sub(pattern, "", cleaned)
+
+    # 最后移除所有剩余的ESC字符
+    cleaned = cleaned.replace("\x1b", "")
 
     # 清理空白
     cleaned = re.sub(r"\s+", " ", cleaned).strip()
@@ -64,16 +87,7 @@ def safe_quote_path(path):
     return path
 
 
-def safe_print(text):
-    """安全打印函数"""
-    try:
-        cleaned_text = ultra_clean(text)
-        if cleaned_text.strip():
-            print(cleaned_text, flush=True)
-    except Exception as e:
-        error_text = f"[Error in safe_print]: {str(e)}"
-        cleaned_error = ultra_clean(error_text)
-        print(cleaned_error, flush=True)
+# 移除原来的 safe_print 函数，因为我们已经重定向了所有输出
 
 
 def get_git_env():
@@ -89,6 +103,9 @@ def get_git_env():
     env["GIT_CONFIG_NOSYSTEM"] = "1"
     env["GIT_PAGER"] = "cat"
     env["PAGER"] = "cat"
+    # 添加更多禁用控制序列的环境变量
+    env["ANSICON"] = "0"
+    env["ConEmuANSI"] = "OFF"
     return env
 
 
@@ -99,9 +116,9 @@ def run_command(cmd, cwd=None, capture_output=False):
     try:
         if cwd:
             os.chdir(cwd)
-            safe_print(f"[Working directory]: {cwd}")
+            print(f"[Working directory]: {cwd}")
 
-        safe_print(f"[Executing command]: {ultra_clean(cmd)}")
+        print(f"[Executing command]: {cmd}")
         env = get_git_env()
 
         if capture_output:
@@ -125,9 +142,9 @@ def run_command(cmd, cwd=None, capture_output=False):
                 if not line and process.poll() is not None:
                     break
                 if line:
-                    cleaned_line = ultra_clean(line)
-                    if cleaned_line.strip():
-                        output_lines.append(cleaned_line)
+                    # 直接打印，让FilteredStream处理过滤
+                    print(line.rstrip())
+                    output_lines.append(line)
 
             output = "\n".join(output_lines)
             return process.returncode == 0, output
@@ -151,22 +168,22 @@ def run_command(cmd, cwd=None, capture_output=False):
                 if not line and process.poll() is not None:
                     break
                 if line:
-                    cleaned_line = ultra_clean(line)
-                    if cleaned_line.strip():
-                        print(cleaned_line, flush=True)
+                    # 直接打印，让FilteredStream处理过滤
+                    print(line.rstrip())
 
             return process.returncode == 0, ""
 
     except Exception as e:
-        err_msg = ultra_clean(str(e))
-        safe_print(f"[Error] Command failed: {err_msg}")
-        return False, err_msg
+        print(f"[Error] Command failed: {str(e)}")
+        return False, str(e)
     finally:
         if cwd:
             os.chdir(original_cwd)
 
 
-# 其他函数保持不变，只需将deep_clean替换为ultra_clean
+# 其他函数保持不变，但移除所有 ultra_clean 调用，因为 FilteredStream 会自动处理
+
+
 def get_git_submodule_paths(git_root):
     """获取子仓库路径"""
     if not git_root:
@@ -178,7 +195,7 @@ def get_git_submodule_paths(git_root):
 
     submodule_abs_paths = []
     for line in re.split(r"[\r\n]+", output):
-        line = ultra_clean(line).strip()
+        line = line.strip()
         if not line:
             continue
         parts = re.split(r"\s+", line, 2)
@@ -218,7 +235,7 @@ def get_git_submodule_modified(git_root):
 
     modified_submodules = []
     for line in re.split(r"[\r\n]+", output):
-        line = ultra_clean(line).strip()
+        line = line.strip()
         if not line:
             continue
         if line.startswith(("+", "-")):
@@ -236,17 +253,17 @@ def handle_git_submodule(submodule_rel_path, git_root):
     sm_quoted = safe_quote_path(sm_abs)
 
     cmd_init = f"git submodule update --init {sm_quoted}"
-    safe_print(f"[Submodule] Initializing: {submodule_rel_path}")
+    print(f"[Submodule] Initializing: {submodule_rel_path}")
     success, _ = run_command(cmd_init, cwd=git_root)
     if not success:
-        safe_print(f"[Error] Failed to initialize submodule: {submodule_rel_path}")
+        print(f"[Error] Failed to initialize submodule: {submodule_rel_path}")
         return False
 
     cmd_add = f"git add {sm_quoted}"
-    safe_print(f"[Submodule] Staging: {submodule_rel_path}")
+    print(f"[Submodule] Staging: {submodule_rel_path}")
     success, _ = run_command(cmd_add, cwd=git_root)
     if not success:
-        safe_print(f"[Error] Failed to stage submodule: {submodule_rel_path}")
+        print(f"[Error] Failed to stage submodule: {submodule_rel_path}")
         return False
     return True
 
@@ -255,7 +272,7 @@ def get_uncommitted_files():
     """获取未提交文件"""
     git_root = find_git_root()
     if not git_root:
-        safe_print("[Error]: Could not find Git repository root")
+        print("[Error]: Could not find Git repository root")
         return [], [], []
 
     submodule_abs_paths = get_git_submodule_paths(git_root)
@@ -297,12 +314,12 @@ def get_uncommitted_files():
 
     modified_submodules = get_git_submodule_modified(git_root)
 
-    safe_print(f"[Debug]: Found {len(valid_normal)} valid normal files")
-    safe_print(f"[Debug]: Found {len(modified_submodules)} modified submodules")
+    print(f"[Debug]: Found {len(valid_normal)} valid normal files")
+    print(f"[Debug]: Found {len(modified_submodules)} modified submodules")
     if invalid_normal:
-        safe_print("[Warning]: Invalid file paths (not exist or encoding issue):")
+        print("[Warning]: Invalid file paths (not exist or encoding issue):")
         for f in invalid_normal:
-            safe_print(f"  {f}")
+            print(f"  {f}")
 
     return valid_normal, invalid_normal, modified_submodules
 
@@ -332,12 +349,11 @@ def get_file_size(file_rel_path, git_root):
         if is_file_deleted_by_git(file_rel_path, git_root):
             return 0
         if not os.path.exists(file_abs):
-            safe_print(f"[Warning]: File not found: {file_rel_path}")
+            print(f"[Warning]: File not found: {file_rel_path}")
             return 0
         return os.path.getsize(file_abs)
     except OSError as e:
-        err_msg = ultra_clean(str(e))
-        safe_print(f"[Warning]: Failed to get size of '{file_rel_path}' - {err_msg}")
+        print(f"[Warning]: Failed to get size of '{file_rel_path}' - {str(e)}")
         return 0
 
 
@@ -358,48 +374,48 @@ def commit_and_push(valid_normal, modified_submodules, commit_msg_file):
     """提交文件和子仓库"""
     git_root = find_git_root()
     if not git_root:
-        safe_print("[Error]: Could not find Git repository root")
+        print("[Error]: Could not find Git repository root")
         return False
 
     if valid_normal:
-        safe_print(f"[Info]: Staging {len(valid_normal)} normal files...")
+        print(f"[Info]: Staging {len(valid_normal)} normal files...")
         files_quoted = [
             safe_quote_path(os.path.join(git_root, f)) for f in valid_normal
         ]
         cmd_add = f"git add {' '.join(files_quoted)}"
         success, _ = run_command(cmd_add, cwd=git_root)
         if not success:
-            safe_print("[Error]: Failed to stage normal files")
+            print("[Error]: Failed to stage normal files")
             return False
 
     if modified_submodules:
-        safe_print(f"[Info]: Handling {len(modified_submodules)} submodules...")
+        print(f"[Info]: Handling {len(modified_submodules)} submodules...")
         for sm_rel in modified_submodules:
             if not handle_git_submodule(sm_rel, git_root):
                 return False
 
     commit_msg_abs = os.path.abspath(commit_msg_file)
     cmd_commit = f"git commit -F {safe_quote_path(commit_msg_abs)}"
-    safe_print("[Info]: Committing changes...")
+    print("[Info]: Committing changes...")
     success, _ = run_command(cmd_commit, cwd=git_root)
     if not success:
-        safe_print("[Error]: Failed to commit changes")
+        print("[Error]: Failed to commit changes")
         return False
 
     total = len(valid_normal) + len(modified_submodules)
-    safe_print(f"[Success]: Committed {total} items (files + submodules)")
+    print(f"[Success]: Committed {total} items (files + submodules)")
     for retry in range(MAX_RETRIES):
-        safe_print(f"[Pushing]: Attempt {retry+1}/{MAX_RETRIES}...")
+        print(f"[Pushing]: Attempt {retry+1}/{MAX_RETRIES}...")
         cmd_push = "git push --recurse-submodules=on-demand"
         success, _ = run_command(cmd_push, cwd=git_root)
         if success:
-            safe_print("[Success]: Push completed successfully")
+            print("[Success]: Push completed successfully")
             return True
-        safe_print(f"[Error]: Push attempt {retry+1} failed")
+        print(f"[Error]: Push attempt {retry+1} failed")
         if retry < MAX_RETRIES - 1:
             time.sleep(2)
 
-    safe_print(f"[Error]: Maximum retries ({MAX_RETRIES}) reached")
+    print(f"[Error]: Maximum retries ({MAX_RETRIES}) reached")
     return False
 
 
@@ -409,9 +425,7 @@ def main():
     sys.argv = clean_args
 
     if len(sys.argv) < 2:
-        safe_print(
-            "[Error]: Usage: python git_batch_commit.py <commit_message_file.txt>"
-        )
+        print("[Error]: Usage: python git_batch_commit.py <commit_message_file.txt>")
         sys.exit(1)
 
     git_root = find_git_root()
@@ -420,11 +434,11 @@ def main():
     push_allow = False
 
     if not os.path.exists(original_commit_file):
-        safe_print(f"[Error]: Commit file not found: '{original_commit_file}'")
+        print(f"[Error]: Commit file not found: '{original_commit_file}'")
         sys.exit(1)
     try:
         with open(original_commit_file, "r", encoding="utf-8", errors="replace") as f:
-            lines = [ultra_clean(line).replace("\r", "") for line in f.readlines()]
+            lines = [line.replace("\r", "") for line in f.readlines()]
         with open(commit_msg_file, "w", encoding="utf-8") as f:
             for line in lines:
                 if line.strip().startswith("#") or not line.strip():
@@ -432,12 +446,12 @@ def main():
                 f.write(f"{line.strip()}\n")
                 push_allow = True
     except Exception as e:
-        safe_print(f"[Error]: Process commit file failed - {ultra_clean(str(e))}")
+        print(f"[Error]: Process commit file failed - {str(e)}")
         if os.path.exists(commit_msg_file):
             os.remove(commit_msg_file)
         sys.exit(1)
     if not push_allow:
-        safe_print("[Error]: Commit message is empty (filtered comments/blank lines)")
+        print("[Error]: Commit message is empty (filtered comments/blank lines)")
         os.remove(commit_msg_file)
         sys.exit(1)
 
@@ -446,7 +460,7 @@ def main():
     for f in valid_normal:
         file_size = get_file_size(f, git_root)
         if file_size > MAX_SINGLE_FILE_SIZE:
-            safe_print(
+            print(
                 f"[Warning]: File exceeds 100MB (skipped): '{f}' ({file_size/1024/1024:.2f}MB)"
             )
             continue
@@ -454,10 +468,10 @@ def main():
 
     total = len(filtered_normal) + len(modified_submodules)
     if total == 0:
-        safe_print("[Info]: No valid content to commit. Exiting.")
+        print("[Info]: No valid content to commit. Exiting.")
         os.remove(commit_msg_file)
         sys.exit(0)
-    safe_print(
+    print(
         f"[Info]: To commit: {len(filtered_normal)} files + {len(modified_submodules)} submodules"
     )
 
@@ -470,11 +484,9 @@ def main():
 
     # 最终输出
     if result:
-        final_msg = "[Complete]: All content committed and pushed successfully!"
-        print(ultra_clean(final_msg), flush=True)
+        print("[Complete]: All content committed and pushed successfully!")
     else:
-        final_msg = "[Error]: Commit & Push failed"
-        print(ultra_clean(final_msg), flush=True)
+        print("[Error]: Commit & Push failed")
         sys.exit(1)
 
 
