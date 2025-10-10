@@ -44,6 +44,20 @@ require("which-key").register({
 		"run_cur_file_exit-force_cmd",
 		mode = { "n", "v" },
 	},
+	["<leader>r<leader>l"] = {
+		function()
+			require("f").show_running_jobs()
+		end,
+		"show_running_jobs",
+		mode = { "n", "v" },
+	},
+	["<leader>r<leader>k"] = {
+		function()
+			require("f").kill_all_running_jobs()
+		end,
+		"kill_all_running_jobs",
+		mode = { "n", "v" },
+	},
 	["<leader>rt"] = {
 		function()
 			R.stop_cur_file()

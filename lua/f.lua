@@ -676,6 +676,7 @@ function F.filter_control_chars(text)
 end
 
 function F.async_run(cmd, opts)
+	F.running_jobs = F.running_jobs or {}
 	F.lazy_load("nvim-notify")
 	opts = opts or {}
 	local use_pty = opts.use_pty ~= nil and opts.use_pty or false
@@ -728,7 +729,7 @@ function F.async_run(cmd, opts)
 	if timer then
 		timer:start(interval, interval, vim.schedule_wrap(process_cache))
 	end
-	local job_id = vim.fn.jobstart(cmd, {
+	vim.g.job_id = vim.fn.jobstart(cmd, {
 		pty = use_pty,
 		stdout_buffered = false,
 		stderr_buffered = false,
@@ -793,6 +794,9 @@ function F.async_run(cmd, opts)
 			end
 		end,
 		on_exit = function(_, exit_code, signal)
+			if vim.g.job_id then
+				F.running_jobs[vim.g.job_id] = nil
+			end
 			local end_time = vim.loop.hrtime()
 			local duration_ms = (end_time - start_time) / 1e6
 			local duration_sec = duration_ms / 1000
@@ -814,7 +818,7 @@ function F.async_run(cmd, opts)
 			end
 		end,
 	})
-	if job_id <= 0 then
+	if vim.g.job_id <= 0 then
 		vim.notify("failed to run " .. vim.inspect(cmd), vim.log.levels.ERROR, { title = "Command Error" })
 		if fd then
 			vim.loop.fs_close(fd)
@@ -826,9 +830,48 @@ function F.async_run(cmd, opts)
 		end
 		vim.notify("failed to run " .. vim.inspect(cmd), vim.log.levels.ERROR, { title = "Command Error" })
 	else
+		F.running_jobs[vim.g.job_id] = {
+			cmd = cmd,
+			title = title,
+			start_time = start_time,
+			output_file = output_file,
+		}
 		F.fidget_notify("running: " .. cmd, vim.log.levels.INFO)
 	end
-	return job_id
+	return vim.g.job_id
+end
+
+function F.kill_all_running_jobs()
+	local count = 0
+	F.running_jobs = F.running_jobs or {}
+	for job_id, job_info in pairs(F.running_jobs) do
+		vim.fn.jobstop(job_id)
+		count = count + 1
+		vim.notify("Killed: " .. job_info.cmd, vim.log.levels.WARN, { title = "Process Manager" })
+	end
+	F.running_jobs = {}
+	if count == 0 then
+		vim.notify("No running jobs to kill", vim.log.levels.INFO, { title = "Process Manager" })
+	else
+		vim.notify(string.format("Killed %d running job(s)", count), vim.log.levels.WARN, { title = "Process Manager" })
+	end
+end
+
+function F.show_running_jobs()
+	local count = 0
+	local job_list = {}
+	F.running_jobs = F.running_jobs or {}
+	for job_id, job_info in pairs(F.running_jobs) do
+		count = count + 1
+		local duration = (vim.loop.hrtime() - job_info.start_time) / 1e9
+		table.insert(job_list, string.format("Job %d: %s (%.1fs)", job_id, job_info.cmd, duration))
+	end
+	if count == 0 then
+		vim.notify("No running jobs", vim.log.levels.INFO, { title = "Process Manager" })
+	else
+		local message = string.format("Running jobs (%d):\n%s", count, table.concat(job_list, "\n"))
+		vim.notify(message, vim.log.levels.INFO, { title = "Process Manager" })
+	end
 end
 
 function F.run_and_exit(...)
