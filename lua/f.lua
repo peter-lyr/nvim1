@@ -680,7 +680,7 @@ function F.async_run(cmd, opts)
 	F.lazy_load("nvim-notify")
 	opts = opts or {}
 	local use_pty = opts.use_pty ~= nil and opts.use_pty or false
-	local interval = opts.interval or 30000
+	local interval = opts.interval or 100
 	local output_file = opts.output_file or StdOutTxt
 	local fd = nil
 	local dir

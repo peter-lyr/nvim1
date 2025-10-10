@@ -4,17 +4,14 @@ import time
 import re
 import subprocess
 import random
-import shutil
-from pathlib import Path
 
-MAX_BATCH_SIZE = 100 * 1024 * 1024  # 每个批次最大100MB
-MAX_SINGLE_FILE_SIZE = 50 * 1024 * 1024  # 单个文件大小限制
+MAX_BATCH_SIZE = 100 * 1024 * 1024
+MAX_SINGLE_FILE_SIZE = 50 * 1024 * 1024
 MAX_RETRIES = 5
 CUR_WORKING_DIR = ""
 SPLIT_FILE_EXTENSION = ".split_part_"
-MAX_CMD_LENGTH = 8000  # Windows命令行限制约8191，留一些余量
+MAX_CMD_LENGTH = 8000
 
-# 全局缓存，避免重复查询
 _git_submodule_cache = None
 _git_deleted_files_cache = None
 
@@ -60,7 +57,8 @@ def get_git_env():
     return env
 
 
-def run_command(cmd, cwd=None, capture_output=False):
+def run_command(cmd, cwd=None, capture_output=False, real_time_output=True):
+    """修改后的 run_command 函数，支持真正的实时输出"""
     global CUR_WORKING_DIR
     original_cwd = os.getcwd()
     output = ""
@@ -72,7 +70,7 @@ def run_command(cmd, cwd=None, capture_output=False):
                 print(f"[Working directory]: {cwd}")
         print(f"[Executing command]: {cmd}")
         env = get_git_env()
-        if capture_output:
+        if capture_output and not real_time_output:
             process = subprocess.Popen(
                 cmd,
                 shell=True,
@@ -108,13 +106,19 @@ def run_command(cmd, cwd=None, capture_output=False):
                 encoding="utf-8",
                 errors="replace",
             )
+            output_lines = []
             while True:
                 line = process.stdout.readline()
                 if not line and process.poll() is not None:
                     break
                 if line:
                     print(line.rstrip())
-            return process.returncode == 0, ""
+                    sys.stdout.flush()
+                    if capture_output:
+                        output_lines.append(line)
+            if capture_output:
+                output = "\n".join(output_lines)
+            return process.returncode == 0, output
     except Exception as e:
         print(f"[Error] Command failed: {str(e)}")
         return False, str(e)
@@ -127,7 +131,6 @@ def get_git_submodule_paths(git_root):
     global _git_submodule_cache
     if _git_submodule_cache is not None:
         return _git_submodule_cache
-
     if not git_root:
         return []
     cmd = "git submodule status --recursive"
@@ -209,13 +212,11 @@ def get_deleted_files(git_root):
     global _git_deleted_files_cache
     if _git_deleted_files_cache is not None:
         return _git_deleted_files_cache
-
     cmd = "git diff --name-only --diff-filter=D"
     success, output = run_command(cmd, cwd=git_root, capture_output=True)
     if not success:
         _git_deleted_files_cache = set()
         return set()
-
     deleted_files = {f.strip() for f in re.split(r"[\r\n]+", output) if f.strip()}
     _git_deleted_files_cache = deleted_files
     return deleted_files
@@ -223,19 +224,14 @@ def get_deleted_files(git_root):
 
 def get_uncommitted_files():
     global _git_submodule_cache, _git_deleted_files_cache
-    # 清空缓存
     _git_submodule_cache = None
     _git_deleted_files_cache = None
-
     git_root = find_git_root()
     if not git_root:
         print("[Error]: Could not find Git repository root")
         return [], [], []
-
-    # 一次性获取所有必要信息
     submodule_abs_paths = get_git_submodule_paths(git_root)
     deleted_files = get_deleted_files(git_root)
-
     cmd_modified = "git diff --name-only --diff-filter=ADM"
     success, modified_output = run_command(
         cmd_modified, cwd=git_root, capture_output=True
@@ -263,7 +259,6 @@ def get_uncommitted_files():
             if not f:
                 continue
             f_abs = os.path.abspath(os.path.join(git_root, f))
-            # 使用缓存的删除文件列表，不再单独查询每个文件
             if os.path.exists(f_abs) or f in deleted_files:
                 valid_normal.append(f)
             else:
@@ -293,7 +288,6 @@ def get_file_size(file_rel_path, git_root):
         if os.path.commonprefix([file_abs, sm_abs]) == sm_abs:
             return 0
     try:
-        # 使用缓存的删除文件列表
         deleted_files = get_deleted_files(git_root)
         if file_rel_path in deleted_files:
             return 0
@@ -327,70 +321,46 @@ def split_large_file(file_path, git_root):
         abs_file_path = os.path.join(git_root, file_path)
         file_size = os.path.getsize(abs_file_path)
         file_dir = os.path.dirname(abs_file_path)
-
-        # 计算需要分割的块数（基于平均40MB）
         avg_chunk_size = 40 * 1024 * 1024
         num_chunks = max(2, (file_size + avg_chunk_size - 1) // avg_chunk_size)
-
         print(
             f"[Split] Splitting {file_path} ({file_size/1024/1024:.2f}MB) into {num_chunks} chunks"
         )
-
-        # 生成随机但不同的块大小（30-50MB之间）
         chunk_sizes = []
         remaining_size = file_size
         min_chunk = 30 * 1024 * 1024
         max_chunk = 50 * 1024 * 1024
-
         for i in range(num_chunks - 1):
-            # 为每个块生成不同的大小
             if remaining_size <= min_chunk:
                 chunk_size = remaining_size
             else:
-                # 计算可用范围，确保剩余文件能合理分配
                 available_max = min(
                     max_chunk, remaining_size - (num_chunks - i - 1) * min_chunk
                 )
                 available_min = max(
                     min_chunk, remaining_size - (num_chunks - i - 1) * max_chunk
                 )
-
                 if available_min >= available_max:
                     chunk_size = available_min
                 else:
-                    # 在可用范围内随机选择
                     chunk_size = random.randint(available_min, available_max)
-
             chunk_sizes.append(chunk_size)
             remaining_size -= chunk_size
-
-        # 最后一个块使用剩余的所有大小
         chunk_sizes.append(remaining_size)
-
-        # 打乱块大小的顺序（可选，保持顺序也可）
-        # random.shuffle(chunk_sizes)
-
         split_files = []
         with open(abs_file_path, "rb") as f:
             for i, chunk_size in enumerate(chunk_sizes):
                 chunk_file_path = f"{abs_file_path}{SPLIT_FILE_EXTENSION}{i+1:03d}"
                 relative_chunk_path = f"{file_path}{SPLIT_FILE_EXTENSION}{i+1:03d}"
-
                 with open(chunk_file_path, "wb") as chunk_file:
-                    # 读取指定大小的数据
                     data = f.read(chunk_size)
                     chunk_file.write(data)
-
                 split_files.append(relative_chunk_path)
                 print(
                     f"[Split] Created chunk: {relative_chunk_path} ({len(data)/1024/1024:.2f}MB)"
                 )
-
-        # 在同目录创建.gitignore文件
         add_to_local_gitignore(file_path, file_dir, git_root)
-
         return split_files
-
     except Exception as e:
         print(f"[Error] Failed to split file {file_path}: {str(e)}")
         return []
@@ -402,8 +372,6 @@ def add_to_local_gitignore(file_pattern, local_dir, git_root):
     """
     try:
         gitignore_path = os.path.join(local_dir, ".gitignore")
-
-        # 计算相对于git根目录的文件路径
         if os.path.commonpath([local_dir, git_root]) == git_root:
             relative_dir = os.path.relpath(local_dir, git_root)
             if relative_dir == ".":
@@ -412,8 +380,6 @@ def add_to_local_gitignore(file_pattern, local_dir, git_root):
                 ignore_pattern = os.path.join(relative_dir, file_pattern)
         else:
             ignore_pattern = file_pattern
-
-        # 读取现有的.gitignore内容
         existing_patterns = set()
         if os.path.exists(gitignore_path):
             with open(gitignore_path, "r", encoding="utf-8") as f:
@@ -421,27 +387,20 @@ def add_to_local_gitignore(file_pattern, local_dir, git_root):
                     line = line.strip()
                     if line and not line.startswith("#"):
                         existing_patterns.add(line)
-
-        # 添加原文件到.gitignore
         if ignore_pattern not in existing_patterns:
             with open(gitignore_path, "a", encoding="utf-8") as f:
                 f.write(f"\n{ignore_pattern}\n")
             print(f"[GitIgnore] Added {ignore_pattern} to {gitignore_path}")
-
-        # 添加合并文件到.gitignore
         merged_pattern = f"{ignore_pattern}.merged"
         if merged_pattern not in existing_patterns:
             with open(gitignore_path, "a", encoding="utf-8") as f:
                 f.write(f"{merged_pattern}\n")
             print(f"[GitIgnore] Added {merged_pattern} to {gitignore_path}")
-
-        # 暂存.gitignore文件
         quoted_gitignore = safe_quote_path(gitignore_path)
         cmd_add = f"git add {quoted_gitignore}"
         success, _ = run_command(cmd_add, cwd=git_root)
         if not success:
             print(f"[Warning] Failed to stage .gitignore file")
-
     except Exception as e:
         print(f"[Error] Failed to update local .gitignore: {str(e)}")
 
@@ -450,27 +409,20 @@ def batch_add_files(files, git_root):
     """分批添加文件，避免命令行过长和批次过大"""
     if not files:
         return True
-
     print(f"[Info]: Staging {len(files)} files in batches...")
-
     current_batch = []
     current_length = 0
     current_batch_size = 0
-
     for i, f in enumerate(files):
         file_path = safe_quote_path(os.path.join(git_root, f))
-        file_length = len(file_path) + 1  # +1 for space
+        file_length = len(file_path) + 1
         file_size = get_file_size(f, git_root)
-
-        # 检查是否需要开始新批次（命令行长度限制或批次大小限制）
         should_start_new_batch = current_batch and (
             current_length + file_length > MAX_CMD_LENGTH
             or current_batch_size + file_size > MAX_BATCH_SIZE
-            or i == len(files) - 1  # 最后一个文件
+            or i == len(files) - 1
         )
-
         if should_start_new_batch:
-            # 执行当前批次
             cmd_add = f"git add {' '.join(current_batch)}"
             success, _ = run_command(cmd_add, cwd=git_root)
             if not success:
@@ -480,18 +432,12 @@ def batch_add_files(files, git_root):
                 f"[Info]: Successfully staged batch of {len(current_batch)} files "
                 + f"({current_batch_size/1024/1024:.2f}MB)"
             )
-
-            # 重置批次
             current_batch = []
             current_length = 0
             current_batch_size = 0
-
-        # 添加文件到当前批次
         current_batch.append(file_path)
         current_length += file_length
         current_batch_size += file_size
-
-    # 处理最后一批
     if current_batch:
         cmd_add = f"git add {' '.join(current_batch)}"
         success, _ = run_command(cmd_add, cwd=git_root)
@@ -502,7 +448,6 @@ def batch_add_files(files, git_root):
             f"[Info]: Successfully staged final batch of {len(current_batch)} files "
             + f"({current_batch_size/1024/1024:.2f}MB)"
         )
-
     return True
 
 
@@ -511,44 +456,34 @@ def commit_and_push(valid_normal, modified_submodules, commit_msg_file):
     if not git_root:
         print("[Error]: Could not find Git repository root")
         return False
-
-    # 分批添加普通文件
     if valid_normal:
         if not batch_add_files(valid_normal, git_root):
             print("[Error]: Failed to stage normal files")
             return False
-
-    # 处理子模块
     if modified_submodules:
         print(f"[Info]: Handling {len(modified_submodules)} submodules...")
         for sm_rel in modified_submodules:
             if not handle_git_submodule(sm_rel, git_root):
                 return False
-
-    # 提交更改
     commit_msg_abs = os.path.abspath(commit_msg_file)
     cmd_commit = f"git commit -F {safe_quote_path(commit_msg_abs)}"
     print("[Info]: Committing changes...")
-    success, _ = run_command(cmd_commit, cwd=git_root)
+    success, _ = run_command(cmd_commit, cwd=git_root, capture_output=False)
     if not success:
         print("[Error]: Failed to commit changes")
         return False
-
     total = len(valid_normal) + len(modified_submodules)
     print(f"[Success]: Committed {total} items (files + submodules)")
-
-    # 推送更改
     for retry in range(MAX_RETRIES):
         print(f"[Pushing]: Attempt {retry+1}/{MAX_RETRIES}...")
         cmd_push = "git push --recurse-submodules=on-demand"
-        success, _ = run_command(cmd_push, cwd=git_root)
+        success, _ = run_command(cmd_push, cwd=git_root, capture_output=False)
         if success:
             print("[Success]: Push completed successfully")
             return True
         print(f"[Error]: Push attempt {retry+1} failed")
         if retry < MAX_RETRIES - 1:
             time.sleep(2)
-
     print(f"[Error]: Maximum retries ({MAX_RETRIES}) reached")
     return False
 
@@ -588,16 +523,12 @@ def main():
     original_commit_file = os.path.abspath(sys.argv[1].replace("\r", ""))
     commit_msg_file = process_commit_file(original_commit_file)
     valid_normal, _, modified_submodules = get_uncommitted_files()
-
-    # 处理大文件分割
     filtered_normal = []
     split_files = []
-
     for f in valid_normal:
         file_size = get_file_size(f, git_root)
         if file_size > MAX_SINGLE_FILE_SIZE:
             print(f"[Info]: Large file detected: {f} ({file_size/1024/1024:.2f}MB)")
-            # 分割大文件
             chunks = split_large_file(f, git_root)
             if chunks:
                 split_files.extend(chunks)
@@ -606,22 +537,17 @@ def main():
                 print(f"[Warning]: Failed to split large file: {f}")
         else:
             filtered_normal.append(f)
-
-    # 将分割后的文件加入提交列表
     filtered_normal.extend(split_files)
-
     total = len(filtered_normal) + len(modified_submodules)
     if total == 0:
         print("[Info]: No valid content to commit. Exiting.")
         os.remove(commit_msg_file)
         sys.exit(0)
-
     print(
         f"[Info]: To commit: {len(filtered_normal)} files + {len(modified_submodules)} submodules"
     )
     if split_files:
         print(f"[Info]: Including {len(split_files)} split file chunks")
-
     result = commit_and_push(filtered_normal, modified_submodules, commit_msg_file)
     if os.path.exists(commit_msg_file):
         os.remove(commit_msg_file)
