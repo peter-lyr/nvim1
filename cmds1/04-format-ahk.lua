@@ -1,6 +1,6 @@
 vim.api.nvim_create_user_command("FormatAhk", function(params)
-	for _ = 1, 9 do
-		vim.cmd([[
+  for _ = 1, 9 do
+    vim.cmd([[
       try
         silent %s/^ \+$//g
       catch
@@ -26,5 +26,5 @@ vim.api.nvim_create_user_command("FormatAhk", function(params)
       catch
       endtry
     ]])
-	end
+  end
 end, { nargs = "*" })
