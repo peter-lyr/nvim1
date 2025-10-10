@@ -7,8 +7,8 @@ import random
 import shutil
 from pathlib import Path
 
-MAX_BATCH_SIZE = 100 * 1024 * 1024
-MAX_SINGLE_FILE_SIZE = 50 * 1024 * 1024
+MAX_BATCH_SIZE = 100 * 1024 * 1024  # 每个批次最大100MB
+MAX_SINGLE_FILE_SIZE = 50 * 1024 * 1024  # 单个文件大小限制
 MAX_RETRIES = 5
 CUR_WORKING_DIR = ""
 SPLIT_FILE_EXTENSION = ".split_part_"
@@ -447,7 +447,7 @@ def add_to_local_gitignore(file_pattern, local_dir, git_root):
 
 
 def batch_add_files(files, git_root):
-    """分批添加文件，避免命令行过长"""
+    """分批添加文件，避免命令行过长和批次过大"""
     if not files:
         return True
 
@@ -455,30 +455,41 @@ def batch_add_files(files, git_root):
 
     current_batch = []
     current_length = 0
+    current_batch_size = 0
 
     for i, f in enumerate(files):
         file_path = safe_quote_path(os.path.join(git_root, f))
         file_length = len(file_path) + 1  # +1 for space
+        file_size = get_file_size(f, git_root)
 
-        # 如果添加这个文件会超过限制，或者已经是最后一个文件，则执行当前批次
-        if current_batch and (
-            current_length + file_length > MAX_CMD_LENGTH or i == len(files) - 1
-        ):
+        # 检查是否需要开始新批次（命令行长度限制或批次大小限制）
+        should_start_new_batch = current_batch and (
+            current_length + file_length > MAX_CMD_LENGTH
+            or current_batch_size + file_size > MAX_BATCH_SIZE
+            or i == len(files) - 1  # 最后一个文件
+        )
+
+        if should_start_new_batch:
             # 执行当前批次
             cmd_add = f"git add {' '.join(current_batch)}"
             success, _ = run_command(cmd_add, cwd=git_root)
             if not success:
                 print(f"[Error]: Failed to stage batch of {len(current_batch)} files")
                 return False
-            print(f"[Info]: Successfully staged batch of {len(current_batch)} files")
+            print(
+                f"[Info]: Successfully staged batch of {len(current_batch)} files "
+                + f"({current_batch_size/1024/1024:.2f}MB)"
+            )
 
             # 重置批次
             current_batch = []
             current_length = 0
+            current_batch_size = 0
 
         # 添加文件到当前批次
         current_batch.append(file_path)
         current_length += file_length
+        current_batch_size += file_size
 
     # 处理最后一批
     if current_batch:
@@ -487,7 +498,10 @@ def batch_add_files(files, git_root):
         if not success:
             print(f"[Error]: Failed to stage final batch of {len(current_batch)} files")
             return False
-        print(f"[Info]: Successfully staged final batch of {len(current_batch)} files")
+        print(
+            f"[Info]: Successfully staged final batch of {len(current_batch)} files "
+            + f"({current_batch_size/1024/1024:.2f}MB)"
+        )
 
     return True
 
