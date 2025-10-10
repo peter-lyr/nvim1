@@ -18,15 +18,29 @@ ESC = "\x1b"  # ^[ 字符
 BEL = "\x07"  # ^G 字符
 CTRL_CHARS = re.compile(r"[\x00-\x1F\x7F]")  # 所有ASCII控制字符
 
-
-# 特定目标序列 - 最后残留的问题序列
+# 扩展目标序列，包含所有观察到的控制序列
 TARGET_SEQUENCES = [
     r"\x1B\[\?9001l",
     r"\x1B\[\?1004l",
     r"\x1B\[\?9001h",
     r"\x1B\[\?1004h",
+    r"\x1B\[\?25l",  # 隐藏光标
+    r"\x1B\[\?25h",  # 显示光标
+    r"\x1B\[2J",  # 清屏
+    r"\x1B\[H",  # 光标归位
+    r"\x1B\[m",  # 重置属性
+    r"\x1B\]0;[^\x07]*\x07",  # 窗口标题序列
+    r"\x1B\[[\d;]*m",  # SGR格式控制
 ]
 TARGET_REGEX = re.compile("|".join(TARGET_SEQUENCES))
+
+# 新增：更全面的控制序列正则表达式
+CONTROL_SEQUENCES = re.compile(
+    r"\x1B\[[\?]?[\d;]*[a-zA-Z]|"  # CSI序列
+    r"\x1B\][^\x07]*\x07|"  # OSC序列（窗口标题等）
+    r"\x1B[\(\)][\x20-\x2F]*[\x40-\x7E]|"  # 双字符序列
+    r"[\x00-\x1F\x7F-\x9F]"  # 所有控制字符
+)
 
 
 def strip_control_chars(text):
@@ -34,49 +48,35 @@ def strip_control_chars(text):
     if not isinstance(text, str):
         return text
 
-    # 1. 优先处理最后残留的特定目标序列
-    text = TARGET_REGEX.sub("", text)
+    # 方法1：使用全面的控制序列正则表达式一次性清除
+    cleaned = CONTROL_SEQUENCES.sub("", text)
 
-    # 2. 处理窗口标题序列: ^[]0;...^G
-    text = re.sub(r"\x1B\]0;[^\x07]*\x07", "", text)
+    # 方法2：针对特定顽固序列再次清理
+    cleaned = TARGET_REGEX.sub("", cleaned)
 
-    # 3. 处理私有模式控制序列: ^[[?9001h, ^[[?1004l等
-    text = re.sub(r"\x1B\[\?\d+[hl]", "", text)
+    # 方法3：移除所有ASCII控制字符（兜底）
+    cleaned = CTRL_CHARS.sub("", cleaned)
 
-    # 4. 处理屏幕控制序列: ^[[2J(清屏), ^[[H(光标归位)
-    text = re.sub(r"\x1B\[2J", "", text)
-    text = re.sub(r"\x1B\[H", "", text)
+    # 清理空白和格式
+    cleaned = re.sub(r"\s+", " ", cleaned).strip()
+    cleaned = re.sub(r" +", " ", cleaned)  # 合并多个空格
 
-    # 5. 处理SGR格式控制: ^[[m及变体
-    text = re.sub(r"\x1B\[[\d;]*m", "", text)
-
-    # 6. 处理所有其他ESC开头的控制序列
-    text = re.sub(r"\x1B[^\x40-\x7E]*[\x40-\x7E]", "", text)
-
-    # 7. 移除任何残留的ESC字符
-    text = text.replace(ESC, "")
-
-    # 8. 移除所有ASCII控制字符
-    text = CTRL_CHARS.sub("", text)
-
-    # 9. 再次处理目标序列，确保彻底清除
-    text = TARGET_REGEX.sub("", text)
-
-    # 10. 清理空白和格式
-    text = re.sub(r"\s+", " ", text).strip()
-    text = re.sub(r" +", " ", text)  # 合并多个空格
-
-    return text
+    return cleaned
 
 
 def deep_clean(text):
     """深度清理函数，连续多次过滤确保彻底清除"""
-    cleaned = str(text)
-    # 连续6次过滤，确保最顽固序列被清除
-    for _ in range(6):
+    if not isinstance(text, str):
+        text = str(text)
+
+    cleaned = text
+    # 连续多次过滤，确保最顽固序列被清除
+    for _ in range(3):
         cleaned = strip_control_chars(cleaned)
-    # 最后再专门针对目标序列过滤一次
-    cleaned = TARGET_REGEX.sub("", cleaned)
+        # 如果已经清理干净，提前退出
+        if not re.search(r"[\x00-\x1F\x7F]", cleaned):
+            break
+
     return cleaned
 
 
