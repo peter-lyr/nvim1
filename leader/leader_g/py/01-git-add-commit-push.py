@@ -39,9 +39,9 @@ def ultra_clean(text):
 
     for seq in sequences_to_remove:
         if seq in text:
-            print(f"{seq} is in text")
+            print(f"[[{seq}]] is in text")
         else:
-            print(f"{seq} is not in text")
+            print(f"[[{seq}]] is not in text")
         text = text.replace(seq, "")
 
     # 移除所有控制字符（除了换行和制表符）
