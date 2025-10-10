@@ -8,7 +8,7 @@ import random
 import shutil
 from pathlib import Path
 
-MAX_BATCH_SIZE = 500 * 1024 * 1024
+MAX_BATCH_SIZE = 100 * 1024 * 1024
 MAX_SINGLE_FILE_SIZE = 50 * 1024 * 1024
 MAX_RETRIES = 5
 CUR_WORKING_DIR = ""
