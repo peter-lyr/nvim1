@@ -1,7 +1,6 @@
 import os
 import sys
 import time
-import tempfile
 import re
 import subprocess
 
@@ -31,6 +30,7 @@ sys.stderr = FilteredStream(sys.stderr)
 MAX_BATCH_SIZE = 500 * 1024 * 1024
 MAX_SINGLE_FILE_SIZE = 100 * 1024 * 1024
 MAX_RETRIES = 5
+CUR_WORKING_DIR = ""
 
 
 def safe_quote_path(path):
@@ -63,12 +63,15 @@ def get_git_env():
 
 def run_command(cmd, cwd=None, capture_output=False):
     """执行命令"""
+    global CUR_WORKING_DIR
     original_cwd = os.getcwd()
     output = ""
     try:
         if cwd:
             os.chdir(cwd)
-            print(f"[Working directory]: {cwd}")
+            if CUR_WORKING_DIR != cwd:
+                CUR_WORKING_DIR = cwd
+                print(f"[Working directory]: {cwd}")
 
         print(f"[Executing command]: {cmd}")
         env = get_git_env()
