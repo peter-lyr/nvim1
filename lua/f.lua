@@ -838,6 +838,11 @@ function F.run_and_notify_title_on_err(title, on_stderr, ...)
 	F.async_run(cmd, { title = title, on_stderr = on_stderr })
 end
 
+function F.run_and_notify_title_on_err_pty(title, on_stderr, ...)
+	local cmd = string.format(...)
+	F.async_run(cmd, { title = title, on_stderr = on_stderr, use_pty = true, interval = 5000 })
+end
+
 function F.run_and_notify_title_on_exit(title, on_exit, ...)
 	local cmd = string.format(...)
 	F.async_run(cmd, { title = title, on_exit = on_exit })

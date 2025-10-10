@@ -8,7 +8,7 @@ local function get_py(py)
 end
 
 function G.add_commit_push_do(py, file)
-	require("f").run_and_notify_title_on_err("git add commit push", function(errors)
+	require("f").run_and_notify_title_on_err_pty("git add commit push", function(errors)
 		local message = table.concat(errors, "\n")
 		if require("f").in_str(".git/index.lock': File exists.", message) then
 			_G.add_commit_push_retry_cnt = _G.add_commit_push_retry_cnt - 1
