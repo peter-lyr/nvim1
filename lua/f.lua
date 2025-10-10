@@ -661,33 +661,17 @@ function F.filter_control_chars(text)
 	if not text then
 		return ""
 	end
-
-	-- 首先，将文本按行分割
 	local lines = {}
 	for line in text:gmatch("[^\r\n]+") do
-		-- 对每一行进行过滤
 		local cleaned_line = line
-
-		-- 移除所有ANSI转义序列
-		-- 匹配 ESC [ 后跟任意参数和命令字母的序列
 		cleaned_line = cleaned_line:gsub(string.char(27) .. "%[[%d;%?]*[a-zA-Z]", "")
-
-		-- 移除窗口标题序列 (ESC ] 0 ; ... BEL)
 		cleaned_line = cleaned_line:gsub(string.char(27) .. "%]0;[^" .. string.char(7) .. "]*" .. string.char(7), "")
-
-		-- 移除其他OSC序列 (ESC ] ... BEL)
 		cleaned_line = cleaned_line:gsub(string.char(27) .. "%][^" .. string.char(7) .. "]*" .. string.char(7), "")
-
-		-- 移除所有其他控制字符（除了空格和可打印字符）
-		cleaned_line = cleaned_line:gsub("[%c%z]", "") -- %c 匹配所有控制字符，%z 匹配NULL字符
-
-		-- 如果行不为空，则添加到结果中
-		if cleaned_line:match("%S") then -- %S 匹配非空白字符
+		cleaned_line = cleaned_line:gsub("[%c%z]", "")
+		if cleaned_line:match("%S") then
 			table.insert(lines, cleaned_line)
 		end
 	end
-
-	-- 重新组合行
 	return table.concat(lines, "\n")
 end
 
@@ -699,9 +683,7 @@ function F.async_run(cmd, opts)
 	local output_file = opts.output_file or StdOutTxt
 	local fd = nil
 	local dir
-	-- 记录命令开始时间
 	local start_time = vim.loop.hrtime()
-
 	if output_file then
 		dir = vim.fn.fnamemodify(output_file, ":h")
 		if not vim.fn.isdirectory(dir) then
@@ -811,11 +793,9 @@ function F.async_run(cmd, opts)
 			end
 		end,
 		on_exit = function(_, exit_code, signal)
-			-- 计算命令运行时间
 			local end_time = vim.loop.hrtime()
-			local duration_ms = (end_time - start_time) / 1e6 -- 转换为毫秒
-			local duration_sec = duration_ms / 1000 -- 转换为秒
-
+			local duration_ms = (end_time - start_time) / 1e6
+			local duration_sec = duration_ms / 1000
 			process_cache()
 			if fd then
 				vim.loop.fs_close(fd)
@@ -825,11 +805,10 @@ function F.async_run(cmd, opts)
 				timer:close()
 				timer = nil
 			end
-
-			-- 显示运行时长通知
-			local time_message = string.format("Command completed in %.2f seconds", duration_sec)
-			vim.notify(time_message, vim.log.levels.INFO, { title = title .. " (Duration)" })
-
+			if duration_sec > 10 then
+				local time_message = string.format("Command completed in %.2f seconds", duration_sec)
+				vim.notify(time_message, vim.log.levels.INFO, { title = title .. " (Duration)" })
+			end
 			if opts.on_exit then
 				opts.on_exit(exit_code, signal, output_file)
 			end
