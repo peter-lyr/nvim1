@@ -127,6 +127,29 @@ def run_command(cmd, cwd=None, capture_output=False, real_time_output=True):
             os.chdir(original_cwd)
 
 
+def run_git_push(cwd=None):
+    """专门用于运行 git push 命令，使用 os.system 确保实时输出"""
+    original_cwd = os.getcwd()
+    try:
+        if cwd:
+            os.chdir(cwd)
+
+        cmd = "git push --recurse-submodules=on-demand"
+        print(f"[Executing command]: {cmd}")
+
+        # 使用 os.system 来确保实时输出
+        returncode = os.system(cmd)
+        success = returncode == 0
+
+        return success, ""
+    except Exception as e:
+        print(f"[Error] git push failed: {str(e)}")
+        return False, str(e)
+    finally:
+        if cwd:
+            os.chdir(original_cwd)
+
+
 def get_git_submodule_paths(git_root):
     global _git_submodule_cache
     if _git_submodule_cache is not None:
@@ -527,11 +550,10 @@ def commit_batch(
         print(f"[Error]: Failed to commit batch {batch_num}")
         return False
 
-    # 推送
+    # 推送 - 使用专门的 git push 函数
     for retry in range(MAX_RETRIES):
         print(f"[Pushing batch {batch_num}]: Attempt {retry+1}/{MAX_RETRIES}...")
-        cmd_push = "git push --recurse-submodules=on-demand"
-        success, _ = run_command(cmd_push, cwd=git_root, capture_output=False)
+        success, _ = run_git_push(cwd=git_root)
         if success:
             print(f"[Success]: Batch {batch_num} push completed successfully")
 
