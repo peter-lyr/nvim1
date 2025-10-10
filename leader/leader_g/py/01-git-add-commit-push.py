@@ -13,7 +13,7 @@ class FilteredStream:
 
     def write(self, text):
         if text and text.strip():
-            cleaned_text = ultra_clean(text)
+            cleaned_text = text
             if cleaned_text.strip():
                 # 检查是否是整行控制字符，如果是则跳过
                 if not re.match(r"^[\x00-\x1F\x7F\x1b]*$", text):
@@ -31,43 +31,6 @@ sys.stderr = FilteredStream(sys.stderr)
 MAX_BATCH_SIZE = 500 * 1024 * 1024
 MAX_SINGLE_FILE_SIZE = 100 * 1024 * 1024
 MAX_RETRIES = 5
-
-
-def ultra_clean(text):
-    """终极清理函数 - 确保彻底清除所有控制字符"""
-    return text
-    if not isinstance(text, str):
-        text = str(text)
-
-    # 首先处理窗口标题序列：ESC ] 0 ; ... BEL
-    # 这个序列可能跨越多行，所以需要特别处理
-    text = re.sub(r"\x1b\]0;[^\x07]*\x07", "", text)
-
-    # 处理其他 OSC 序列 (Operating System Command)
-    text = re.sub(r"\x1b\][^\x1b]*(\x1b\\|\x07)", "", text)
-
-    # 处理 CSI 序列 (Control Sequence Introducer)
-    text = re.sub(r"\x1b\[[0-9;]*[a-zA-Z]", "", text)
-
-    # 处理私有模式序列
-    text = re.sub(r"\x1b\[\?[0-9;]*[hl]", "", text)
-
-    # 处理其他 ESC 序列
-    text = re.sub(r"\x1b[<=>]", "", text)
-
-    # 移除所有控制字符（除了换行和制表符）
-    cleaned = ""
-    for char in text:
-        # 保留：\t (0x09), \n (0x0A), \r (0x0D)
-        # 移除：其他所有控制字符 (0x00-0x08, 0x0B-0x0C, 0x0E-0x1F, 0x7F)
-        if char in ["\t", "\n", "\r"] or (ord(char) >= 32 and ord(char) != 127):
-            cleaned += char
-
-    # 清理空白
-    cleaned = re.sub(r"\s+", " ", cleaned).strip()
-    cleaned = re.sub(r" +", " ", cleaned)
-
-    return cleaned
 
 
 def safe_quote_path(path):
@@ -410,7 +373,7 @@ def commit_and_push(valid_normal, modified_submodules, commit_msg_file):
 
 def main():
     # 清理命令行参数中的控制字符
-    clean_args = [ultra_clean(arg) for arg in sys.argv]
+    clean_args = [arg for arg in sys.argv]
     sys.argv = clean_args
 
     if len(sys.argv) < 2:
