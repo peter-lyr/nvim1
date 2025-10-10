@@ -5,8 +5,8 @@ import re
 import subprocess
 import random
 
-MAX_BATCH_SIZE = 100 * 1024 * 1024
-MAX_SINGLE_FILE_SIZE = 50 * 1024 * 1024
+MAX_BATCH_SIZE = 100 * 1024 * 1024  # 100MB 每批次
+MAX_SINGLE_FILE_SIZE = 50 * 1024 * 1024  # 50MB 单个文件限制
 MAX_RETRIES = 5
 CUR_WORKING_DIR = ""
 SPLIT_FILE_EXTENSION = ".split_part_"
@@ -406,85 +406,149 @@ def add_to_local_gitignore(file_pattern, local_dir, git_root):
 
 
 def batch_add_files(files, git_root):
-    """分批添加文件，避免命令行过长和批次过大"""
+    """分批添加文件，避免命令行过长"""
     if not files:
         return True
     print(f"[Info]: Staging {len(files)} files in batches...")
     current_batch = []
     current_length = 0
-    current_batch_size = 0
+
     for i, f in enumerate(files):
         file_path = safe_quote_path(os.path.join(git_root, f))
         file_length = len(file_path) + 1
-        file_size = get_file_size(f, git_root)
-        should_start_new_batch = current_batch and (
-            current_length + file_length > MAX_CMD_LENGTH
-            or current_batch_size + file_size > MAX_BATCH_SIZE
-            or i == len(files) - 1
-        )
-        if should_start_new_batch:
+
+        if current_batch and (
+            current_length + file_length > MAX_CMD_LENGTH or i == len(files) - 1
+        ):
             cmd_add = f"git add {' '.join(current_batch)}"
             success, _ = run_command(cmd_add, cwd=git_root)
             if not success:
                 print(f"[Error]: Failed to stage batch of {len(current_batch)} files")
                 return False
-            print(
-                f"[Info]: Successfully staged batch of {len(current_batch)} files "
-                + f"({current_batch_size/1024/1024:.2f}MB)"
-            )
+            print(f"[Info]: Successfully staged batch of {len(current_batch)} files")
             current_batch = []
             current_length = 0
-            current_batch_size = 0
+
         current_batch.append(file_path)
         current_length += file_length
-        current_batch_size += file_size
+
     if current_batch:
         cmd_add = f"git add {' '.join(current_batch)}"
         success, _ = run_command(cmd_add, cwd=git_root)
         if not success:
             print(f"[Error]: Failed to stage final batch of {len(current_batch)} files")
             return False
-        print(
-            f"[Info]: Successfully staged final batch of {len(current_batch)} files "
-            + f"({current_batch_size/1024/1024:.2f}MB)"
-        )
+        print(f"[Info]: Successfully staged final batch of {len(current_batch)} files")
+
     return True
 
 
-def commit_and_push(valid_normal, modified_submodules, commit_msg_file):
+def calculate_batches(files, git_root):
+    """根据文件总大小计算需要分成多少个批次"""
+    if not files:
+        return []
+
+    total_size = 0
+    for f in files:
+        total_size += get_file_size(f, git_root)
+
+    print(f"[Batch] Total files size: {total_size/1024/1024:.2f}MB")
+    print(f"[Batch] Max batch size: {MAX_BATCH_SIZE/1024/1024:.2f}MB")
+
+    if total_size <= MAX_BATCH_SIZE:
+        print("[Batch] All files fit in one batch")
+        return [files]
+
+    num_batches = (total_size + MAX_BATCH_SIZE - 1) // MAX_BATCH_SIZE
+    print(f"[Batch] Need to split into {num_batches} batches")
+
+    # 按文件大小降序排序，优先处理大文件
+    files_with_size = [(f, get_file_size(f, git_root)) for f in files]
+    files_with_size.sort(key=lambda x: x[1], reverse=True)
+
+    batches = [[] for _ in range(num_batches)]
+    batch_sizes = [0] * num_batches
+
+    # 使用贪心算法分配文件到各个批次
+    for file_path, file_size in files_with_size:
+        # 找到当前最小的批次
+        min_batch_index = batch_sizes.index(min(batch_sizes))
+        batches[min_batch_index].append(file_path)
+        batch_sizes[min_batch_index] += file_size
+
+    # 打印批次信息
+    for i, (batch, size) in enumerate(zip(batches, batch_sizes)):
+        print(f"[Batch {i+1}]: {len(batch)} files, {size/1024/1024:.2f}MB")
+
+    return batches
+
+
+def commit_batch(
+    files, modified_submodules, commit_msg_file, batch_num=1, total_batches=1
+):
+    """提交单个批次"""
     git_root = find_git_root()
     if not git_root:
         print("[Error]: Could not find Git repository root")
         return False
-    if valid_normal:
-        if not batch_add_files(valid_normal, git_root):
+
+    # 添加文件
+    if files:
+        if not batch_add_files(files, git_root):
             print("[Error]: Failed to stage normal files")
             return False
-    if modified_submodules:
+
+    # 处理子模块（只在第一批次处理）
+    if batch_num == 1 and modified_submodules:
         print(f"[Info]: Handling {len(modified_submodules)} submodules...")
         for sm_rel in modified_submodules:
             if not handle_git_submodule(sm_rel, git_root):
                 return False
+
+    # 生成批次提交信息
     commit_msg_abs = os.path.abspath(commit_msg_file)
+    if total_batches > 1:
+        batch_commit_msg = f"{commit_msg_file}.batch{batch_num}"
+        try:
+            with open(commit_msg_abs, "r", encoding="utf-8") as f:
+                original_msg = f.read().strip()
+            batch_msg = f"{original_msg}\n\n[Batch {batch_num}/{total_batches}]"
+            with open(batch_commit_msg, "w", encoding="utf-8") as f:
+                f.write(batch_msg)
+            commit_msg_abs = batch_commit_msg
+        except Exception as e:
+            print(f"[Warning]: Failed to create batch commit message: {str(e)}")
+
+    # 提交
     cmd_commit = f"git commit -F {safe_quote_path(commit_msg_abs)}"
-    print("[Info]: Committing changes...")
+    print(f"[Info]: Committing batch {batch_num}/{total_batches}...")
     success, _ = run_command(cmd_commit, cwd=git_root, capture_output=False)
     if not success:
-        print("[Error]: Failed to commit changes")
+        print(f"[Error]: Failed to commit batch {batch_num}")
         return False
-    total = len(valid_normal) + len(modified_submodules)
-    print(f"[Success]: Committed {total} items (files + submodules)")
+
+    # 推送
     for retry in range(MAX_RETRIES):
-        print(f"[Pushing]: Attempt {retry+1}/{MAX_RETRIES}...")
+        print(f"[Pushing batch {batch_num}]: Attempt {retry+1}/{MAX_RETRIES}...")
         cmd_push = "git push --recurse-submodules=on-demand"
         success, _ = run_command(cmd_push, cwd=git_root, capture_output=False)
         if success:
-            print("[Success]: Push completed successfully")
+            print(f"[Success]: Batch {batch_num} push completed successfully")
+
+            # 清理临时提交信息文件
+            if (
+                total_batches > 1
+                and os.path.exists(commit_msg_abs)
+                and commit_msg_abs != os.path.abspath(commit_msg_file)
+            ):
+                os.remove(commit_msg_abs)
             return True
-        print(f"[Error]: Push attempt {retry+1} failed")
+
+        print(f"[Error]: Batch {batch_num} push attempt {retry+1} failed")
         if retry < MAX_RETRIES - 1:
             time.sleep(2)
-    print(f"[Error]: Maximum retries ({MAX_RETRIES}) reached")
+
+    print(f"[Error]: Batch {batch_num} maximum retries ({MAX_RETRIES}) reached")
     return False
 
 
@@ -548,13 +612,33 @@ def main():
     )
     if split_files:
         print(f"[Info]: Including {len(split_files)} split file chunks")
-    result = commit_and_push(filtered_normal, modified_submodules, commit_msg_file)
+    # 计算批次
+    batches = calculate_batches(filtered_normal, git_root)
+    if not batches:
+        print("[Error]: Failed to calculate batches")
+        os.remove(commit_msg_file)
+        sys.exit(1)
+    # 分批提交
+    all_success = True
+    for i, batch_files in enumerate(batches):
+        batch_num = i + 1
+        total_batches = len(batches)
+        print(f"\n[Batch {batch_num}/{total_batches}] Starting...")
+        success = commit_batch(
+            batch_files, modified_submodules, commit_msg_file, batch_num, total_batches
+        )
+        if not success:
+            print(f"[Error]: Batch {batch_num} failed")
+            all_success = False
+            break
+        print(f"[Batch {batch_num}/{total_batches}] Completed successfully")
+    # 清理
     if os.path.exists(commit_msg_file):
         os.remove(commit_msg_file)
-    if result:
-        print("[Complete]: All content committed and pushed successfully!")
+    if all_success:
+        print("[Complete]: All batches committed and pushed successfully!")
     else:
-        print("[Error]: Commit & Push failed")
+        print("[Error]: Some batches failed")
         sys.exit(1)
 
 
