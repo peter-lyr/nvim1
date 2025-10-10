@@ -658,52 +658,52 @@ function F.ensure_file_exists(file_path)
 end
 
 local function filter_control_chars(text)
-	-- if not text then
-	--   return ""
-	-- end
-	--
-	-- -- 方法1: 逐个移除控制字符（避免在字符类中使用转义）
-	-- local controls = {
-	--   "\0",
-	--   "\1",
-	--   "\2",
-	--   "\3",
-	--   "\4",
-	--   "\5",
-	--   "\6",
-	--   "\7",
-	--   "\8",
-	--   "\11",
-	--   "\12",
-	--   "\14",
-	--   "\15",
-	--   "\16",
-	--   "\17",
-	--   "\18",
-	--   "\19",
-	--   "\20",
-	--   "\21",
-	--   "\22",
-	--   "\23",
-	--   "\24",
-	--   "\25",
-	--   "\26",
-	--   "\27",
-	--   "\28",
-	--   "\29",
-	--   "\30",
-	--   "\31",
-	--   "\127",
-	-- }
-	--
-	-- for _, control in ipairs(controls) do
-	--   text = text:gsub(control, "")
-	-- end
-	--
-	-- -- 方法2: 移除ANSI序列
-	-- text = text:gsub("%x1b%[[%d;]*[a-zA-Z]", "") -- 使用%x1b表示十六进制的ESC
-	-- text = text:gsub("%x1b%]0;[^%x07]*%x07", "") -- 窗口标题序列
-	-- text = text:gsub("%x1b%[%?[%d;]*[hl]", "") -- 私有模式序列
+	if not text then
+		return ""
+	end
+
+	-- 方法1: 逐个移除控制字符（避免在字符类中使用转义）
+	local controls = {
+		"\0",
+		"\1",
+		"\2",
+		"\3",
+		"\4",
+		"\5",
+		"\6",
+		"\7",
+		"\8",
+		"\11",
+		"\12",
+		"\14",
+		"\15",
+		"\16",
+		"\17",
+		"\18",
+		"\19",
+		"\20",
+		"\21",
+		"\22",
+		"\23",
+		"\24",
+		"\25",
+		"\26",
+		"\27",
+		"\28",
+		"\29",
+		"\30",
+		"\31",
+		"\127",
+	}
+
+	for _, control in ipairs(controls) do
+		text = text:gsub(control, "")
+	end
+
+	-- 方法2: 移除ANSI序列
+	text = text:gsub("%x1b%[[%d;]*[a-zA-Z]", "") -- 使用%x1b表示十六进制的ESC
+	text = text:gsub("%x1b%]0;[^%x07]*%x07", "") -- 窗口标题序列
+	text = text:gsub("%x1b%[%?[%d;]*[hl]", "") -- 私有模式序列
 
 	return text
 end
