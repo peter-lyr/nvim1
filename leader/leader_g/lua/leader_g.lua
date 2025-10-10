@@ -1,5 +1,7 @@
 local G = {}
 
+TempCommitTxt = TempTxt .. ".commit"
+
 local function get_py(py)
 	local info = debug.getinfo(1, "S")
 	local relative_path = info.source:sub(2)
@@ -37,24 +39,24 @@ function G.add_commit_push_infos(infos)
 		return
 	end
 	infos = require("f").to_table(infos)
-	require("f").write_lines_to_file(infos, TempTxt)
-	G.add_commit_push_file(TempTxt)
+	require("f").write_lines_to_file(infos, TempCommitTxt)
+	G.add_commit_push_file(TempCommitTxt)
 end
 
 function G.write_TempTxt_and_quit_and_add_commit_push()
-	require("f").write_lines_to_file({}, TempTxt)
-	require("f").cmd("bw %s", TempTxt)
-	require("f").cmd("silent w! %s", TempTxt)
+	require("f").write_lines_to_file({}, TempCommitTxt)
+	require("f").cmd("bw %s", TempCommitTxt)
+	require("f").cmd("silent w! %s", TempCommitTxt)
 	if not require("f").is(require("f").is_cur_last_win()) then
 		vim.cmd("silent q")
 	end
 	for _ = 1, 1000 do
-		local lines = require("f").read_lines_from_file(TempTxt)
+		local lines = require("f").read_lines_from_file(TempCommitTxt)
 		if #lines > 0 then
 			break
 		end
 	end
-	G.add_commit_push_file(TempTxt)
+	G.add_commit_push_file(TempCommitTxt)
 	vim.keymap.del({ "n", "v" }, "<cr><cr>", { buffer = vim.g.bufnr })
 end
 

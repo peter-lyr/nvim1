@@ -1,3 +1,4 @@
+# todo: .gitignore要在所有拆分的文件都提交完之后才去把原文件相对路径加到.gitignore文件中去，不要一股脑就加进去了
 import os
 import sys
 import time
