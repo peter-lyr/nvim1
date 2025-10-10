@@ -13,46 +13,33 @@ MAX_BATCH_SIZE = 500 * 1024 * 1024
 MAX_SINGLE_FILE_SIZE = 100 * 1024 * 1024
 MAX_RETRIES = 5
 
-# 定义ESC控制字符（^[）
-ESC = "\x1b"
-BEL = "\x07"  # 响铃字符，常用于OSC序列结尾
+# 定义控制字符常量
+ESC = "\x1b"  # ^[ 字符
+BEL = "\x07"  # 响铃字符
+CTRL_CHARS = re.compile(r"[\x00-\x1F\x7F]")  # 所有ASCII控制字符
 
 
 def strip_control_chars(text):
-    """专门针对ESC(^[)控制字符及其衍生序列的强化过滤"""
+    """终极控制字符过滤函数，针对Windows终端所有已知控制序列"""
     if not isinstance(text, str):
         return text
 
-    # 1. 处理所有以ESC开头的控制序列（最关键的一步）
-    # 匹配任何以ESC开头，后跟任意字符直到序列结束的模式
-    # 这将捕获所有基于ESC的控制序列
-    text = re.sub(r"\x1B[^\x40-\x7E]*[\x40-\x7E]", "", text)
+    # 1. 匹配所有以ESC开头的控制序列
+    # 包括: [?9001h、[?1004l、[2J、[H、[m、]0;... 等所有变体
+    text = re.sub(r"\x1B\[\??\d*[hl]", "", text)  # 私有模式控制
+    text = re.sub(r"\x1B\[\d+[JK]", "", text)  # 清屏/擦除序列
+    text = re.sub(r"\x1B\[H", "", text)  # 光标归位
+    text = re.sub(r"\x1B\[[\d;]*m", "", text)  # SGR格式控制
+    text = re.sub(r"\x1B\]0;[^\x07]*\x07", "", text)  # 窗口标题序列
+    text = re.sub(r"\x1B[^\x40-\x7E]*[\x40-\x7E]", "", text)  # 所有其他ESC序列
 
-    # 2. 处理OSC（操作系统命令）序列的特殊情况
-    # 如：]0;C:\WINDOWS\SYSTEM32\cmd.exe
-    text = re.sub(r"\x1B\]0;[^\x07]*\x07", "", text)
-
-    # 3. 处理私有模式控制序列（顽固序列）
-    # 如：[?9001h、[?1004l、[?25l等
-    text = re.sub(r"\x1B\[\?\d+[hl]", "", text)
-
-    # 4. 处理屏幕控制序列
-    # 如：[2J（清屏）、[H（光标归位）
-    text = re.sub(r"\x1B\[2J", "", text)
-    text = re.sub(r"\x1B\[H", "", text)
-
-    # 5. 处理SGR（选择图形再现）序列
-    # 如：[m（重置格式）
-    text = re.sub(r"\x1B\[[\d;]*m", "", text)
-
-    # 6. 移除任何单独的ESC字符（^[）
+    # 2. 移除任何残留的ESC字符
     text = text.replace(ESC, "")
 
-    # 7. 移除其他控制字符
-    # 包括BEL（响铃）、CR（回车）等
-    text = re.sub(r"[\x00-\x1F\x7F]", "", text)
+    # 3. 移除所有ASCII控制字符
+    text = CTRL_CHARS.sub("", text)
 
-    # 8. 清理空白和格式
+    # 4. 清理空白和格式
     text = re.sub(r"\s+", " ", text).strip()
     text = re.sub(r" +", " ", text)  # 合并多个空格
 
@@ -62,19 +49,17 @@ def strip_control_chars(text):
 def safe_quote_path(path):
     """安全引用路径（处理空格、中文逗号等）"""
     if re.search(r'[\s，,()"]', path):
-        return f'"{path.replace('"', '\\"')}"'  # 转义路径中的双引号
+        return f'"{path.replace('"', '\\"')}"'
     return path
 
 
 def safe_print(text):
-    """四重过滤确保所有ESC相关字符被清除"""
+    """多重过滤确保输出干净"""
     try:
         cleaned_text = str(text)
-        # 多次过滤确保顽固序列被清除
-        cleaned_text = strip_control_chars(cleaned_text)
-        cleaned_text = strip_control_chars(cleaned_text)
-        cleaned_text = strip_control_chars(cleaned_text)
-        cleaned_text = strip_control_chars(cleaned_text)
+        # 连续四次过滤确保彻底清除顽固序列
+        for _ in range(4):
+            cleaned_text = strip_control_chars(cleaned_text)
         if cleaned_text.strip():
             print(cleaned_text, flush=True)
     except Exception as e:
@@ -181,9 +166,8 @@ def run_command(cmd, cwd=None, capture_output=False):
             os.chdir(original_cwd)
 
 
-# 以下函数保持不变
 def get_git_submodule_paths(git_root):
-    """获取子仓库路径（按行严格分割）"""
+    """获取子仓库路径"""
     if not git_root:
         return []
     cmd = "git submodule status --recursive"
@@ -223,7 +207,7 @@ def filter_out_submodules(file_list, submodule_abs_paths, git_root):
 
 
 def get_git_submodule_modified(git_root):
-    """获取修改的子仓库（按行分割）"""
+    """获取修改的子仓库"""
     if not git_root:
         return []
     cmd = "git submodule status --recursive"
