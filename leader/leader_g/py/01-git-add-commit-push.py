@@ -455,7 +455,7 @@ def commit_and_push(valid_normal, modified_submodules, commit_msg_file):
 
 
 def process_commit_file(original_commit_file):
-    commit_msg_file = f"{original_commit_file}.tmp"
+    commit_msg_file = f"{original_commit_file}.tmpcommit"
     push_allow = False
     if not os.path.exists(original_commit_file):
         print(f"[Error]: Commit file not found: '{original_commit_file}'")
