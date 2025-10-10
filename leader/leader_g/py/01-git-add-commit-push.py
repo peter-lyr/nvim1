@@ -35,6 +35,7 @@ MAX_RETRIES = 5
 
 def ultra_clean(text):
     """终极清理函数 - 确保彻底清除所有控制字符"""
+    return text
     if not isinstance(text, str):
         text = str(text)
 
