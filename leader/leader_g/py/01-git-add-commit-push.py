@@ -18,35 +18,50 @@ ESC = "\x1b"  # ^[ 字符
 BEL = "\x07"  # ^G 字符
 CTRL_CHARS = re.compile(r"[\x00-\x1F\x7F]")  # 所有ASCII控制字符
 
+# 特定目标序列 - 最后残留的问题序列
+TARGET_SEQUENCES = [
+    r"\x1B\[\?9001l",
+    r"\x1B\[\?1004l",
+    r"\x1B\[\?9001h",
+    r"\x1B\[\?1004h",
+]
+TARGET_REGEX = re.compile("|".join(TARGET_SEQUENCES))
+
 
 def strip_control_chars(text):
     """终极控制字符过滤函数，针对所有观察到的控制序列"""
     if not isinstance(text, str):
         return text
 
-    # 1. 处理窗口标题序列: ^[]0;...^G
+    # 1. 优先处理最后残留的特定目标序列
+    text = TARGET_REGEX.sub("", text)
+
+    # 2. 处理窗口标题序列: ^[]0;...^G
     text = re.sub(r"\x1B\]0;[^\x07]*\x07", "", text)
 
-    # 2. 处理私有模式控制序列: ^[[?9001h, ^[[?1004l等
+    # 3. 处理私有模式控制序列: ^[[?9001h, ^[[?1004l等
     text = re.sub(r"\x1B\[\?\d+[hl]", "", text)
 
-    # 3. 处理屏幕控制序列: ^[[2J(清屏), ^[[H(光标归位)
+    # 4. 处理屏幕控制序列: ^[[2J(清屏), ^[[H(光标归位)
     text = re.sub(r"\x1B\[2J", "", text)
     text = re.sub(r"\x1B\[H", "", text)
 
-    # 4. 处理SGR格式控制: ^[[m及变体
+    # 5. 处理SGR格式控制: ^[[m及变体
     text = re.sub(r"\x1B\[[\d;]*m", "", text)
 
-    # 5. 处理所有其他ESC开头的控制序列
+    # 6. 处理所有其他ESC开头的控制序列
     text = re.sub(r"\x1B[^\x40-\x7E]*[\x40-\x7E]", "", text)
 
-    # 6. 移除任何残留的ESC字符
+    # 7. 移除任何残留的ESC字符
     text = text.replace(ESC, "")
 
-    # 7. 移除所有ASCII控制字符
+    # 8. 移除所有ASCII控制字符
     text = CTRL_CHARS.sub("", text)
 
-    # 8. 清理空白和格式
+    # 9. 再次处理目标序列，确保彻底清除
+    text = TARGET_REGEX.sub("", text)
+
+    # 10. 清理空白和格式
     text = re.sub(r"\s+", " ", text).strip()
     text = re.sub(r" +", " ", text)  # 合并多个空格
 
@@ -56,9 +71,11 @@ def strip_control_chars(text):
 def deep_clean(text):
     """深度清理函数，连续多次过滤确保彻底清除"""
     cleaned = str(text)
-    # 连续5次过滤，确保顽固序列被清除
-    for _ in range(5):
+    # 连续6次过滤，确保最顽固序列被清除
+    for _ in range(6):
         cleaned = strip_control_chars(cleaned)
+    # 最后再专门针对目标序列过滤一次
+    cleaned = TARGET_REGEX.sub("", cleaned)
     return cleaned
 
 
@@ -471,13 +488,23 @@ def main():
         f"[Info]: To commit: {len(filtered_normal)} files + {len(modified_submodules)} submodules"
     )
 
-    if not commit_and_push(filtered_normal, modified_submodules, commit_msg_file):
-        safe_print("[Error]: Commit & Push failed")
-        os.remove(commit_msg_file)
-        sys.exit(1)
+    # 执行提交和推送
+    result = commit_and_push(filtered_normal, modified_submodules, commit_msg_file)
 
-    os.remove(commit_msg_file)
-    safe_print("[Complete]: All content committed and pushed successfully!")
+    # 清理临时文件
+    if os.path.exists(commit_msg_file):
+        os.remove(commit_msg_file)
+
+    # 最终输出前的额外清理步骤
+    if result:
+        final_msg = "[Complete]: All content committed and pushed successfully!"
+        # 对最终消息进行额外过滤
+        final_msg = deep_clean(final_msg)
+        print(final_msg, flush=True)
+    else:
+        final_msg = "[Error]: Commit & Push failed"
+        print(deep_clean(final_msg), flush=True)
+        sys.exit(1)
 
 
 if __name__ == "__main__":
