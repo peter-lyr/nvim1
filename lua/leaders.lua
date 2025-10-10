@@ -139,13 +139,13 @@ return {
 	{
 		name = "leader_r",
 		dir = Nvim1Leader .. "leader_r",
-		cmd = {},
+		cmd = { "Run", "RunPty" },
 		keys = {
 			{ "<leader>r", desc = "leader_r", mode = { "n", "v" } },
 			{
 				"<leader>;",
-				":<c-u>RunNotify ",
-				desc = "RunNotify",
+				":<c-u>RunPty",
+				desc = "RunPty",
 				mode = { "n", "v" },
 			},
 		},

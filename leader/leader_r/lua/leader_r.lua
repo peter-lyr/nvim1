@@ -81,8 +81,12 @@ end
 
 function R.stop_cur_file() end
 
-vim.api.nvim_create_user_command("RunNotify", function(params)
+vim.api.nvim_create_user_command("RunPty", function(params)
 	require("f").run_and_notify_pty(require("f").join(params.fargs, " "))
+end, { nargs = "+" })
+
+vim.api.nvim_create_user_command("Run", function(params)
+	require("f").run_and_notify(require("f").join(params.fargs, " "))
 end, { nargs = "+" })
 
 return R
