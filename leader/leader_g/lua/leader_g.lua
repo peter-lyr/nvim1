@@ -45,7 +45,6 @@ function G.write_TempTxt_and_quit_and_add_commit_push()
 	require("f").write_lines_to_file({}, TempTxt)
 	require("f").cmd("bw %s", TempTxt)
 	require("f").cmd("silent w! %s", TempTxt)
-	vim.keymap.del({ "n", "v" }, "<cr><cr>", { buffer = vim.g.bufnr })
 	if not require("f").is(require("f").is_cur_last_win()) then
 		vim.cmd("silent q")
 	end
@@ -56,6 +55,7 @@ function G.write_TempTxt_and_quit_and_add_commit_push()
 		end
 	end
 	G.add_commit_push_file(TempTxt)
+	vim.keymap.del({ "n", "v" }, "<cr><cr>", { buffer = vim.g.bufnr })
 end
 
 function G.add_commit_push_edit_status()
