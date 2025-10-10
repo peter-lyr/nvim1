@@ -661,11 +661,9 @@ local function filter_control_chars(text)
 	if not text then
 		return ""
 	end
-
-	-- 简单的替换方法
-	text = text:gsub(string.char(27) .. "%[[%d;]*[a-zA-Z]", "") -- ANSI序列
-	text = text:gsub(string.char(27) .. "%]0;[^" .. string.char(7) .. "]*" .. string.char(7), "") -- 窗口标题
-
+	-- 只过滤最明显的ANSI序列，避免复杂的模式匹配
+	text = text:gsub(string.char(27) .. "%[[%d;]*[a-zA-Z]", "")
+	text = text:gsub(string.char(27) .. "%[%?[%d;]*[hl]", "")
 	return text
 end
 
