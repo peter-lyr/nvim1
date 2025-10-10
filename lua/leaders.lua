@@ -139,8 +139,15 @@ return {
 	{
 		name = "leader_r",
 		dir = Nvim1Leader .. "leader_r",
+		cmd = {},
 		keys = {
 			{ "<leader>r", desc = "leader_r", mode = { "n", "v" } },
+			{
+				"<leader>;",
+				":<c-u>RunNotify ",
+				desc = "RunNotify",
+				mode = { "n", "v" },
+			},
 		},
 	},
 
