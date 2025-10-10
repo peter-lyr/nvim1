@@ -657,6 +657,22 @@ function F.ensure_file_exists(file_path)
 	end
 end
 
+-- 修正的控制字符过滤函数
+local function filter_control_chars(text)
+	if not text then
+		return ""
+	end
+	-- 方法1: 移除所有控制字符（除了换行和制表符）
+	text = text:gsub("[\0-\8\11-\31\127]", "")
+	-- 方法2: 移除ANSI转义序列
+	text = text:gsub("\27%[[%d;]*[a-zA-Z]", "")
+	-- 方法3: 移除窗口标题序列 (ESC ] 0 ; ... BEL)
+	text = text:gsub("\27%]0;[^\7]*\7", "")
+	-- 方法4: 移除其他私有模式序列
+	text = text:gsub("\27%[%?[%d;]*[hl]", "")
+	return text
+end
+
 function F.async_run(cmd, opts)
 	F.lazy_load("nvim-notify")
 	opts = opts or {}
@@ -701,7 +717,7 @@ function F.async_run(cmd, opts)
 		if #output > 0 then
 			local message = table.concat(output, "\n")
 			message = string.gsub(message, "\r", "")
-			message = message:gsub("[\x00-\x1F\x7F]", ""):gsub("\x1b%[[%d;]*[a-zA-Z]", "")
+			message = filter_control_chars(message)
 			vim.notify(message, vim.log.levels.INFO, { title = title .. "..." })
 			if opts.on_stdout then
 				opts.on_stdout(output)
@@ -769,7 +785,7 @@ function F.async_run(cmd, opts)
 			end
 			if #errors > 0 then
 				local message = table.concat(errors, "\n")
-				message = message:gsub("[\x00-\x1F\x7F]", ""):gsub("\x1b%[[%d;]*[a-zA-Z]", "")
+				message = filter_control_chars(message)
 				vim.notify(message, vim.log.levels.ERROR, { title = title .. " (Error)" })
 				if opts.on_stderr then
 					opts.on_stderr(errors)

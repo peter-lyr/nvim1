@@ -15,64 +15,53 @@ MAX_RETRIES = 5
 
 
 def ultra_clean(text):
-    """终极清理函数 - 使用多种方法确保彻底清除所有控制字符"""
+    """终极清理函数 - 确保彻底清除所有控制字符"""
     if not isinstance(text, str):
         text = str(text)
 
-    # 方法1: 直接移除所有ANSI转义序列
-    ansi_escape = re.compile(
-        r"""
-        \x1B  # ESC
-        (?:   # 开始非捕获组
-            [@-Z\\-_]    # 所有有效的ESC序列字符
-        |     # 或
-            \[           # CSI序列
-            [0-?]*       # 参数字节
-            [ -/]*       # 中间字节
-            [@-~]        # 最终字节
-        |     # 或
-            \]           # OSC序列
-            [^\x1B]*     # 直到下一个ESC或BEL
-            (?:\x1B\\|\x07)  # 以ST或BEL结束
-        )
-    """,
-        re.VERBOSE,
-    )
-    cleaned = ansi_escape.sub("", text)
-
-    # 方法2: 移除所有控制字符（保留换行符、制表符等格式字符）
-    control_chars = re.compile(r"[\x00-\x09\x0B-\x1F\x7F]")
-    cleaned = control_chars.sub("", cleaned)
-
-    # 方法3: 特别处理顽固序列
-    stubborn_patterns = [
-        r"\x1b\[\?[\d;]*[hl]",  # 私有模式序列
-        r"\x1b\]0;[^\x07]*\x07",  # 窗口标题
-        r"\x1b\[[\d;]*[ABCDEFGJKSTHfmnsu]",  # 各种CSI序列
-        r"\x1b[=>]",  # 其他ESC序列
+    # 方法1: 直接替换所有已知的控制序列
+    replacements = [
+        (r"\x1b\[\?9001[hl]", ""),  # 私有模式序列
+        (r"\x1b\[\?1004[hl]", ""),  # 私有模式序列
+        (r"\x1b\[\?25[hl]", ""),  # 光标显示/隐藏
+        (r"\x1b\[2J", ""),  # 清屏
+        (r"\x1b\[H", ""),  # 光标归位
+        (r"\x1b\[m", ""),  # 重置属性
+        (r"\x1b\[[\d;]*m", ""),  # 所有SGR序列
+        (r"\x1b\]0;[^\x07]*\x07", ""),  # 窗口标题
     ]
-    for pattern in stubborn_patterns:
-        cleaned = re.sub(pattern, "", cleaned)
 
-    # 方法4: 最后移除所有剩余的ESC字符
-    cleaned = cleaned.replace("\x1b", "")
+    for pattern, replacement in replacements:
+        text = re.sub(pattern, replacement, text)
+
+    # 方法2: 移除所有其他控制字符
+    # 保留: \t (0x09), \n (0x0A), \r (0x0D)
+    control_chars = "".join(
+        chr(i)
+        for i in list(range(0, 9)) + list(range(11, 13)) + list(range(14, 32)) + [127]
+    )
+    for char in control_chars:
+        text = text.replace(char, "")
+
+    # 方法3: 移除所有剩余的ESC字符
+    text = text.replace("\x1b", "")
 
     # 清理空白
-    cleaned = re.sub(r"\s+", " ", cleaned).strip()
-    cleaned = re.sub(r" +", " ", cleaned)
+    text = re.sub(r"\s+", " ", text).strip()
+    text = re.sub(r" +", " ", text)
 
-    return cleaned
+    return text
 
 
 def safe_quote_path(path):
-    """安全引用路径（处理空格、中文逗号等）"""
+    """安全引用路径"""
     if re.search(r'[\s，,()"]', path):
         return f'"{path.replace('"', '\\"')}"'
     return path
 
 
 def safe_print(text):
-    """安全打印函数，确保所有输出经过终极清理"""
+    """安全打印函数"""
     try:
         cleaned_text = ultra_clean(text)
         if cleaned_text.strip():
@@ -84,14 +73,14 @@ def safe_print(text):
 
 
 def get_git_env():
-    """强制Git使用UTF-8编码（适配中文）"""
+    """Git环境设置"""
     env = os.environ.copy()
     env["GIT_COMMITTER_ENCODING"] = "utf-8"
     env["GIT_AUTHOR_ENCODING"] = "utf-8"
     env["LANG"] = "zh_CN.UTF-8"
     env["PYTHONIOENCODING"] = "utf-8"
     env["LC_ALL"] = "zh_CN.UTF-8"
-    # 禁用终端颜色和控制序列
+    # 禁用所有可能的控制序列
     env["TERM"] = "dumb"
     env["GIT_CONFIG_NOSYSTEM"] = "1"
     env["GIT_PAGER"] = "cat"
@@ -100,7 +89,7 @@ def get_git_env():
 
 
 def run_command(cmd, cwd=None, capture_output=False):
-    """执行命令并对输出进行终极过滤"""
+    """执行命令"""
     original_cwd = os.getcwd()
     output = ""
     try:
@@ -108,7 +97,6 @@ def run_command(cmd, cwd=None, capture_output=False):
             os.chdir(cwd)
             safe_print(f"[Working directory]: {cwd}")
 
-        # 过滤命令中的控制字符后再打印
         safe_print(f"[Executing command]: {ultra_clean(cmd)}")
         env = get_git_env()
 
@@ -140,7 +128,7 @@ def run_command(cmd, cwd=None, capture_output=False):
             output = "\n".join(output_lines)
             return process.returncode == 0, output
         else:
-            # 对于实时输出，直接执行并过滤每一行
+            # 实时输出
             process = subprocess.Popen(
                 cmd,
                 shell=True,
@@ -174,7 +162,7 @@ def run_command(cmd, cwd=None, capture_output=False):
             os.chdir(original_cwd)
 
 
-# 以下函数保持不变，但将deep_clean替换为ultra_clean
+# 其他函数保持不变，只需将deep_clean替换为ultra_clean
 def get_git_submodule_paths(git_root):
     """获取子仓库路径"""
     if not git_root:
@@ -476,12 +464,10 @@ def main():
     if os.path.exists(commit_msg_file):
         os.remove(commit_msg_file)
 
-    # 最终输出前的额外清理步骤
+    # 最终输出
     if result:
         final_msg = "[Complete]: All content committed and pushed successfully!"
-        # 对最终消息进行额外过滤
-        final_msg = ultra_clean(final_msg)
-        print(final_msg, flush=True)
+        print(ultra_clean(final_msg), flush=True)
     else:
         final_msg = "[Error]: Commit & Push failed"
         print(ultra_clean(final_msg), flush=True)
