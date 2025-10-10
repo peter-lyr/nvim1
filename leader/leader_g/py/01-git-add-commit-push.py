@@ -13,69 +13,53 @@ MAX_BATCH_SIZE = 500 * 1024 * 1024
 MAX_SINGLE_FILE_SIZE = 100 * 1024 * 1024
 MAX_RETRIES = 5
 
-# 定义控制字符常量
-ESC = "\x1b"  # ^[ 字符
-BEL = "\x07"  # ^G 字符
-CTRL_CHARS = re.compile(r"[\x00-\x1F\x7F]")  # 所有ASCII控制字符
 
-# 扩展目标序列，包含所有观察到的控制序列
-TARGET_SEQUENCES = [
-    r"\x1B\[\?9001l",
-    r"\x1B\[\?1004l",
-    r"\x1B\[\?9001h",
-    r"\x1B\[\?1004h",
-    r"\x1B\[\?25l",  # 隐藏光标
-    r"\x1B\[\?25h",  # 显示光标
-    r"\x1B\[2J",  # 清屏
-    r"\x1B\[H",  # 光标归位
-    r"\x1B\[m",  # 重置属性
-    r"\x1B\]0;[^\x07]*\x07",  # 窗口标题序列
-    r"\x1B\[[\d;]*m",  # SGR格式控制
-]
-TARGET_REGEX = re.compile("|".join(TARGET_SEQUENCES))
-
-# 新增：更全面的控制序列正则表达式
-CONTROL_SEQUENCES = re.compile(
-    r"\x1B\[[\?]?[\d;]*[a-zA-Z]|"  # CSI序列
-    r"\x1B\][^\x07]*\x07|"  # OSC序列（窗口标题等）
-    r"\x1B[\(\)][\x20-\x2F]*[\x40-\x7E]|"  # 双字符序列
-    r"[\x00-\x1F\x7F-\x9F]"  # 所有控制字符
-)
-
-
-def strip_control_chars(text):
-    """终极控制字符过滤函数，针对所有观察到的控制序列"""
-    if not isinstance(text, str):
-        return text
-
-    # 方法1：使用全面的控制序列正则表达式一次性清除
-    cleaned = CONTROL_SEQUENCES.sub("", text)
-
-    # 方法2：针对特定顽固序列再次清理
-    cleaned = TARGET_REGEX.sub("", cleaned)
-
-    # 方法3：移除所有ASCII控制字符（兜底）
-    cleaned = CTRL_CHARS.sub("", cleaned)
-
-    # 清理空白和格式
-    cleaned = re.sub(r"\s+", " ", cleaned).strip()
-    cleaned = re.sub(r" +", " ", cleaned)  # 合并多个空格
-
-    return cleaned
-
-
-def deep_clean(text):
-    """深度清理函数，连续多次过滤确保彻底清除"""
+def ultra_clean(text):
+    """终极清理函数 - 使用多种方法确保彻底清除所有控制字符"""
     if not isinstance(text, str):
         text = str(text)
 
-    cleaned = text
-    # 连续多次过滤，确保最顽固序列被清除
-    for _ in range(3):
-        cleaned = strip_control_chars(cleaned)
-        # 如果已经清理干净，提前退出
-        if not re.search(r"[\x00-\x1F\x7F]", cleaned):
-            break
+    # 方法1: 直接移除所有ANSI转义序列
+    ansi_escape = re.compile(
+        r"""
+        \x1B  # ESC
+        (?:   # 开始非捕获组
+            [@-Z\\-_]    # 所有有效的ESC序列字符
+        |     # 或
+            \[           # CSI序列
+            [0-?]*       # 参数字节
+            [ -/]*       # 中间字节  
+            [@-~]        # 最终字节
+        |     # 或
+            \]           # OSC序列
+            [^\x1B]*     # 直到下一个ESC或BEL
+            (?:\x1B\\|\x07)  # 以ST或BEL结束
+        )
+    """,
+        re.VERBOSE,
+    )
+    cleaned = ansi_escape.sub("", text)
+
+    # 方法2: 移除所有控制字符（保留换行符、制表符等格式字符）
+    control_chars = re.compile(r"[\x00-\x09\x0B-\x1F\x7F]")
+    cleaned = control_chars.sub("", cleaned)
+
+    # 方法3: 特别处理顽固序列
+    stubborn_patterns = [
+        r"\x1b\[\?[\d;]*[hl]",  # 私有模式序列
+        r"\x1b\]0;[^\x07]*\x07",  # 窗口标题
+        r"\x1b\[[\d;]*[ABCDEFGJKSTHfmnsu]",  # 各种CSI序列
+        r"\x1b[=>]",  # 其他ESC序列
+    ]
+    for pattern in stubborn_patterns:
+        cleaned = re.sub(pattern, "", cleaned)
+
+    # 方法4: 最后移除所有剩余的ESC字符
+    cleaned = cleaned.replace("\x1b", "")
+
+    # 清理空白
+    cleaned = re.sub(r"\s+", " ", cleaned).strip()
+    cleaned = re.sub(r" +", " ", cleaned)
 
     return cleaned
 
@@ -88,14 +72,14 @@ def safe_quote_path(path):
 
 
 def safe_print(text):
-    """安全打印函数，确保所有输出经过深度清理"""
+    """安全打印函数，确保所有输出经过终极清理"""
     try:
-        cleaned_text = deep_clean(text)
+        cleaned_text = ultra_clean(text)
         if cleaned_text.strip():
             print(cleaned_text, flush=True)
     except Exception as e:
         error_text = f"[Error in safe_print]: {str(e)}"
-        cleaned_error = deep_clean(error_text)
+        cleaned_error = ultra_clean(error_text)
         print(cleaned_error, flush=True)
 
 
@@ -107,11 +91,16 @@ def get_git_env():
     env["LANG"] = "zh_CN.UTF-8"
     env["PYTHONIOENCODING"] = "utf-8"
     env["LC_ALL"] = "zh_CN.UTF-8"
+    # 禁用终端颜色和控制序列
+    env["TERM"] = "dumb"
+    env["GIT_CONFIG_NOSYSTEM"] = "1"
+    env["GIT_PAGER"] = "cat"
+    env["PAGER"] = "cat"
     return env
 
 
 def run_command(cmd, cwd=None, capture_output=False):
-    """执行命令并对输出进行深度过滤"""
+    """执行命令并对输出进行终极过滤"""
     original_cwd = os.getcwd()
     output = ""
     try:
@@ -120,74 +109,64 @@ def run_command(cmd, cwd=None, capture_output=False):
             safe_print(f"[Working directory]: {cwd}")
 
         # 过滤命令中的控制字符后再打印
-        safe_print(f"[Executing command]: {deep_clean(cmd)}")
+        safe_print(f"[Executing command]: {ultra_clean(cmd)}")
         env = get_git_env()
 
-        # 构建环境变量命令
-        if os.name == "nt":
-            env_cmd = " && ".join(
-                [f"set {k}={v}" for k, v in env.items() if k not in os.environ]
-            )
-        else:
-            env_cmd = " ; ".join(
-                [f"export {k}={v}" for k, v in env.items() if k not in os.environ]
-            )
-
-        full_cmd = (
-            f"{env_cmd} && {cmd}"
-            if (env_cmd and os.name == "nt")
-            else f"{env_cmd} ; {cmd}" if (env_cmd and os.name != "nt") else cmd
-        )
-
-        # 捕获输出
         if capture_output:
-            with tempfile.NamedTemporaryFile(
-                mode="w+", delete=False, encoding="utf-8", newline=""
-            ) as f:
-                temp_file = f.name
-            full_cmd += f" > {safe_quote_path(temp_file)} 2>&1"
-            os.system(full_cmd)
-            # 读取时进行深度过滤
-            with open(
-                temp_file, "r", encoding="utf-8", errors="replace", newline=""
-            ) as f:
-                content = f.read()
-                output = deep_clean(content)
-            os.remove(temp_file)
-        else:
-            # 使用subprocess，修复bufsize警告
+            # 使用subprocess直接捕获输出
             process = subprocess.Popen(
-                full_cmd,
+                cmd,
                 shell=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 cwd=cwd,
                 env=env,
-                bufsize=0,  # 无缓冲，解决二进制模式下行缓冲警告
+                bufsize=1,
+                universal_newlines=True,
+                encoding="utf-8",
+                errors="replace",
             )
 
-            # 逐行读取并过滤输出
+            output_lines = []
             while True:
                 line = process.stdout.readline()
-                if not line:
+                if not line and process.poll() is not None:
                     break
-                # 处理不同编码
-                try:
-                    line_str = line.decode("utf-8", errors="replace")
-                except UnicodeDecodeError:
-                    line_str = line.decode("gbk", errors="replace")  # 兼容Windows
-                # 深度过滤
-                cleaned_line = deep_clean(line_str)
-                if cleaned_line.strip():
-                    print(cleaned_line, flush=True)
+                if line:
+                    cleaned_line = ultra_clean(line)
+                    if cleaned_line.strip():
+                        output_lines.append(cleaned_line)
 
-            process.wait()
-            if process.returncode != 0:
-                return False, f"Command failed with exit code {process.returncode}"
+            output = "\n".join(output_lines)
+            return process.returncode == 0, output
+        else:
+            # 对于实时输出，直接执行并过滤每一行
+            process = subprocess.Popen(
+                cmd,
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                cwd=cwd,
+                env=env,
+                bufsize=1,
+                universal_newlines=True,
+                encoding="utf-8",
+                errors="replace",
+            )
 
-        return True, output
+            while True:
+                line = process.stdout.readline()
+                if not line and process.poll() is not None:
+                    break
+                if line:
+                    cleaned_line = ultra_clean(line)
+                    if cleaned_line.strip():
+                        print(cleaned_line, flush=True)
+
+            return process.returncode == 0, ""
+
     except Exception as e:
-        err_msg = deep_clean(str(e))
+        err_msg = ultra_clean(str(e))
         safe_print(f"[Error] Command failed: {err_msg}")
         return False, err_msg
     finally:
@@ -195,6 +174,7 @@ def run_command(cmd, cwd=None, capture_output=False):
             os.chdir(original_cwd)
 
 
+# 以下函数保持不变，但将deep_clean替换为ultra_clean
 def get_git_submodule_paths(git_root):
     """获取子仓库路径"""
     if not git_root:
@@ -206,7 +186,7 @@ def get_git_submodule_paths(git_root):
 
     submodule_abs_paths = []
     for line in re.split(r"[\r\n]+", output):
-        line = deep_clean(line).strip()
+        line = ultra_clean(line).strip()
         if not line:
             continue
         parts = re.split(r"\s+", line, 2)
@@ -246,7 +226,7 @@ def get_git_submodule_modified(git_root):
 
     modified_submodules = []
     for line in re.split(r"[\r\n]+", output):
-        line = deep_clean(line).strip()
+        line = ultra_clean(line).strip()
         if not line:
             continue
         if line.startswith(("+", "-")):
@@ -364,7 +344,7 @@ def get_file_size(file_rel_path, git_root):
             return 0
         return os.path.getsize(file_abs)
     except OSError as e:
-        err_msg = deep_clean(str(e))
+        err_msg = ultra_clean(str(e))
         safe_print(f"[Warning]: Failed to get size of '{file_rel_path}' - {err_msg}")
         return 0
 
@@ -433,7 +413,7 @@ def commit_and_push(valid_normal, modified_submodules, commit_msg_file):
 
 def main():
     # 清理命令行参数中的控制字符
-    clean_args = [deep_clean(arg) for arg in sys.argv]
+    clean_args = [ultra_clean(arg) for arg in sys.argv]
     sys.argv = clean_args
 
     if len(sys.argv) < 2:
@@ -452,7 +432,7 @@ def main():
         sys.exit(1)
     try:
         with open(original_commit_file, "r", encoding="utf-8", errors="replace") as f:
-            lines = [deep_clean(line).replace("\r", "") for line in f.readlines()]
+            lines = [ultra_clean(line).replace("\r", "") for line in f.readlines()]
         with open(commit_msg_file, "w", encoding="utf-8") as f:
             for line in lines:
                 if line.strip().startswith("#") or not line.strip():
@@ -460,7 +440,7 @@ def main():
                 f.write(f"{line.strip()}\n")
                 push_allow = True
     except Exception as e:
-        safe_print(f"[Error]: Process commit file failed - {deep_clean(str(e))}")
+        safe_print(f"[Error]: Process commit file failed - {ultra_clean(str(e))}")
         if os.path.exists(commit_msg_file):
             os.remove(commit_msg_file)
         sys.exit(1)
@@ -500,11 +480,11 @@ def main():
     if result:
         final_msg = "[Complete]: All content committed and pushed successfully!"
         # 对最终消息进行额外过滤
-        final_msg = deep_clean(final_msg)
+        final_msg = ultra_clean(final_msg)
         print(final_msg, flush=True)
     else:
         final_msg = "[Error]: Commit & Push failed"
-        print(deep_clean(final_msg), flush=True)
+        print(ultra_clean(final_msg), flush=True)
         sys.exit(1)
 
 
