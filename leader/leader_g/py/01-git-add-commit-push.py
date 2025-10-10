@@ -3,8 +3,9 @@ import sys
 import time
 import tempfile
 import re
-import subprocess  # 引入subprocess模块解决兼容性问题
+import subprocess
 
+# 确保标准输出/错误使用UTF-8编码
 sys.stdout.reconfigure(encoding="utf-8", line_buffering=True)
 sys.stderr.reconfigure(encoding="utf-8", line_buffering=True)
 
@@ -16,28 +17,34 @@ cur_working_directory = ""
 
 
 def strip_control_chars(text):
-    """终极版控制字符过滤，覆盖所有观察到的序列"""
+    """终极版控制字符过滤器，专门针对观察到的所有终端控制序列"""
     if not isinstance(text, str):
         return text
 
-    # 1. 处理所有VT100控制序列
-    # 匹配ESC[开头的各种控制序列，包括私有模式如[?9001h
-    text = re.sub(r"\x1B\[\??(?:\d+;?)+[a-zA-Z]", "", text)
+    # 1. 处理所有私有模式控制序列 (最常见的问题序列)
+    # 匹配如[?9001h、[?1004l这类序列
+    text = re.sub(r"\x1B\[\?\d+[hl]", "", text)
 
-    # 2. 处理OSC序列（操作系y统命令）如]0;...
-    text = re.sub(r"\x1B\][^\x07]*\x07", "", text)
+    # 2. 处理光标和屏幕控制序列
+    # 匹配如[2J(清屏)、[H(光标归位)、[?25l(隐藏光标)、[?25h(显示光标)
+    text = re.sub(r"\x1B\[\d+[JK]", "", text)
+    text = re.sub(r"\x1B\[\?25[lh]", "", text)
+    text = re.sub(r"\x1B\[H", "", text)
 
-    # 3. 处理其他ESC相关序列
-    text = re.sub(r"\x1B[()#;?]*(?:\d{1,4}(?:;\d{0,4})*)?[a-zA-Z<>]", "", text)
+    # 3. 处理SGR(选择图形再现)序列，如[m(重置)
+    text = re.sub(r"\x1B\[[\d;]*m", "", text)
 
-    # 4. 处理单独的控制字符（ASCII 0-31, 127和扩展控制字符）
+    # 4. 处理OSC(操作系统命令)序列，如]0;...(设置窗口标题)
+    text = re.sub(r"\x1B\]0;[^\x07]*\x07", "", text)
+
+    # 5. 处理所有其他ESC开头的控制序列
+    text = re.sub(r"\x1B[^\x40-\x7E]*[\x40-\x7E]", "", text)
+
+    # 6. 移除所有ASCII控制字符(0-31, 127)和扩展控制字符(128-159)
     text = re.sub(r"[\x00-\x1F\x7F\x80-\x9F]", "", text)
 
-    # 5. 处理可能的残留ESC字符
-    text = text.replace("\x1b", "")
-
-    # 6. 清理空白行
-    text = re.sub(r"\n\s*\n", "\n", text)
+    # 7. 清理可能的空行
+    text = re.sub(r"\n\s*\n", "\n", text).strip()
 
     return text
 
@@ -50,10 +57,13 @@ def safe_quote_path(path):
 
 
 def safe_print(text):
-    """安全打印（确保所有输出都经过过滤）"""
+    """安全打印，确保所有输出经过多层过滤"""
     try:
-        cleaned_text = strip_control_chars(text)
-        if cleaned_text.strip():  # 只打印非空内容
+        # 双重过滤确保安全
+        cleaned_text = strip_control_chars(str(text))
+        # 再次过滤以防万一
+        cleaned_text = strip_control_chars(cleaned_text)
+        if cleaned_text.strip():
             print(cleaned_text, flush=True)
     except Exception as e:
         error_text = f"[Error in safe_print]: {str(e)}"
@@ -73,7 +83,7 @@ def get_git_env():
 
 
 def run_command(cmd, cwd=None, capture_output=False):
-    """执行命令（使用subprocess解决兼容性问题）"""
+    """执行命令并全面过滤输出"""
     global cur_working_directory
     original_cwd = os.getcwd()
     output = ""
@@ -119,7 +129,7 @@ def run_command(cmd, cwd=None, capture_output=False):
                 output = strip_control_chars(f.read())
             os.remove(temp_file)
         else:
-            # 使用subprocess替代os.popen解决encoding参数问题
+            # 使用subprocess确保兼容性
             process = subprocess.Popen(
                 full_cmd,
                 shell=True,
@@ -127,6 +137,7 @@ def run_command(cmd, cwd=None, capture_output=False):
                 stderr=subprocess.STDOUT,
                 cwd=cwd,
                 env=env,
+                bufsize=1,
             )
 
             # 逐行读取并过滤输出
@@ -134,18 +145,17 @@ def run_command(cmd, cwd=None, capture_output=False):
                 line = process.stdout.readline()
                 if not line:
                     break
-                # 手动解码，兼容不支持encoding参数的Python版本
+                # 处理不同编码
                 try:
                     line_str = line.decode("utf-8", errors="replace")
                 except UnicodeDecodeError:
-                    line_str = line.decode(
-                        "gbk", errors="replace"
-                    )  # 兼容Windows默认编码
+                    line_str = line.decode("gbk", errors="replace")  # 兼容Windows
+                # 双重过滤
                 cleaned_line = strip_control_chars(line_str)
+                cleaned_line = strip_control_chars(cleaned_line)
                 if cleaned_line.strip():
                     print(cleaned_line, flush=True)
 
-            # 等待进程结束并获取返回码
             process.wait()
             if process.returncode != 0:
                 return False, f"Command failed with exit code {process.returncode}"
@@ -171,12 +181,10 @@ def get_git_submodule_paths(git_root):
         return []
 
     submodule_abs_paths = []
-    # 强制按换行符分割（兼容\n和\r\n）
     for line in re.split(r"[\r\n]+", output):
         line = line.strip()
         if not line:
             continue
-        # 提取路径（最多分割2次，保留路径中的空格）
         parts = re.split(r"\s+", line, 2)
         if len(parts) >= 2:
             sm_rel_path = parts[1]
@@ -231,7 +239,6 @@ def handle_git_submodule(submodule_rel_path, git_root):
     sm_abs = os.path.abspath(os.path.join(git_root, submodule_rel_path))
     sm_quoted = safe_quote_path(sm_abs)
 
-    # 初始化子仓库
     cmd_init = f"git submodule update --init {sm_quoted}"
     safe_print(f"[Submodule] Initializing: {submodule_rel_path}")
     success, _ = run_command(cmd_init, cwd=git_root)
@@ -239,7 +246,6 @@ def handle_git_submodule(submodule_rel_path, git_root):
         safe_print(f"[Error] Failed to initialize submodule: {submodule_rel_path}")
         return False
 
-    # 暂存子仓库
     cmd_add = f"git add {sm_quoted}"
     safe_print(f"[Submodule] Staging: {submodule_rel_path}")
     success, _ = run_command(cmd_add, cwd=git_root)
@@ -250,16 +256,14 @@ def handle_git_submodule(submodule_rel_path, git_root):
 
 
 def get_uncommitted_files():
-    """获取未提交文件（强制按行分割路径，逐个验证）"""
+    """获取未提交文件"""
     git_root = find_git_root()
     if not git_root:
         safe_print("[Error]: Could not find Git repository root")
         return [], [], []
 
-    # 1. 获取子仓库路径
     submodule_abs_paths = get_git_submodule_paths(git_root)
 
-    # 2. 获取普通文件修改（强制按换行符分割）
     cmd_modified = "git diff --name-only --diff-filter=ADM"
     success, modified_output = run_command(
         cmd_modified, cwd=git_root, capture_output=True
@@ -269,7 +273,6 @@ def get_uncommitted_files():
         cmd_untracked, cwd=git_root, capture_output=True
     )
 
-    # 关键修复：强制按换行符分割（无论\n还是\r\n）
     all_modified = [
         f.strip() for f in re.split(r"[\r\n]+", modified_output) if f.strip()
     ]
@@ -277,7 +280,6 @@ def get_uncommitted_files():
         f.strip() for f in re.split(r"[\r\n]+", untracked_output) if f.strip()
     ]
 
-    # 过滤子仓库文件
     filtered_modified = filter_out_submodules(
         all_modified, submodule_abs_paths, git_root
     )
@@ -285,7 +287,6 @@ def get_uncommitted_files():
         all_untracked, submodule_abs_paths, git_root
     )
 
-    # 3. 逐个验证文件有效性
     valid_normal = []
     invalid_normal = []
     for file_list in [filtered_modified, filtered_untracked]:
@@ -298,10 +299,8 @@ def get_uncommitted_files():
             else:
                 invalid_normal.append(f)
 
-    # 4. 获取修改的子仓库
     modified_submodules = get_git_submodule_modified(git_root)
 
-    # 打印调试信息
     safe_print(f"[Debug]: Found {len(valid_normal)} valid normal files")
     safe_print(f"[Debug]: Found {len(modified_submodules)} modified submodules")
     if invalid_normal:
@@ -313,7 +312,7 @@ def get_uncommitted_files():
 
 
 def is_file_deleted_by_git(file_rel_path, git_root):
-    """逐个判断文件是否被删除"""
+    """判断文件是否被删除"""
     if not git_root or not file_rel_path:
         return False
     quoted_path = safe_quote_path(file_rel_path)
@@ -324,14 +323,14 @@ def is_file_deleted_by_git(file_rel_path, git_root):
 
 
 def get_file_size(file_rel_path, git_root):
-    """获取文件大小（逐个处理）"""
+    """获取文件大小"""
     if not git_root or not file_rel_path:
         return 0
     submodule_abs_paths = get_git_submodule_paths(git_root)
     file_abs = os.path.abspath(os.path.join(git_root, file_rel_path))
     for sm_abs in submodule_abs_paths:
         if os.path.commonprefix([file_abs, sm_abs]) == sm_abs:
-            return 0  # 子仓库文件不计算大小
+            return 0
 
     try:
         if is_file_deleted_by_git(file_rel_path, git_root):
@@ -366,7 +365,6 @@ def commit_and_push(valid_normal, modified_submodules, commit_msg_file):
         safe_print("[Error]: Could not find Git repository root")
         return False
 
-    # 1. 暂存普通文件
     if valid_normal:
         safe_print(f"[Info]: Staging {len(valid_normal)} normal files...")
         files_quoted = [
@@ -378,14 +376,12 @@ def commit_and_push(valid_normal, modified_submodules, commit_msg_file):
             safe_print("[Error]: Failed to stage normal files")
             return False
 
-    # 2. 处理子仓库
     if modified_submodules:
         safe_print(f"[Info]: Handling {len(modified_submodules)} submodules...")
         for sm_rel in modified_submodules:
             if not handle_git_submodule(sm_rel, git_root):
                 return False
 
-    # 3. 提交
     commit_msg_abs = os.path.abspath(commit_msg_file)
     cmd_commit = f"git commit -F {safe_quote_path(commit_msg_abs)}"
     safe_print("[Info]: Committing changes...")
@@ -394,7 +390,6 @@ def commit_and_push(valid_normal, modified_submodules, commit_msg_file):
         safe_print("[Error]: Failed to commit changes")
         return False
 
-    # 4. 推送
     total = len(valid_normal) + len(modified_submodules)
     safe_print(f"[Success]: Committed {total} items (files + submodules)")
     for retry in range(MAX_RETRIES):
@@ -419,13 +414,11 @@ def main():
         )
         sys.exit(1)
 
-    # 初始化
     git_root = find_git_root()
     original_commit_file = os.path.abspath(sys.argv[1].replace("\r", ""))
     commit_msg_file = f"{original_commit_file}.tmp"
     push_allow = False
 
-    # 1. 处理提交信息
     if not os.path.exists(original_commit_file):
         safe_print(f"[Error]: Commit file not found: '{original_commit_file}'")
         sys.exit(1)
@@ -452,9 +445,7 @@ def main():
         os.remove(commit_msg_file)
         sys.exit(1)
 
-    # 2. 获取可提交内容
     valid_normal, _, modified_submodules = get_uncommitted_files()
-    # 过滤超大文件
     filtered_normal = []
     for f in valid_normal:
         file_size = get_file_size(f, git_root)
@@ -465,7 +456,6 @@ def main():
             continue
         filtered_normal.append(f)
 
-    # 3. 检查是否有内容可提交
     total = len(filtered_normal) + len(modified_submodules)
     if total == 0:
         safe_print("[Info]: No valid content to commit. Exiting.")
@@ -475,13 +465,11 @@ def main():
         f"[Info]: To commit: {len(filtered_normal)} files + {len(modified_submodules)} submodules"
     )
 
-    # 4. 提交并推送
     if not commit_and_push(filtered_normal, modified_submodules, commit_msg_file):
         safe_print("[Error]: Commit & Push failed")
         os.remove(commit_msg_file)
         sys.exit(1)
 
-    # 5. 清理临时文件
     os.remove(commit_msg_file)
     safe_print("[Complete]: All content committed and pushed successfully!")
 
