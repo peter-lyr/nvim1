@@ -2,6 +2,7 @@ import os
 import sys
 import time
 import tempfile
+import re  # 新增：用于匹配控制序列
 
 sys.stdout.reconfigure(encoding="utf-8", line_buffering=True)
 sys.stderr.reconfigure(encoding="utf-8", line_buffering=True)
@@ -13,12 +14,35 @@ MAX_RETRIES = 5
 cur_working_directory = ""
 
 
+def strip_control_chars(text):
+    """核心：过滤所有终端控制序列和特殊字符
+    覆盖场景：
+    - ANSI 转义码（如 ^[[?25h、^[[2J、^[[m）
+    - ASCII 控制字符（如 ^G（BEL）、^H（退格）等）
+    - 终端标题序列（如 ^[]0;...^G）
+    """
+    if not isinstance(text, str):
+        return text
+    # 1. 过滤 ANSI 转义序列（以 ESC 开头，常见格式）
+    # 匹配 ^[[...m（颜色/格式）、^[[...h/l（光标）、^[[...J（清屏）、^[[...H（光标位置）
+    text = re.sub(r"\x1B\[[0-9;?]*[mKhlHJ]", "", text)
+    # 2. 过滤终端标题序列（^[]0;内容^G）
+    text = re.sub(r"\x1B\]0;.*?\x07", "", text)
+    # 3. 过滤单个 ASCII 控制字符（0-31 及 127 号字符，除了换行\n、回车\r、制表符\t）
+    text = re.sub(r"[\x00-\x06\x08-\x1F\x7F]", "", text)
+    return text
+
+
 def safe_print(text):
+    """打印前先过滤控制字符"""
     try:
-        print(text, flush=True)
+        # 新增：打印前过滤控制字符
+        cleaned_text = strip_control_chars(text)
+        print(cleaned_text, flush=True)
     except:
         text_encoded = text.encode("utf-8", errors="replace").decode("utf-8")
-        print(text_encoded, flush=True)
+        cleaned_text = strip_control_chars(text_encoded)
+        print(cleaned_text, flush=True)
 
 
 def get_git_env():
@@ -41,6 +65,7 @@ def run_command(cmd, cwd=None):
             if cur_working_directory != cwd:
                 cur_working_directory = cwd
                 safe_print(f"[Working directory]: {cwd}")
+        # 打印命令时无需过滤（cmd本身无控制字符）
         safe_print(f"[Executing command]: {cmd}")
         env = get_git_env()
         if os.name == "nt":
@@ -59,7 +84,8 @@ def run_command(cmd, cwd=None):
         exit_code = os.system(full_cmd)
         return exit_code == 0
     except Exception as e:
-        safe_print(f"[Error] Command execution failed: {str(e)}")
+        # 异常信息也需过滤
+        safe_print(f"[Error] Command execution failed: {strip_control_chars(str(e))}")
         return False
     finally:
         if cwd:
@@ -68,11 +94,16 @@ def run_command(cmd, cwd=None):
 
 def get_uncommitted_files():
     """获取未提交文件（含删除文件！），清理路径中的\r字符"""
-    modified_output = get_command_output("git diff --name-only --diff-filter=ADM")
+    # 命令输出先过滤控制字符，再处理路径
+    modified_output = strip_control_chars(
+        get_command_output("git diff --name-only --diff-filter=ADM")
+    )
     modified_files = [
         f.strip().replace("\r", "") for f in modified_output.splitlines() if f.strip()
     ]
-    untracked_output = get_command_output("git ls-files --others --exclude-standard")
+    untracked_output = strip_control_chars(
+        get_command_output("git ls-files --others --exclude-standard")
+    )
     untracked_files = [
         f.strip().replace("\r", "") for f in untracked_output.splitlines() if f.strip()
     ]
@@ -100,12 +131,13 @@ def get_uncommitted_files():
 def is_file_deleted_by_git(file_path):
     """判断文件是否被Git标记为删除（解决删除文件无法检测的问题）"""
     command = f'git diff --name-only --diff-filter=D -- "{file_path}"'
-    output = get_command_output(command)
+    # 输出过滤控制字符后再比较
+    output = strip_control_chars(get_command_output(command))
     return output.strip() == file_path.strip()
 
 
 def get_command_output(command):
-    """获取Git命令输出，清理\r字符，避免^M残留"""
+    """获取Git命令输出，清理\r字符和控制字符，避免^M/^G残留"""
     env = get_git_env()
     with tempfile.NamedTemporaryFile(
         mode="w+", delete=False, encoding="utf-8", newline="\n"
@@ -135,7 +167,9 @@ def get_command_output(command):
     output = ""
     try:
         with open(temp_file, "r", encoding="utf-8", newline="") as f:
-            output = f.read().replace("\r", "")
+            output = f.read()
+        # 先过滤控制字符，再清理\r
+        output = strip_control_chars(output).replace("\r", "")
     finally:
         os.remove(temp_file)
     return output
@@ -153,7 +187,10 @@ def get_file_size(file_path):
             return 0
         return os.path.getsize(file_abspath)
     except OSError as e:
-        safe_print(f"[Warning]: Failed to get size of file '{file_path}' - {str(e)}")
+        # 异常信息过滤控制字符
+        safe_print(
+            f"[Warning]: Failed to get size of file '{file_path}' - {strip_control_chars(str(e))}"
+        )
         return 0
 
 
@@ -186,7 +223,9 @@ def commit_and_push(files, commit_msg_file):
         ]
         files_quoted = [f'"{f}"' for f in files_relative]
     except ValueError as e:
-        safe_print(f"[Error]: Failed to calculate relative paths: {e}")
+        safe_print(
+            f"[Error]: Failed to calculate relative paths: {strip_control_chars(str(e))}"
+        )
         return False
     add_cmd = f"git add {' '.join(files_quoted)}"
     if not run_command(add_cmd, cwd=git_root):
@@ -239,7 +278,9 @@ def main():
                 f.write(f"{line_stripped}\n")
                 push_allow = True
     except Exception as e:
-        safe_print(f"[Error]: Failed to process commit message file - {str(e)}")
+        safe_print(
+            f"[Error]: Failed to process commit message file - {strip_control_chars(str(e))}"
+        )
         if os.path.exists(commit_msg_file):
             os.remove(commit_msg_file)
         sys.exit(1)
@@ -261,7 +302,7 @@ def main():
         file_size = get_file_size(file)
         if file_size > MAX_SINGLE_FILE_SIZE:
             safe_print(
-                f"[Warning]: File exceeds 500MB (skipped): '{file}' ({file_size/1024/1024:.2f}MB)"
+                f"[Warning]: File exceeds 100MB (skipped): '{file}' ({file_size/1024/1024:.2f}MB)"
             )
             continue
         all_files.append((file, file_size))
