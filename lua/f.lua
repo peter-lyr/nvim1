@@ -729,6 +729,7 @@ function F.async_run(cmd, opts)
 	if timer then
 		timer:start(interval, interval, vim.schedule_wrap(process_cache))
 	end
+	vim.notify(cmd, vim.log.levels.INFO, { title = "[" .. title .. "]" })
 	vim.g.job_id = vim.fn.jobstart(cmd, {
 		pty = use_pty,
 		stdout_buffered = false,
