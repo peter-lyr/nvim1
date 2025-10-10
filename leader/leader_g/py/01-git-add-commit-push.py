@@ -14,6 +14,10 @@ MAX_RETRIES = 5
 CUR_WORKING_DIR = ""
 SPLIT_FILE_EXTENSION = ".split_part_"
 
+# 全局缓存，避免重复查询
+_git_submodule_cache = None
+_git_deleted_files_cache = None
+
 
 class FilteredStream:
     def __init__(self, original_stream):
@@ -120,11 +124,16 @@ def run_command(cmd, cwd=None, capture_output=False):
 
 
 def get_git_submodule_paths(git_root):
+    global _git_submodule_cache
+    if _git_submodule_cache is not None:
+        return _git_submodule_cache
+
     if not git_root:
         return []
     cmd = "git submodule status --recursive"
     success, output = run_command(cmd, cwd=git_root, capture_output=True)
     if not success or not output:
+        _git_submodule_cache = []
         return []
     submodule_abs_paths = []
     for line in re.split(r"[\r\n]+", output):
@@ -136,6 +145,7 @@ def get_git_submodule_paths(git_root):
             sm_rel_path = parts[1]
             sm_abs_path = os.path.abspath(os.path.join(git_root, sm_rel_path))
             submodule_abs_paths.append(sm_abs_path)
+    _git_submodule_cache = submodule_abs_paths
     return submodule_abs_paths
 
 
@@ -194,12 +204,38 @@ def handle_git_submodule(submodule_rel_path, git_root):
     return True
 
 
+def get_deleted_files(git_root):
+    """一次性获取所有被删除的文件"""
+    global _git_deleted_files_cache
+    if _git_deleted_files_cache is not None:
+        return _git_deleted_files_cache
+
+    cmd = "git diff --name-only --diff-filter=D"
+    success, output = run_command(cmd, cwd=git_root, capture_output=True)
+    if not success:
+        _git_deleted_files_cache = set()
+        return set()
+
+    deleted_files = {f.strip() for f in re.split(r"[\r\n]+", output) if f.strip()}
+    _git_deleted_files_cache = deleted_files
+    return deleted_files
+
+
 def get_uncommitted_files():
+    global _git_submodule_cache, _git_deleted_files_cache
+    # 清空缓存
+    _git_submodule_cache = None
+    _git_deleted_files_cache = None
+
     git_root = find_git_root()
     if not git_root:
         print("[Error]: Could not find Git repository root")
         return [], [], []
+
+    # 一次性获取所有必要信息
     submodule_abs_paths = get_git_submodule_paths(git_root)
+    deleted_files = get_deleted_files(git_root)
+
     cmd_modified = "git diff --name-only --diff-filter=ADM"
     success, modified_output = run_command(
         cmd_modified, cwd=git_root, capture_output=True
@@ -227,7 +263,8 @@ def get_uncommitted_files():
             if not f:
                 continue
             f_abs = os.path.abspath(os.path.join(git_root, f))
-            if os.path.exists(f_abs) or is_file_deleted_by_git(f, git_root):
+            # 使用缓存的删除文件列表，不再单独查询每个文件
+            if os.path.exists(f_abs) or f in deleted_files:
                 valid_normal.append(f)
             else:
                 invalid_normal.append(f)
@@ -242,12 +279,8 @@ def get_uncommitted_files():
 
 
 def is_file_deleted_by_git(file_rel_path, git_root):
-    if not git_root or not file_rel_path:
-        return False
-    quoted_path = safe_quote_path(file_rel_path)
-    cmd = f"git diff --name-only --diff-filter=D -- {quoted_path}"
-    success, output = run_command(cmd, cwd=git_root, capture_output=True)
-    deleted_files = [f.strip() for f in re.split(r"[\r\n]+", output) if f.strip()]
+    """使用缓存的删除文件列表"""
+    deleted_files = get_deleted_files(git_root)
     return file_rel_path in deleted_files
 
 
@@ -260,7 +293,9 @@ def get_file_size(file_rel_path, git_root):
         if os.path.commonprefix([file_abs, sm_abs]) == sm_abs:
             return 0
     try:
-        if is_file_deleted_by_git(file_rel_path, git_root):
+        # 使用缓存的删除文件列表
+        deleted_files = get_deleted_files(git_root)
+        if file_rel_path in deleted_files:
             return 0
         if not os.path.exists(file_abs):
             print(f"[Warning]: File not found: {file_rel_path}")
