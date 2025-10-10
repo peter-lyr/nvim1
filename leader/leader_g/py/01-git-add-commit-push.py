@@ -12,11 +12,13 @@ class FilteredStream:
         self.original_stream = original_stream
 
     def write(self, text):
-        if text.strip():  # 只处理非空文本
+        if text and text.strip():
             cleaned_text = ultra_clean(text)
             if cleaned_text.strip():
-                self.original_stream.write(cleaned_text + "\n")
-                self.original_stream.flush()
+                # 检查是否是整行控制字符，如果是则跳过
+                if not re.match(r"^[\x00-\x1F\x7F\x1b]*$", text):
+                    self.original_stream.write(cleaned_text + "\n")
+                    self.original_stream.flush()
 
     def flush(self):
         self.original_stream.flush()
@@ -32,46 +34,33 @@ MAX_RETRIES = 5
 
 
 def ultra_clean(text):
-    """终极清理函数 - 使用简单直接的方法"""
+    """终极清理函数 - 确保彻底清除所有控制字符"""
     if not isinstance(text, str):
         text = str(text)
 
-    # 首先移除所有控制字符（除了换行和制表符）
+    # 首先处理窗口标题序列：ESC ] 0 ; ... BEL
+    # 这个序列可能跨越多行，所以需要特别处理
+    text = re.sub(r"\x1b\]0;[^\x07]*\x07", "", text)
+
+    # 处理其他 OSC 序列 (Operating System Command)
+    text = re.sub(r"\x1b\][^\x1b]*(\x1b\\|\x07)", "", text)
+
+    # 处理 CSI 序列 (Control Sequence Introducer)
+    text = re.sub(r"\x1b\[[0-9;]*[a-zA-Z]", "", text)
+
+    # 处理私有模式序列
+    text = re.sub(r"\x1b\[\?[0-9;]*[hl]", "", text)
+
+    # 处理其他 ESC 序列
+    text = re.sub(r"\x1b[<=>]", "", text)
+
+    # 移除所有控制字符（除了换行和制表符）
     cleaned = ""
     for char in text:
-        if char == "\n" or char == "\t" or (ord(char) >= 32 and ord(char) != 127):
+        # 保留：\t (0x09), \n (0x0A), \r (0x0D)
+        # 移除：其他所有控制字符 (0x00-0x08, 0x0B-0x0C, 0x0E-0x1F, 0x7F)
+        if char in ["\t", "\n", "\r"] or (ord(char) >= 32 and ord(char) != 127):
             cleaned += char
-
-    # 然后处理ANSI转义序列
-    # 使用正则表达式匹配所有ANSI转义序列
-    ansi_escape = re.compile(
-        r"""
-        \x1B  # ESC
-        (?:   # 开始非捕获组
-            [@-Z\\-_]    # 所有有效的ESC序列字符
-        |     # 或
-            \[           # CSI序列
-            [0-?]*       # 参数字节
-            [ -/]*       # 中间字节  
-            [@-~]        # 最终字节
-        )
-    """,
-        re.VERBOSE,
-    )
-
-    cleaned = ansi_escape.sub("", cleaned)
-
-    # 特别处理一些顽固的序列
-    stubborn_patterns = [
-        r"\x1b\[\?[\d;]*[hl]",  # 私有模式序列
-        r"\x1b\]0;[^\x07]*\x07",  # 窗口标题
-    ]
-
-    for pattern in stubborn_patterns:
-        cleaned = re.sub(pattern, "", cleaned)
-
-    # 最后移除所有剩余的ESC字符
-    cleaned = cleaned.replace("\x1b", "")
 
     # 清理空白
     cleaned = re.sub(r"\s+", " ", cleaned).strip()
@@ -85,9 +74,6 @@ def safe_quote_path(path):
     if re.search(r'[\s，,()"]', path):
         return f'"{path.replace('"', '\\"')}"'
     return path
-
-
-# 移除原来的 safe_print 函数，因为我们已经重定向了所有输出
 
 
 def get_git_env():
@@ -106,6 +92,8 @@ def get_git_env():
     # 添加更多禁用控制序列的环境变量
     env["ANSICON"] = "0"
     env["ConEmuANSI"] = "OFF"
+    # 禁用 Windows 控制台虚拟终端序列
+    env["ENABLE_VIRTUAL_TERMINAL_PROCESSING"] = "0"
     return env
 
 
@@ -181,7 +169,7 @@ def run_command(cmd, cwd=None, capture_output=False):
             os.chdir(original_cwd)
 
 
-# 其他函数保持不变，但移除所有 ultra_clean 调用，因为 FilteredStream 会自动处理
+# 其他函数保持不变...
 
 
 def get_git_submodule_paths(git_root):
