@@ -3,6 +3,7 @@ import sys
 import time
 import tempfile
 import re
+import subprocess  # 引入subprocess模块解决兼容性问题
 
 sys.stdout.reconfigure(encoding="utf-8", line_buffering=True)
 sys.stderr.reconfigure(encoding="utf-8", line_buffering=True)
@@ -15,13 +16,29 @@ cur_working_directory = ""
 
 
 def strip_control_chars(text):
-    """过滤控制字符，保留中文特殊字符和换行符"""
+    """终极版控制字符过滤，覆盖所有观察到的序列"""
     if not isinstance(text, str):
         return text
-    # 仅过滤ANSI控制序列和ASCII不可见字符，保留换行符和中文符号
-    text = re.sub(r"\x1B\[[0-9;?]*[mKhlHJ]", "", text)  # ANSI控制序列
-    text = re.sub(r"\x1B\]0;.*?\x07", "", text)  # 终端标题序列
-    text = re.sub(r"[^\x20-\x7E\xA0-\xFF\n\r]", "", text)  # 保留可见字符和换行
+
+    # 1. 处理所有VT100控制序列
+    # 匹配ESC[开头的各种控制序列，包括私有模式如[?9001h
+    text = re.sub(r"\x1B\[\??(?:\d+;?)+[a-zA-Z]", "", text)
+
+    # 2. 处理OSC序列（操作系y统命令）如]0;...
+    text = re.sub(r"\x1B\][^\x07]*\x07", "", text)
+
+    # 3. 处理其他ESC相关序列
+    text = re.sub(r"\x1B[()#;?]*(?:\d{1,4}(?:;\d{0,4})*)?[a-zA-Z<>]", "", text)
+
+    # 4. 处理单独的控制字符（ASCII 0-31, 127和扩展控制字符）
+    text = re.sub(r"[\x00-\x1F\x7F\x80-\x9F]", "", text)
+
+    # 5. 处理可能的残留ESC字符
+    text = text.replace("\x1b", "")
+
+    # 6. 清理空白行
+    text = re.sub(r"\n\s*\n", "\n", text)
+
     return text
 
 
@@ -33,14 +50,15 @@ def safe_quote_path(path):
 
 
 def safe_print(text):
-    """安全打印（支持中文）"""
+    """安全打印（确保所有输出都经过过滤）"""
     try:
         cleaned_text = strip_control_chars(text)
-        print(cleaned_text, flush=True)
-    except:
-        text_encoded = text.encode("utf-8", errors="replace").decode("utf-8")
-        cleaned_text = strip_control_chars(text_encoded)
-        print(cleaned_text, flush=True)
+        if cleaned_text.strip():  # 只打印非空内容
+            print(cleaned_text, flush=True)
+    except Exception as e:
+        error_text = f"[Error in safe_print]: {str(e)}"
+        cleaned_error = strip_control_chars(error_text)
+        print(cleaned_error, flush=True)
 
 
 def get_git_env():
@@ -55,7 +73,7 @@ def get_git_env():
 
 
 def run_command(cmd, cwd=None, capture_output=False):
-    """执行命令（确保输出正确捕获换行符）"""
+    """执行命令（使用subprocess解决兼容性问题）"""
     global cur_working_directory
     original_cwd = os.getcwd()
     output = ""
@@ -65,7 +83,9 @@ def run_command(cmd, cwd=None, capture_output=False):
             if cur_working_directory != cwd:
                 cur_working_directory = cwd
                 safe_print(f"[Working directory]: {cwd}")
-        safe_print(f"[Executing command]: {cmd}")
+
+        # 过滤命令中的控制字符后再打印
+        safe_print(f"[Executing command]: {strip_control_chars(cmd)}")
         env = get_git_env()
 
         # 构建环境变量命令
@@ -84,7 +104,7 @@ def run_command(cmd, cwd=None, capture_output=False):
             else f"{env_cmd} ; {cmd}" if (env_cmd and os.name != "nt") else cmd
         )
 
-        # 捕获输出（强制保留原始换行符）
+        # 捕获输出
         if capture_output:
             with tempfile.NamedTemporaryFile(
                 mode="w+", delete=False, encoding="utf-8", newline=""
@@ -92,14 +112,44 @@ def run_command(cmd, cwd=None, capture_output=False):
                 temp_file = f.name
             full_cmd += f" > {safe_quote_path(temp_file)} 2>&1"
             os.system(full_cmd)
-            # 读取时保留原始换行符，避免自动转换
+            # 读取时过滤所有控制字符
             with open(
                 temp_file, "r", encoding="utf-8", errors="replace", newline=""
             ) as f:
                 output = strip_control_chars(f.read())
             os.remove(temp_file)
         else:
-            os.system(full_cmd)
+            # 使用subprocess替代os.popen解决encoding参数问题
+            process = subprocess.Popen(
+                full_cmd,
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                cwd=cwd,
+                env=env,
+            )
+
+            # 逐行读取并过滤输出
+            while True:
+                line = process.stdout.readline()
+                if not line:
+                    break
+                # 手动解码，兼容不支持encoding参数的Python版本
+                try:
+                    line_str = line.decode("utf-8", errors="replace")
+                except UnicodeDecodeError:
+                    line_str = line.decode(
+                        "gbk", errors="replace"
+                    )  # 兼容Windows默认编码
+                cleaned_line = strip_control_chars(line_str)
+                if cleaned_line.strip():
+                    print(cleaned_line, flush=True)
+
+            # 等待进程结束并获取返回码
+            process.wait()
+            if process.returncode != 0:
+                return False, f"Command failed with exit code {process.returncode}"
+
         return True, output
     except Exception as e:
         err_msg = strip_control_chars(str(e))
@@ -110,6 +160,7 @@ def run_command(cmd, cwd=None, capture_output=False):
             os.chdir(original_cwd)
 
 
+# 以下函数保持不变
 def get_git_submodule_paths(git_root):
     """获取子仓库路径（按行严格分割）"""
     if not git_root:
@@ -218,7 +269,7 @@ def get_uncommitted_files():
         cmd_untracked, cwd=git_root, capture_output=True
     )
 
-    # 关键修复：强制按换行符分割（无论\n还是\r\n），确保每个路径单独存在
+    # 关键修复：强制按换行符分割（无论\n还是\r\n）
     all_modified = [
         f.strip() for f in re.split(r"[\r\n]+", modified_output) if f.strip()
     ]
@@ -234,17 +285,14 @@ def get_uncommitted_files():
         all_untracked, submodule_abs_paths, git_root
     )
 
-    # 3. 逐个验证文件有效性（修复批量验证错误）
+    # 3. 逐个验证文件有效性
     valid_normal = []
     invalid_normal = []
-    # 逐个处理每个文件，而不是批量处理
     for file_list in [filtered_modified, filtered_untracked]:
         for f in file_list:
-            # 跳过空路径
             if not f:
                 continue
             f_abs = os.path.abspath(os.path.join(git_root, f))
-            # 检查文件是否存在或被Git删除
             if os.path.exists(f_abs) or is_file_deleted_by_git(f, git_root):
                 valid_normal.append(f)
             else:
@@ -271,7 +319,6 @@ def is_file_deleted_by_git(file_rel_path, git_root):
     quoted_path = safe_quote_path(file_rel_path)
     cmd = f"git diff --name-only --diff-filter=D -- {quoted_path}"
     success, output = run_command(cmd, cwd=git_root, capture_output=True)
-    # 验证输出是否包含当前文件路径（处理可能的换行）
     deleted_files = [f.strip() for f in re.split(r"[\r\n]+", output) if f.strip()]
     return file_rel_path in deleted_files
 
