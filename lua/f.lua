@@ -665,6 +665,9 @@ function F.async_run(cmd, opts)
 	local output_file = opts.output_file or StdOutTxt
 	local fd = nil
 	local dir
+	-- 记录命令开始时间
+	local start_time = vim.loop.hrtime()
+
 	if output_file then
 		dir = vim.fn.fnamemodify(output_file, ":h")
 		if not vim.fn.isdirectory(dir) then
@@ -772,6 +775,11 @@ function F.async_run(cmd, opts)
 			end
 		end,
 		on_exit = function(_, exit_code, signal)
+			-- 计算命令运行时间
+			local end_time = vim.loop.hrtime()
+			local duration_ms = (end_time - start_time) / 1e6 -- 转换为毫秒
+			local duration_sec = duration_ms / 1000 -- 转换为秒
+
 			process_cache()
 			if fd then
 				vim.loop.fs_close(fd)
@@ -781,6 +789,11 @@ function F.async_run(cmd, opts)
 				timer:close()
 				timer = nil
 			end
+
+			-- 显示运行时长通知
+			local time_message = string.format("Command completed in %.2f seconds", duration_sec)
+			vim.notify(time_message, vim.log.levels.INFO, { title = title .. " (Duration)" })
+
 			if opts.on_exit then
 				opts.on_exit(exit_code, signal, output_file)
 			end
