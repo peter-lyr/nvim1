@@ -4,65 +4,54 @@ import time
 import re
 import subprocess
 
-
-# 重定向标准输出和标准错误，确保所有输出都经过过滤
-class FilteredStream:
-    def __init__(self, original_stream):
-        self.original_stream = original_stream
-
-    def write(self, text):
-        if text and text.strip():
-            cleaned_text = text
-            if cleaned_text.strip():
-                # 检查是否是整行控制字符，如果是则跳过
-                if not re.match(r"^[\x00-\x1F\x7F\x1b]*$", text):
-                    self.original_stream.write(cleaned_text + "\n")
-                    self.original_stream.flush()
-
-    def flush(self):
-        self.original_stream.flush()
-
-
-# 应用过滤流
-sys.stdout = FilteredStream(sys.stdout)
-sys.stderr = FilteredStream(sys.stderr)
-
 MAX_BATCH_SIZE = 500 * 1024 * 1024
 MAX_SINGLE_FILE_SIZE = 100 * 1024 * 1024
 MAX_RETRIES = 5
 CUR_WORKING_DIR = ""
 
 
+class FilteredStream:
+    def __init__(self, original_stream):
+        self.original_stream = original_stream
+
+    def write(self, text):
+        if text and text.strip():
+            if not re.match(r"^[\x00-\x1F\x7F\x1b]*$", text):
+                self.original_stream.write(text + "\n")
+                self.original_stream.flush()
+
+    def flush(self):
+        self.original_stream.flush()
+
+
+sys.stdout = FilteredStream(sys.stdout)
+sys.stderr = FilteredStream(sys.stderr)
+
+
 def safe_quote_path(path):
-    """安全引用路径"""
     if re.search(r'[\s，,()"]', path):
         return f'"{path.replace('"', '\\"')}"'
     return path
 
 
 def get_git_env():
-    """Git环境设置"""
     env = os.environ.copy()
     env["GIT_COMMITTER_ENCODING"] = "utf-8"
     env["GIT_AUTHOR_ENCODING"] = "utf-8"
     env["LANG"] = "zh_CN.UTF-8"
     env["PYTHONIOENCODING"] = "utf-8"
     env["LC_ALL"] = "zh_CN.UTF-8"
-    # 禁用所有可能的控制序列
     env["TERM"] = "dumb"
     env["GIT_CONFIG_NOSYSTEM"] = "1"
     env["GIT_PAGER"] = "cat"
     env["PAGER"] = "cat"
-    # 添加更多禁用控制序列的环境变量
     env["ANSICON"] = "0"
     env["ConEmuANSI"] = "OFF"
-    # 禁用 Windows 控制台虚拟终端序列
     env["ENABLE_VIRTUAL_TERMINAL_PROCESSING"] = "0"
     return env
 
 
 def run_command(cmd, cwd=None, capture_output=False):
-    """执行命令"""
     global CUR_WORKING_DIR
     original_cwd = os.getcwd()
     output = ""
@@ -72,12 +61,9 @@ def run_command(cmd, cwd=None, capture_output=False):
             if CUR_WORKING_DIR != cwd:
                 CUR_WORKING_DIR = cwd
                 print(f"[Working directory]: {cwd}")
-
         print(f"[Executing command]: {cmd}")
         env = get_git_env()
-
         if capture_output:
-            # 使用subprocess直接捕获输出
             process = subprocess.Popen(
                 cmd,
                 shell=True,
@@ -90,21 +76,17 @@ def run_command(cmd, cwd=None, capture_output=False):
                 encoding="utf-8",
                 errors="replace",
             )
-
             output_lines = []
             while True:
                 line = process.stdout.readline()
                 if not line and process.poll() is not None:
                     break
                 if line:
-                    # 直接打印，让FilteredStream处理过滤
                     print(line.rstrip())
                     output_lines.append(line)
-
             output = "\n".join(output_lines)
             return process.returncode == 0, output
         else:
-            # 实时输出
             process = subprocess.Popen(
                 cmd,
                 shell=True,
@@ -117,17 +99,13 @@ def run_command(cmd, cwd=None, capture_output=False):
                 encoding="utf-8",
                 errors="replace",
             )
-
             while True:
                 line = process.stdout.readline()
                 if not line and process.poll() is not None:
                     break
                 if line:
-                    # 直接打印，让FilteredStream处理过滤
                     print(line.rstrip())
-
             return process.returncode == 0, ""
-
     except Exception as e:
         print(f"[Error] Command failed: {str(e)}")
         return False, str(e)
@@ -136,18 +114,13 @@ def run_command(cmd, cwd=None, capture_output=False):
             os.chdir(original_cwd)
 
 
-# 其他函数保持不变...
-
-
 def get_git_submodule_paths(git_root):
-    """获取子仓库路径"""
     if not git_root:
         return []
     cmd = "git submodule status --recursive"
     success, output = run_command(cmd, cwd=git_root, capture_output=True)
     if not success or not output:
         return []
-
     submodule_abs_paths = []
     for line in re.split(r"[\r\n]+", output):
         line = line.strip()
@@ -162,10 +135,8 @@ def get_git_submodule_paths(git_root):
 
 
 def filter_out_submodules(file_list, submodule_abs_paths, git_root):
-    """过滤子仓库路径"""
     if not file_list or not submodule_abs_paths or not git_root:
         return file_list
-
     filtered_files = []
     for file in file_list:
         file_abs_path = os.path.abspath(os.path.join(git_root, file))
@@ -180,14 +151,12 @@ def filter_out_submodules(file_list, submodule_abs_paths, git_root):
 
 
 def get_git_submodule_modified(git_root):
-    """获取修改的子仓库"""
     if not git_root:
         return []
     cmd = "git submodule status --recursive"
     success, output = run_command(cmd, cwd=git_root, capture_output=True)
     if not success or not output:
         return []
-
     modified_submodules = []
     for line in re.split(r"[\r\n]+", output):
         line = line.strip()
@@ -201,19 +170,16 @@ def get_git_submodule_modified(git_root):
 
 
 def handle_git_submodule(submodule_rel_path, git_root):
-    """处理子仓库"""
     if not git_root or not submodule_rel_path:
         return False
     sm_abs = os.path.abspath(os.path.join(git_root, submodule_rel_path))
     sm_quoted = safe_quote_path(sm_abs)
-
     cmd_init = f"git submodule update --init {sm_quoted}"
     print(f"[Submodule] Initializing: {submodule_rel_path}")
     success, _ = run_command(cmd_init, cwd=git_root)
     if not success:
         print(f"[Error] Failed to initialize submodule: {submodule_rel_path}")
         return False
-
     cmd_add = f"git add {sm_quoted}"
     print(f"[Submodule] Staging: {submodule_rel_path}")
     success, _ = run_command(cmd_add, cwd=git_root)
@@ -224,14 +190,11 @@ def handle_git_submodule(submodule_rel_path, git_root):
 
 
 def get_uncommitted_files():
-    """获取未提交文件"""
     git_root = find_git_root()
     if not git_root:
         print("[Error]: Could not find Git repository root")
         return [], [], []
-
     submodule_abs_paths = get_git_submodule_paths(git_root)
-
     cmd_modified = "git diff --name-only --diff-filter=ADM"
     success, modified_output = run_command(
         cmd_modified, cwd=git_root, capture_output=True
@@ -240,21 +203,18 @@ def get_uncommitted_files():
     success_untracked, untracked_output = run_command(
         cmd_untracked, cwd=git_root, capture_output=True
     )
-
     all_modified = [
         f.strip() for f in re.split(r"[\r\n]+", modified_output) if f.strip()
     ]
     all_untracked = [
         f.strip() for f in re.split(r"[\r\n]+", untracked_output) if f.strip()
     ]
-
     filtered_modified = filter_out_submodules(
         all_modified, submodule_abs_paths, git_root
     )
     filtered_untracked = filter_out_submodules(
         all_untracked, submodule_abs_paths, git_root
     )
-
     valid_normal = []
     invalid_normal = []
     for file_list in [filtered_modified, filtered_untracked]:
@@ -266,21 +226,17 @@ def get_uncommitted_files():
                 valid_normal.append(f)
             else:
                 invalid_normal.append(f)
-
     modified_submodules = get_git_submodule_modified(git_root)
-
     print(f"[Debug]: Found {len(valid_normal)} valid normal files")
     print(f"[Debug]: Found {len(modified_submodules)} modified submodules")
     if invalid_normal:
         print("[Warning]: Invalid file paths (not exist or encoding issue):")
         for f in invalid_normal:
             print(f"  {f}")
-
     return valid_normal, invalid_normal, modified_submodules
 
 
 def is_file_deleted_by_git(file_rel_path, git_root):
-    """判断文件是否被删除"""
     if not git_root or not file_rel_path:
         return False
     quoted_path = safe_quote_path(file_rel_path)
@@ -291,7 +247,6 @@ def is_file_deleted_by_git(file_rel_path, git_root):
 
 
 def get_file_size(file_rel_path, git_root):
-    """获取文件大小"""
     if not git_root or not file_rel_path:
         return 0
     submodule_abs_paths = get_git_submodule_paths(git_root)
@@ -299,7 +254,6 @@ def get_file_size(file_rel_path, git_root):
     for sm_abs in submodule_abs_paths:
         if os.path.commonprefix([file_abs, sm_abs]) == sm_abs:
             return 0
-
     try:
         if is_file_deleted_by_git(file_rel_path, git_root):
             return 0
@@ -313,7 +267,6 @@ def get_file_size(file_rel_path, git_root):
 
 
 def find_git_root(start_path=None):
-    """查找Git根目录"""
     current_path = start_path or os.getcwd()
     while True:
         git_dir = os.path.join(current_path, ".git")
@@ -326,12 +279,10 @@ def find_git_root(start_path=None):
 
 
 def commit_and_push(valid_normal, modified_submodules, commit_msg_file):
-    """提交文件和子仓库"""
     git_root = find_git_root()
     if not git_root:
         print("[Error]: Could not find Git repository root")
         return False
-
     if valid_normal:
         print(f"[Info]: Staging {len(valid_normal)} normal files...")
         files_quoted = [
@@ -342,13 +293,11 @@ def commit_and_push(valid_normal, modified_submodules, commit_msg_file):
         if not success:
             print("[Error]: Failed to stage normal files")
             return False
-
     if modified_submodules:
         print(f"[Info]: Handling {len(modified_submodules)} submodules...")
         for sm_rel in modified_submodules:
             if not handle_git_submodule(sm_rel, git_root):
                 return False
-
     commit_msg_abs = os.path.abspath(commit_msg_file)
     cmd_commit = f"git commit -F {safe_quote_path(commit_msg_abs)}"
     print("[Info]: Committing changes...")
@@ -356,7 +305,6 @@ def commit_and_push(valid_normal, modified_submodules, commit_msg_file):
     if not success:
         print("[Error]: Failed to commit changes")
         return False
-
     total = len(valid_normal) + len(modified_submodules)
     print(f"[Success]: Committed {total} items (files + submodules)")
     for retry in range(MAX_RETRIES):
@@ -369,25 +317,13 @@ def commit_and_push(valid_normal, modified_submodules, commit_msg_file):
         print(f"[Error]: Push attempt {retry+1} failed")
         if retry < MAX_RETRIES - 1:
             time.sleep(2)
-
     print(f"[Error]: Maximum retries ({MAX_RETRIES}) reached")
     return False
 
 
-def main():
-    # 清理命令行参数中的控制字符
-    clean_args = [arg for arg in sys.argv]
-    sys.argv = clean_args
-
-    if len(sys.argv) < 2:
-        print("[Error]: Usage: python git_batch_commit.py <commit_message_file.txt>")
-        sys.exit(1)
-
-    git_root = find_git_root()
-    original_commit_file = os.path.abspath(sys.argv[1].replace("\r", ""))
+def process_commit_file(original_commit_file):
     commit_msg_file = f"{original_commit_file}.tmp"
     push_allow = False
-
     if not os.path.exists(original_commit_file):
         print(f"[Error]: Commit file not found: '{original_commit_file}'")
         sys.exit(1)
@@ -409,7 +345,16 @@ def main():
         print("[Error]: Commit message is empty (filtered comments/blank lines)")
         os.remove(commit_msg_file)
         sys.exit(1)
+    return commit_msg_file
 
+
+def main():
+    if len(sys.argv) < 2:
+        print("[Error]: Usage: python git_batch_commit.py <commit_message_file.txt>")
+        sys.exit(1)
+    git_root = find_git_root()
+    original_commit_file = os.path.abspath(sys.argv[1].replace("\r", ""))
+    commit_msg_file = process_commit_file(original_commit_file)
     valid_normal, _, modified_submodules = get_uncommitted_files()
     filtered_normal = []
     for f in valid_normal:
@@ -420,7 +365,6 @@ def main():
             )
             continue
         filtered_normal.append(f)
-
     total = len(filtered_normal) + len(modified_submodules)
     if total == 0:
         print("[Info]: No valid content to commit. Exiting.")
@@ -429,15 +373,9 @@ def main():
     print(
         f"[Info]: To commit: {len(filtered_normal)} files + {len(modified_submodules)} submodules"
     )
-
-    # 执行提交和推送
     result = commit_and_push(filtered_normal, modified_submodules, commit_msg_file)
-
-    # 清理临时文件
     if os.path.exists(commit_msg_file):
         os.remove(commit_msg_file)
-
-    # 最终输出
     if result:
         print("[Complete]: All content committed and pushed successfully!")
     else:
