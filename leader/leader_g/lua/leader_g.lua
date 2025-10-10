@@ -55,12 +55,6 @@ function G.write_TempTxt_and_quit_and_add_commit_push()
 		end
 	end
 	G.add_commit_push_file(TempTxt)
-	vim.keymap.set(
-		{ "n", "v" },
-		"<cr><cr>",
-		function() end,
-		{ desc = "write_TempTxt_and_quit_and_add_commit_push", buffer = vim.g.bufnr }
-	)
 end
 
 function G.add_commit_push_edit_status()
