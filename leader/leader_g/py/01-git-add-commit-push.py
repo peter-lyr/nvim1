@@ -3,11 +3,15 @@ import sys
 import time
 import re
 import subprocess
+import random
+import shutil
+from pathlib import Path
 
 MAX_BATCH_SIZE = 500 * 1024 * 1024
-MAX_SINGLE_FILE_SIZE = 100 * 1024 * 1024
+MAX_SINGLE_FILE_SIZE = 50 * 1024 * 1024
 MAX_RETRIES = 5
 CUR_WORKING_DIR = ""
+SPLIT_FILE_EXTENSION = ".split_part_"
 
 
 class FilteredStream:
@@ -278,6 +282,84 @@ def find_git_root(start_path=None):
         current_path = parent_path
 
 
+def split_large_file(file_path, git_root):
+    """
+    分割大文件为多个小文件
+    返回分割后的文件列表
+    """
+    try:
+        abs_file_path = os.path.join(git_root, file_path)
+        file_size = os.path.getsize(abs_file_path)
+
+        # 随机选择分割大小（30-50MB）
+        chunk_size = random.randint(30, 50) * 1024 * 1024
+
+        # 计算需要分割的块数
+        num_chunks = (file_size + chunk_size - 1) // chunk_size
+
+        print(
+            f"[Split] Splitting {file_path} ({file_size/1024/1024:.2f}MB) into {num_chunks} chunks"
+        )
+
+        split_files = []
+        with open(abs_file_path, "rb") as f:
+            for i in range(num_chunks):
+                chunk_file_path = f"{abs_file_path}{SPLIT_FILE_EXTENSION}{i+1:03d}"
+                relative_chunk_path = f"{file_path}{SPLIT_FILE_EXTENSION}{i+1:03d}"
+
+                with open(chunk_file_path, "wb") as chunk_file:
+                    # 读取chunk_size大小的数据
+                    data = f.read(chunk_size)
+                    chunk_file.write(data)
+
+                split_files.append(relative_chunk_path)
+                print(
+                    f"[Split] Created chunk: {relative_chunk_path} ({len(data)/1024/1024:.2f}MB)"
+                )
+
+        # 将原文件添加到.gitignore
+        add_to_gitignore(file_path, git_root)
+
+        return split_files
+
+    except Exception as e:
+        print(f"[Error] Failed to split file {file_path}: {str(e)}")
+        return []
+
+
+def add_to_gitignore(file_pattern, git_root):
+    """
+    将文件模式添加到.gitignore
+    """
+    gitignore_path = os.path.join(git_root, ".gitignore")
+
+    try:
+        # 读取现有的.gitignore内容
+        existing_patterns = set()
+        if os.path.exists(gitignore_path):
+            with open(gitignore_path, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith("#"):
+                        existing_patterns.add(line)
+
+        # 如果模式不存在，则添加
+        if file_pattern not in existing_patterns:
+            with open(gitignore_path, "a", encoding="utf-8") as f:
+                f.write(f"\n{file_pattern}\n")
+            print(f"[GitIgnore] Added {file_pattern} to .gitignore")
+
+            # 暂存.gitignore文件
+            quoted_gitignore = safe_quote_path(gitignore_path)
+            cmd_add = f"git add {quoted_gitignore}"
+            success, _ = run_command(cmd_add, cwd=git_root)
+            if not success:
+                print(f"[Warning] Failed to stage .gitignore file")
+
+    except Exception as e:
+        print(f"[Error] Failed to update .gitignore: {str(e)}")
+
+
 def commit_and_push(valid_normal, modified_submodules, commit_msg_file):
     git_root = find_git_root()
     if not git_root:
@@ -356,23 +438,40 @@ def main():
     original_commit_file = os.path.abspath(sys.argv[1].replace("\r", ""))
     commit_msg_file = process_commit_file(original_commit_file)
     valid_normal, _, modified_submodules = get_uncommitted_files()
+
+    # 处理大文件分割
     filtered_normal = []
+    split_files = []
+
     for f in valid_normal:
         file_size = get_file_size(f, git_root)
         if file_size > MAX_SINGLE_FILE_SIZE:
-            print(
-                f"[Warning]: File exceeds 100MB (skipped): '{f}' ({file_size/1024/1024:.2f}MB)"
-            )
-            continue
-        filtered_normal.append(f)
+            print(f"[Info]: Large file detected: {f} ({file_size/1024/1024:.2f}MB)")
+            # 分割大文件
+            chunks = split_large_file(f, git_root)
+            if chunks:
+                split_files.extend(chunks)
+                print(f"[Info]: Split {f} into {len(chunks)} chunks")
+            else:
+                print(f"[Warning]: Failed to split large file: {f}")
+        else:
+            filtered_normal.append(f)
+
+    # 将分割后的文件加入提交列表
+    filtered_normal.extend(split_files)
+
     total = len(filtered_normal) + len(modified_submodules)
     if total == 0:
         print("[Info]: No valid content to commit. Exiting.")
         os.remove(commit_msg_file)
         sys.exit(0)
+
     print(
         f"[Info]: To commit: {len(filtered_normal)} files + {len(modified_submodules)} submodules"
     )
+    if split_files:
+        print(f"[Info]: Including {len(split_files)} split file chunks")
+
     result = commit_and_push(filtered_normal, modified_submodules, commit_msg_file)
     if os.path.exists(commit_msg_file):
         os.remove(commit_msg_file)
