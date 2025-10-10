@@ -902,7 +902,7 @@ end
 
 function F.run_and_notify_title(title, ...)
 	local cmd = string.format(...)
-	F.async_run(cmd, { title = title })
+	F.async_run(cmd, { title = title, use_pty = false })
 end
 
 function F.run_and_notify_title_on_err(title, on_stderr, ...)
