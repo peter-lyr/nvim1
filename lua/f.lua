@@ -701,6 +701,7 @@ function F.async_run(cmd, opts)
 		if #output > 0 then
 			local message = table.concat(output, "\n")
 			message = string.gsub(message, "\r", "")
+			message = message:gsub("[\x00-\x1F\x7F]", ""):gsub("\x1b%[[%d;]*[a-zA-Z]", "")
 			vim.notify(message, vim.log.levels.INFO, { title = title .. "..." })
 			if opts.on_stdout then
 				opts.on_stdout(output)
@@ -768,6 +769,7 @@ function F.async_run(cmd, opts)
 			end
 			if #errors > 0 then
 				local message = table.concat(errors, "\n")
+				message = message:gsub("[\x00-\x1F\x7F]", ""):gsub("\x1b%[[%d;]*[a-zA-Z]", "")
 				vim.notify(message, vim.log.levels.ERROR, { title = title .. " (Error)" })
 				if opts.on_stderr then
 					opts.on_stderr(errors)
