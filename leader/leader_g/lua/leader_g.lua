@@ -42,6 +42,12 @@ function G.add_commit_push_infos(infos)
 end
 
 function G.write_TempTxt_and_quit_and_add_commit_push()
+	vim.keymap.set(
+		{ "n", "v" },
+		"<cr><cr>",
+		function() end,
+		{ desc = "write_TempTxt_and_quit_and_add_commit_push", buffer = vim.g.bufnr }
+	)
 	require("f").write_lines_to_file({}, TempTxt)
 	require("f").cmd("bw %s", TempTxt)
 	require("f").cmd("silent w! %s", TempTxt)
@@ -70,18 +76,20 @@ function G.add_commit_push_edit_status()
 			vim.fn.setline(".", status)
 			vim.cmd("norm G")
 			require("f").set_ft("c")
+			vim.g.bufnr = vim.fn.bufnr()
 			vim.keymap.set({ "n", "v" }, "<cr><cr>", function()
 				G.write_TempTxt_and_quit_and_add_commit_push()
-			end, { desc = "write_TempTxt_and_quit_and_add_commit_push", buffer = vim.fn.bufnr() })
+			end, { desc = "write_TempTxt_and_quit_and_add_commit_push", buffer = vim.g.bufnr })
 		end,
 	})
 end
 
 function G.add_commit_push_edit()
 	vim.cmd("new")
+	vim.g.bufnr = vim.fn.bufnr()
 	vim.keymap.set({ "n", "v" }, "<cr><cr>", function()
 		G.write_TempTxt_and_quit_and_add_commit_push()
-	end, { desc = "write_TempTxt_and_quit_and_add_commit_push", buffer = vim.fn.bufnr() })
+	end, { desc = "write_TempTxt_and_quit_and_add_commit_push", buffer = vim.g.bufnr })
 end
 
 function G.add_commit_push_yank()
