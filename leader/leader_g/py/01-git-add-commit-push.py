@@ -17,34 +17,39 @@ cur_working_directory = ""
 
 
 def strip_control_chars(text):
-    """终极版控制字符过滤器，专门针对观察到的所有终端控制序列"""
+    """针对Windows终端特殊控制序列的增强过滤"""
     if not isinstance(text, str):
         return text
 
-    # 1. 处理所有私有模式控制序列 (最常见的问题序列)
-    # 匹配如[?9001h、[?1004l这类序列
+    # 1. 处理所有私有模式控制序列（最顽固的问题序列）
+    # 匹配：[?9001h、[?1004h、[?9001l、[?1004l、[?25l、[?25h
     text = re.sub(r"\x1B\[\?\d+[hl]", "", text)
 
-    # 2. 处理光标和屏幕控制序列
-    # 匹配如[2J(清屏)、[H(光标归位)、[?25l(隐藏光标)、[?25h(显示光标)
-    text = re.sub(r"\x1B\[\d+[JK]", "", text)
-    text = re.sub(r"\x1B\[\?25[lh]", "", text)
+    # 2. 处理屏幕控制序列
+    # 匹配：[2J（清屏）、[H（光标归位）
+    text = re.sub(r"\x1B\[2J", "", text)
     text = re.sub(r"\x1B\[H", "", text)
 
-    # 3. 处理SGR(选择图形再现)序列，如[m(重置)
+    # 3. 处理SGR（选择图形再现）序列
+    # 匹配：[m（重置格式）及带参数的变体
     text = re.sub(r"\x1B\[[\d;]*m", "", text)
 
-    # 4. 处理OSC(操作系统命令)序列，如]0;...(设置窗口标题)
+    # 4. 处理OSC（操作系统命令）序列
+    # 匹配：]0;C:\WINDOWS\SYSTEM32\cmd.exe 这类窗口标题序列
+    # 其中是BEL控制字符（\x07）
     text = re.sub(r"\x1B\]0;[^\x07]*\x07", "", text)
 
     # 5. 处理所有其他ESC开头的控制序列
+    # 匹配任何以ESC(\x1B)开头的控制序列
     text = re.sub(r"\x1B[^\x40-\x7E]*[\x40-\x7E]", "", text)
 
-    # 6. 移除所有ASCII控制字符(0-31, 127)和扩展控制字符(128-159)
-    text = re.sub(r"[\x00-\x1F\x7F\x80-\x9F]", "", text)
+    # 6. 移除所有ASCII控制字符(0-31, 127)
+    # 包括BEL(\x07)、CR(\r)等可能残留的字符
+    text = re.sub(r"[\x00-\x1F\x7F]", "", text)
 
-    # 7. 清理可能的空行
-    text = re.sub(r"\n\s*\n", "\n", text).strip()
+    # 7. 清理空白和冗余换行
+    text = re.sub(r"\s+", " ", text).strip()  # 替换多个空白为单个空格
+    text = re.sub(r" +", " ", text)  # 合并多个空格
 
     return text
 
@@ -57,12 +62,13 @@ def safe_quote_path(path):
 
 
 def safe_print(text):
-    """安全打印，确保所有输出经过多层过滤"""
+    """三重过滤确保输出干净"""
     try:
-        # 双重过滤确保安全
-        cleaned_text = strip_control_chars(str(text))
-        # 再次过滤以防万一
+        # 转换为字符串并进行多重过滤
+        cleaned_text = str(text)
         cleaned_text = strip_control_chars(cleaned_text)
+        cleaned_text = strip_control_chars(cleaned_text)  # 二次过滤
+        cleaned_text = strip_control_chars(cleaned_text)  # 三次过滤
         if cleaned_text.strip():
             print(cleaned_text, flush=True)
     except Exception as e:
@@ -83,7 +89,7 @@ def get_git_env():
 
 
 def run_command(cmd, cwd=None, capture_output=False):
-    """执行命令并全面过滤输出"""
+    """执行命令并对输出进行多层过滤"""
     global cur_working_directory
     original_cwd = os.getcwd()
     output = ""
@@ -122,11 +128,13 @@ def run_command(cmd, cwd=None, capture_output=False):
                 temp_file = f.name
             full_cmd += f" > {safe_quote_path(temp_file)} 2>&1"
             os.system(full_cmd)
-            # 读取时过滤所有控制字符
+            # 读取时进行多重过滤
             with open(
                 temp_file, "r", encoding="utf-8", errors="replace", newline=""
             ) as f:
-                output = strip_control_chars(f.read())
+                content = f.read()
+                output = strip_control_chars(content)
+                output = strip_control_chars(output)  # 二次过滤
             os.remove(temp_file)
         else:
             # 使用subprocess确保兼容性
@@ -150,9 +158,9 @@ def run_command(cmd, cwd=None, capture_output=False):
                     line_str = line.decode("utf-8", errors="replace")
                 except UnicodeDecodeError:
                     line_str = line.decode("gbk", errors="replace")  # 兼容Windows
-                # 双重过滤
+                # 多重过滤
                 cleaned_line = strip_control_chars(line_str)
-                cleaned_line = strip_control_chars(cleaned_line)
+                cleaned_line = strip_control_chars(cleaned_line)  # 二次过滤
                 if cleaned_line.strip():
                     print(cleaned_line, flush=True)
 
