@@ -676,7 +676,7 @@ function F.filter_control_chars(text)
 end
 
 function F.async_run(cmd, opts)
-	F.running_jobs = F.running_jobs or {}
+	vim.g.running_jobs = vim.g.running_jobs or {}
 	F.lazy_load("nvim-notify")
 	opts = opts or {}
 	local use_pty = opts.use_pty ~= nil and opts.use_pty or false
@@ -795,7 +795,7 @@ function F.async_run(cmd, opts)
 		end,
 		on_exit = function(_, exit_code, signal)
 			if vim.g.job_id then
-				F.running_jobs[vim.g.job_id] = nil
+				vim.g.running_jobs[vim.g.job_id] = nil
 			end
 			local end_time = vim.loop.hrtime()
 			local duration_ms = (end_time - start_time) / 1e6
@@ -830,7 +830,7 @@ function F.async_run(cmd, opts)
 		end
 		vim.notify("failed to run " .. vim.inspect(cmd), vim.log.levels.ERROR, { title = "Command Error" })
 	else
-		F.running_jobs[vim.g.job_id] = {
+		vim.g.running_jobs[vim.g.job_id] = {
 			cmd = cmd,
 			title = title,
 			start_time = start_time,
@@ -843,13 +843,13 @@ end
 
 function F.kill_all_running_jobs()
 	local count = 0
-	F.running_jobs = F.running_jobs or {}
-	for job_id, job_info in pairs(F.running_jobs) do
+	vim.g.running_jobs = vim.g.running_jobs or {}
+	for job_id, job_info in pairs(vim.g.running_jobs) do
 		vim.fn.jobstop(job_id)
 		count = count + 1
 		vim.notify("Killed: " .. job_info.cmd, vim.log.levels.WARN, { title = "Process Manager" })
 	end
-	F.running_jobs = {}
+	vim.g.running_jobs = {}
 	if count == 0 then
 		vim.notify("No running jobs to kill", vim.log.levels.INFO, { title = "Process Manager" })
 	else
@@ -860,8 +860,8 @@ end
 function F.show_running_jobs()
 	local count = 0
 	local job_list = {}
-	F.running_jobs = F.running_jobs or {}
-	for job_id, job_info in pairs(F.running_jobs) do
+	vim.g.running_jobs = vim.g.running_jobs or {}
+	for job_id, job_info in pairs(vim.g.running_jobs) do
 		count = count + 1
 		local duration = (vim.loop.hrtime() - job_info.start_time) / 1e9
 		table.insert(job_list, string.format("Job %d: %s (%.1fs)", job_id, job_info.cmd, duration))
