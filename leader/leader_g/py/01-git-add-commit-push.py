@@ -13,42 +13,47 @@ MAX_BATCH_SIZE = 500 * 1024 * 1024
 MAX_SINGLE_FILE_SIZE = 100 * 1024 * 1024
 MAX_RETRIES = 5
 
-cur_working_directory = ""
+# 定义ESC控制字符（^[）
+ESC = "\x1b"
+BEL = "\x07"  # 响铃字符，常用于OSC序列结尾
 
 
 def strip_control_chars(text):
-    """针对Windows终端特殊控制序列的增强过滤"""
+    """专门针对ESC(^[)控制字符及其衍生序列的强化过滤"""
     if not isinstance(text, str):
         return text
 
-    # 1. 处理所有私有模式控制序列（最顽固的问题序列）
-    # 匹配：[?9001h、[?1004h、[?9001l、[?1004l、[?25l、[?25h
+    # 1. 处理所有以ESC开头的控制序列（最关键的一步）
+    # 匹配任何以ESC开头，后跟任意字符直到序列结束的模式
+    # 这将捕获所有基于ESC的控制序列
+    text = re.sub(r"\x1B[^\x40-\x7E]*[\x40-\x7E]", "", text)
+
+    # 2. 处理OSC（操作系统命令）序列的特殊情况
+    # 如：]0;C:\WINDOWS\SYSTEM32\cmd.exe
+    text = re.sub(r"\x1B\]0;[^\x07]*\x07", "", text)
+
+    # 3. 处理私有模式控制序列（顽固序列）
+    # 如：[?9001h、[?1004l、[?25l等
     text = re.sub(r"\x1B\[\?\d+[hl]", "", text)
 
-    # 2. 处理屏幕控制序列
-    # 匹配：[2J（清屏）、[H（光标归位）
+    # 4. 处理屏幕控制序列
+    # 如：[2J（清屏）、[H（光标归位）
     text = re.sub(r"\x1B\[2J", "", text)
     text = re.sub(r"\x1B\[H", "", text)
 
-    # 3. 处理SGR（选择图形再现）序列
-    # 匹配：[m（重置格式）及带参数的变体
+    # 5. 处理SGR（选择图形再现）序列
+    # 如：[m（重置格式）
     text = re.sub(r"\x1B\[[\d;]*m", "", text)
 
-    # 4. 处理OSC（操作系统命令）序列
-    # 匹配：]0;C:\WINDOWS\SYSTEM32\cmd.exe 这类窗口标题序列
-    # 其中是BEL控制字符（\x07）
-    text = re.sub(r"\x1B\]0;[^\x07]*\x07", "", text)
+    # 6. 移除任何单独的ESC字符（^[）
+    text = text.replace(ESC, "")
 
-    # 5. 处理所有其他ESC开头的控制序列
-    # 匹配任何以ESC(\x1B)开头的控制序列
-    text = re.sub(r"\x1B[^\x40-\x7E]*[\x40-\x7E]", "", text)
-
-    # 6. 移除所有ASCII控制字符(0-31, 127)
-    # 包括BEL(\x07)、CR(\r)等可能残留的字符
+    # 7. 移除其他控制字符
+    # 包括BEL（响铃）、CR（回车）等
     text = re.sub(r"[\x00-\x1F\x7F]", "", text)
 
-    # 7. 清理空白和冗余换行
-    text = re.sub(r"\s+", " ", text).strip()  # 替换多个空白为单个空格
+    # 8. 清理空白和格式
+    text = re.sub(r"\s+", " ", text).strip()
     text = re.sub(r" +", " ", text)  # 合并多个空格
 
     return text
@@ -62,13 +67,14 @@ def safe_quote_path(path):
 
 
 def safe_print(text):
-    """三重过滤确保输出干净"""
+    """四重过滤确保所有ESC相关字符被清除"""
     try:
-        # 转换为字符串并进行多重过滤
         cleaned_text = str(text)
+        # 多次过滤确保顽固序列被清除
         cleaned_text = strip_control_chars(cleaned_text)
-        cleaned_text = strip_control_chars(cleaned_text)  # 二次过滤
-        cleaned_text = strip_control_chars(cleaned_text)  # 三次过滤
+        cleaned_text = strip_control_chars(cleaned_text)
+        cleaned_text = strip_control_chars(cleaned_text)
+        cleaned_text = strip_control_chars(cleaned_text)
         if cleaned_text.strip():
             print(cleaned_text, flush=True)
     except Exception as e:
@@ -90,15 +96,12 @@ def get_git_env():
 
 def run_command(cmd, cwd=None, capture_output=False):
     """执行命令并对输出进行多层过滤"""
-    global cur_working_directory
     original_cwd = os.getcwd()
     output = ""
     try:
         if cwd:
             os.chdir(cwd)
-            if cur_working_directory != cwd:
-                cur_working_directory = cwd
-                safe_print(f"[Working directory]: {cwd}")
+            safe_print(f"[Working directory]: {cwd}")
 
         # 过滤命令中的控制字符后再打印
         safe_print(f"[Executing command]: {strip_control_chars(cmd)}")
