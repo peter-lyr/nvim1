@@ -14,7 +14,7 @@ return {
 		name = "leader_b",
 		dir = Nvim1Leader .. "leader_b",
 		keys = {
-			{ "<leader>b", desc = "leader_b" },
+			{ "<leader>b", desc = "leader_b", mode = { "n", "v" } },
 		},
 	},
 
@@ -23,7 +23,7 @@ return {
 		name = "leader_c",
 		dir = Nvim1Leader .. "leader_c",
 		keys = {
-			{ "<leader>c", desc = "leader_c" },
+			{ "<leader>c", desc = "leader_c", mode = { "n", "v" } },
 		},
 	},
 
@@ -32,25 +32,25 @@ return {
 		name = "leader_d",
 		dir = Nvim1Leader .. "leader_d",
 		keys = {
-			{ "<leader>d", desc = "leader_d" },
+			{ "<leader>d", desc = "leader_d", mode = { "n", "v" } },
 		},
 	},
 
 	-- -- leader_e
 	-- {
-	--   name = 'leader_e',
-	--   dir = Nvim1Leader .. 'leader_e',
+	--   name = "leader_e",
+	--   dir = Nvim1Leader .. "leader_e",
 	--   keys = {
-	--     { '<leader>e', desc = 'leader_e', },
+	--     { "<leader>e", desc = "leader_e", mode = { "n", "v" } },
 	--   },
 	-- },
 
 	-- leader_f
 	{
-		name = 'leader_f',
-		dir = Nvim1Leader .. 'leader_f',
+		name = "leader_f",
+		dir = Nvim1Leader .. "leader_f",
 		keys = {
-			{ '<leader>f', desc = 'leader_f', },
+			{ "<leader>f", desc = "leader_f", mode = { "n", "v" } },
 		},
 	},
 
@@ -59,52 +59,52 @@ return {
 		name = "leader_g",
 		dir = Nvim1Leader .. "leader_g",
 		keys = {
-			{ "<leader>g", desc = "leader_g" },
+			{ "<leader>g", desc = "leader_g", mode = { "n", "v" } },
 		},
 	},
 
 	-- -- leader_h
 	-- {
-	--   name = 'leader_h',
-	--   dir = Nvim1Leader .. 'leader_h',
+	--   name = "leader_h",
+	--   dir = Nvim1Leader .. "leader_h",
 	--   keys = {
-	--     { '<leader>h', desc = 'leader_h', },
+	--     { "<leader>h", desc = "leader_h", mode = { "n", "v" } },
 	--   },
 	-- },
 
 	-- -- leader_i
 	-- {
-	--   name = 'leader_i',
-	--   dir = Nvim1Leader .. 'leader_i',
+	--   name = "leader_i",
+	--   dir = Nvim1Leader .. "leader_i",
 	--   keys = {
-	--     { '<leader>i', desc = 'leader_i', },
+	--     { "<leader>i", desc = "leader_i", mode = { "n", "v" } },
 	--   },
 	-- },
 
 	-- -- leader_l
 	-- {
-	--   name = 'leader_l',
-	--   dir = Nvim1Leader .. 'leader_l',
+	--   name = "leader_l",
+	--   dir = Nvim1Leader .. "leader_l",
 	--   keys = {
-	--     { '<leader>l', desc = 'leader_l', },
+	--     { "<leader>l", desc = "leader_l", mode = { "n", "v" } },
 	--   },
 	-- },
 
 	-- -- leader_m
 	-- {
-	--   name = 'leader_m',
-	--   dir = Nvim1Leader .. 'leader_m',
+	--   name = "leader_m",
+	--   dir = Nvim1Leader .. "leader_m",
 	--   keys = {
-	--     { '<leader>m', desc = 'leader_m', },
+	--     { "<leader>m", desc = "leader_m", mode = { "n", "v" } },
 	--   },
 	-- },
 
 	-- -- leader_n
 	-- {
-	--   name = 'leader_n',
-	--   dir = Nvim1Leader .. 'leader_n',
+	--   name = "leader_n",
+	--   dir = Nvim1Leader .. "leader_n",
 	--   keys = {
-	--     { '<leader>n', desc = 'leader_n', },
+	--     { "<leader>n", desc = "leader_n", mode = { "n", "v" } },
 	--   },
 	-- },
 
@@ -113,16 +113,16 @@ return {
 		name = "leader_o",
 		dir = Nvim1Leader .. "leader_o",
 		keys = {
-			{ "<leader>o", desc = "leader_o" },
+			{ "<leader>o", desc = "leader_o", mode = { "n", "v" } },
 		},
 	},
 
 	-- leader_p
 	{
-		name = 'leader_p',
-		dir = Nvim1Leader .. 'leader_p',
+		name = "leader_p",
+		dir = Nvim1Leader .. "leader_p",
 		keys = {
-			{ '<leader>p', desc = 'leader_p', },
+			{ "<leader>p", desc = "leader_p", mode = { "n", "v" } },
 		},
 	},
 
@@ -131,7 +131,7 @@ return {
 	--   name = 'leader_q',
 	--   dir = Nvim1Leader .. 'leader_q',
 	--   keys = {
-	--     { '<leader>q', desc = 'leader_q', },
+	--     { '<leader>q', desc = 'leader_q', mode = { "n", "v" }, },
 	--   },
 	-- },
 
@@ -140,7 +140,7 @@ return {
 		name = "leader_r",
 		dir = Nvim1Leader .. "leader_r",
 		keys = {
-			{ "<leader>r", desc = "leader_r" },
+			{ "<leader>r", desc = "leader_r", mode = { "n", "v" } },
 		},
 	},
 
@@ -149,7 +149,7 @@ return {
 		name = "leader_s",
 		dir = Nvim1Leader .. "leader_s",
 		keys = {
-			{ "<leader>s", desc = "telescope" },
+			{ "<leader>s", desc = "telescope", mode = { "n", "v" } },
 			{
 				"<leader><leader>",
 				"<cmd>Telescope find_files<cr>",
@@ -170,7 +170,7 @@ return {
 	--   name = 'leader_t',
 	--   dir = Nvim1Leader .. 'leader_t',
 	--   keys = {
-	--     { '<leader>t', desc = 'leader_t', },
+	--     { '<leader>t', desc = 'leader_t', mode = { "n", "v" }, },
 	--   },
 	-- },
 
@@ -179,7 +179,7 @@ return {
 	--   name = 'leader_u',
 	--   dir = Nvim1Leader .. 'leader_u',
 	--   keys = {
-	--     { '<leader>u', desc = 'leader_u', },
+	--     { '<leader>u', desc = 'leader_u', mode = { "n", "v" }, },
 	--   },
 	-- },
 
@@ -188,7 +188,7 @@ return {
 	--   name = 'leader_v',
 	--   dir = Nvim1Leader .. 'leader_v',
 	--   keys = {
-	--     { '<leader>v', desc = 'leader_v', },
+	--     { '<leader>v', desc = 'leader_v', mode = { "n", "v" }, },
 	--   },
 	-- },
 
@@ -197,7 +197,7 @@ return {
 		name = "leader_w",
 		dir = Nvim1Leader .. "leader_w",
 		keys = {
-			{ "<leader>w", desc = "leader_w" },
+			{ "<leader>w", desc = "leader_w", mode = { "n", "v" } },
 		},
 	},
 
@@ -206,7 +206,7 @@ return {
 		name = "leader_x",
 		dir = Nvim1Leader .. "leader_x",
 		keys = {
-			{ "<leader>x", desc = "leader_x" },
+			{ "<leader>x", desc = "leader_x", mode = { "n", "v" } },
 		},
 	},
 
@@ -215,7 +215,7 @@ return {
 	--   name = 'leader_y',
 	--   dir = Nvim1Leader .. 'leader_y',
 	--   keys = {
-	--     { '<leader>y', desc = 'leader_y', },
+	--     { '<leader>y', desc = 'leader_y', mode = { "n", "v" }, },
 	--   },
 	-- },
 
@@ -224,7 +224,7 @@ return {
 	--   name = 'leader_z',
 	--   dir = Nvim1Leader .. 'leader_z',
 	--   keys = {
-	--     { '<leader>z', desc = 'leader_z', },
+	--     { '<leader>z', desc = 'leader_z', mode = { "n", "v" }, },
 	--   },
 	-- },
 }
