@@ -284,31 +284,64 @@ def find_git_root(start_path=None):
 
 def split_large_file(file_path, git_root):
     """
-    分割大文件为多个小文件
+    分割大文件为多个小文件，每个文件大小随机且不同
     返回分割后的文件列表
     """
     try:
         abs_file_path = os.path.join(git_root, file_path)
         file_size = os.path.getsize(abs_file_path)
+        file_dir = os.path.dirname(abs_file_path)
 
-        # 随机选择分割大小（30-50MB）
-        chunk_size = random.randint(30, 50) * 1024 * 1024
-
-        # 计算需要分割的块数
-        num_chunks = (file_size + chunk_size - 1) // chunk_size
+        # 计算需要分割的块数（基于平均40MB）
+        avg_chunk_size = 40 * 1024 * 1024
+        num_chunks = max(2, (file_size + avg_chunk_size - 1) // avg_chunk_size)
 
         print(
             f"[Split] Splitting {file_path} ({file_size/1024/1024:.2f}MB) into {num_chunks} chunks"
         )
 
+        # 生成随机但不同的块大小（30-50MB之间）
+        chunk_sizes = []
+        remaining_size = file_size
+        min_chunk = 30 * 1024 * 1024
+        max_chunk = 50 * 1024 * 1024
+
+        for i in range(num_chunks - 1):
+            # 为每个块生成不同的大小
+            if remaining_size <= min_chunk:
+                chunk_size = remaining_size
+            else:
+                # 计算可用范围，确保剩余文件能合理分配
+                available_max = min(
+                    max_chunk, remaining_size - (num_chunks - i - 1) * min_chunk
+                )
+                available_min = max(
+                    min_chunk, remaining_size - (num_chunks - i - 1) * max_chunk
+                )
+
+                if available_min >= available_max:
+                    chunk_size = available_min
+                else:
+                    # 在可用范围内随机选择
+                    chunk_size = random.randint(available_min, available_max)
+
+            chunk_sizes.append(chunk_size)
+            remaining_size -= chunk_size
+
+        # 最后一个块使用剩余的所有大小
+        chunk_sizes.append(remaining_size)
+
+        # 打乱块大小的顺序（可选，保持顺序也可）
+        # random.shuffle(chunk_sizes)
+
         split_files = []
         with open(abs_file_path, "rb") as f:
-            for i in range(num_chunks):
+            for i, chunk_size in enumerate(chunk_sizes):
                 chunk_file_path = f"{abs_file_path}{SPLIT_FILE_EXTENSION}{i+1:03d}"
                 relative_chunk_path = f"{file_path}{SPLIT_FILE_EXTENSION}{i+1:03d}"
 
                 with open(chunk_file_path, "wb") as chunk_file:
-                    # 读取chunk_size大小的数据
+                    # 读取指定大小的数据
                     data = f.read(chunk_size)
                     chunk_file.write(data)
 
@@ -317,8 +350,8 @@ def split_large_file(file_path, git_root):
                     f"[Split] Created chunk: {relative_chunk_path} ({len(data)/1024/1024:.2f}MB)"
                 )
 
-        # 将原文件添加到.gitignore
-        add_to_gitignore(file_path, git_root)
+        # 在同目录创建.gitignore文件
+        add_to_local_gitignore(file_path, file_dir, git_root)
 
         return split_files
 
@@ -327,13 +360,23 @@ def split_large_file(file_path, git_root):
         return []
 
 
-def add_to_gitignore(file_pattern, git_root):
+def add_to_local_gitignore(file_pattern, local_dir, git_root):
     """
-    将文件模式添加到.gitignore
+    在文件同目录下创建.gitignore文件
     """
-    gitignore_path = os.path.join(git_root, ".gitignore")
-
     try:
+        gitignore_path = os.path.join(local_dir, ".gitignore")
+
+        # 计算相对于git根目录的文件路径
+        if os.path.commonpath([local_dir, git_root]) == git_root:
+            relative_dir = os.path.relpath(local_dir, git_root)
+            if relative_dir == ".":
+                ignore_pattern = file_pattern
+            else:
+                ignore_pattern = os.path.join(relative_dir, file_pattern)
+        else:
+            ignore_pattern = file_pattern
+
         # 读取现有的.gitignore内容
         existing_patterns = set()
         if os.path.exists(gitignore_path):
@@ -343,21 +386,28 @@ def add_to_gitignore(file_pattern, git_root):
                     if line and not line.startswith("#"):
                         existing_patterns.add(line)
 
-        # 如果模式不存在，则添加
-        if file_pattern not in existing_patterns:
+        # 添加原文件到.gitignore
+        if ignore_pattern not in existing_patterns:
             with open(gitignore_path, "a", encoding="utf-8") as f:
-                f.write(f"\n{file_pattern}\n")
-            print(f"[GitIgnore] Added {file_pattern} to .gitignore")
+                f.write(f"\n{ignore_pattern}\n")
+            print(f"[GitIgnore] Added {ignore_pattern} to {gitignore_path}")
 
-            # 暂存.gitignore文件
-            quoted_gitignore = safe_quote_path(gitignore_path)
-            cmd_add = f"git add {quoted_gitignore}"
-            success, _ = run_command(cmd_add, cwd=git_root)
-            if not success:
-                print(f"[Warning] Failed to stage .gitignore file")
+        # 添加合并文件到.gitignore
+        merged_pattern = f"{ignore_pattern}.merged"
+        if merged_pattern not in existing_patterns:
+            with open(gitignore_path, "a", encoding="utf-8") as f:
+                f.write(f"{merged_pattern}\n")
+            print(f"[GitIgnore] Added {merged_pattern} to {gitignore_path}")
+
+        # 暂存.gitignore文件
+        quoted_gitignore = safe_quote_path(gitignore_path)
+        cmd_add = f"git add {quoted_gitignore}"
+        success, _ = run_command(cmd_add, cwd=git_root)
+        if not success:
+            print(f"[Warning] Failed to stage .gitignore file")
 
     except Exception as e:
-        print(f"[Error] Failed to update .gitignore: {str(e)}")
+        print(f"[Error] Failed to update local .gitignore: {str(e)}")
 
 
 def commit_and_push(valid_normal, modified_submodules, commit_msg_file):
