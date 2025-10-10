@@ -661,13 +661,34 @@ function F.filter_control_chars(text)
 	if not text then
 		return ""
 	end
-	-- 移除窗口标题序列
-	text = text:gsub(string.char(27) .. "%]0;[^" .. string.char(7) .. "]*" .. string.char(7), "")
-	-- 移除其他常见的控制序列
-	text = text:gsub(string.char(27) .. "%[[%d;]*[a-zA-Z]", "")
-	-- 移除整行控制字符
-	text = text:gsub("^[\27\n\r\t]*$", "")
-	return text
+
+	-- 首先，将文本按行分割
+	local lines = {}
+	for line in text:gmatch("[^\r\n]+") do
+		-- 对每一行进行过滤
+		local cleaned_line = line
+
+		-- 移除所有ANSI转义序列
+		-- 匹配 ESC [ 后跟任意参数和命令字母的序列
+		cleaned_line = cleaned_line:gsub(string.char(27) .. "%[[%d;%?]*[a-zA-Z]", "")
+
+		-- 移除窗口标题序列 (ESC ] 0 ; ... BEL)
+		cleaned_line = cleaned_line:gsub(string.char(27) .. "%]0;[^" .. string.char(7) .. "]*" .. string.char(7), "")
+
+		-- 移除其他OSC序列 (ESC ] ... BEL)
+		cleaned_line = cleaned_line:gsub(string.char(27) .. "%][^" .. string.char(7) .. "]*" .. string.char(7), "")
+
+		-- 移除所有其他控制字符（除了空格和可打印字符）
+		cleaned_line = cleaned_line:gsub("[%c%z]", "") -- %c 匹配所有控制字符，%z 匹配NULL字符
+
+		-- 如果行不为空，则添加到结果中
+		if cleaned_line:match("%S") then -- %S 匹配非空白字符
+			table.insert(lines, cleaned_line)
+		end
+	end
+
+	-- 重新组合行
+	return table.concat(lines, "\n")
 end
 
 function F.async_run(cmd, opts)
