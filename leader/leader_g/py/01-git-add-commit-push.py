@@ -18,6 +18,7 @@ ESC = "\x1b"  # ^[ 字符
 BEL = "\x07"  # ^G 字符
 CTRL_CHARS = re.compile(r"[\x00-\x1F\x7F]")  # 所有ASCII控制字符
 
+
 # 特定目标序列 - 最后残留的问题序列
 TARGET_SEQUENCES = [
     r"\x1B\[\?9001l",
