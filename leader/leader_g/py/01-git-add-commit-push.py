@@ -15,35 +15,51 @@ MAX_RETRIES = 5
 
 # 定义控制字符常量
 ESC = "\x1b"  # ^[ 字符
-BEL = "\x07"  # 响铃字符
+BEL = "\x07"  # ^G 字符
 CTRL_CHARS = re.compile(r"[\x00-\x1F\x7F]")  # 所有ASCII控制字符
 
 
 def strip_control_chars(text):
-    """终极控制字符过滤函数，针对Windows终端所有已知控制序列"""
+    """终极控制字符过滤函数，针对所有观察到的控制序列"""
     if not isinstance(text, str):
         return text
 
-    # 1. 匹配所有以ESC开头的控制序列
-    # 包括: [?9001h、[?1004l、[2J、[H、[m、]0;... 等所有变体
-    text = re.sub(r"\x1B\[\??\d*[hl]", "", text)  # 私有模式控制
-    text = re.sub(r"\x1B\[\d+[JK]", "", text)  # 清屏/擦除序列
-    text = re.sub(r"\x1B\[H", "", text)  # 光标归位
-    text = re.sub(r"\x1B\[[\d;]*m", "", text)  # SGR格式控制
-    text = re.sub(r"\x1B\]0;[^\x07]*\x07", "", text)  # 窗口标题序列
-    text = re.sub(r"\x1B[^\x40-\x7E]*[\x40-\x7E]", "", text)  # 所有其他ESC序列
+    # 1. 处理窗口标题序列: ^[]0;...^G
+    text = re.sub(r"\x1B\]0;[^\x07]*\x07", "", text)
 
-    # 2. 移除任何残留的ESC字符
+    # 2. 处理私有模式控制序列: ^[[?9001h, ^[[?1004l等
+    text = re.sub(r"\x1B\[\?\d+[hl]", "", text)
+
+    # 3. 处理屏幕控制序列: ^[[2J(清屏), ^[[H(光标归位)
+    text = re.sub(r"\x1B\[2J", "", text)
+    text = re.sub(r"\x1B\[H", "", text)
+
+    # 4. 处理SGR格式控制: ^[[m及变体
+    text = re.sub(r"\x1B\[[\d;]*m", "", text)
+
+    # 5. 处理所有其他ESC开头的控制序列
+    text = re.sub(r"\x1B[^\x40-\x7E]*[\x40-\x7E]", "", text)
+
+    # 6. 移除任何残留的ESC字符
     text = text.replace(ESC, "")
 
-    # 3. 移除所有ASCII控制字符
+    # 7. 移除所有ASCII控制字符
     text = CTRL_CHARS.sub("", text)
 
-    # 4. 清理空白和格式
+    # 8. 清理空白和格式
     text = re.sub(r"\s+", " ", text).strip()
     text = re.sub(r" +", " ", text)  # 合并多个空格
 
     return text
+
+
+def deep_clean(text):
+    """深度清理函数，连续多次过滤确保彻底清除"""
+    cleaned = str(text)
+    # 连续5次过滤，确保顽固序列被清除
+    for _ in range(5):
+        cleaned = strip_control_chars(cleaned)
+    return cleaned
 
 
 def safe_quote_path(path):
@@ -54,17 +70,14 @@ def safe_quote_path(path):
 
 
 def safe_print(text):
-    """多重过滤确保输出干净"""
+    """安全打印函数，确保所有输出经过深度清理"""
     try:
-        cleaned_text = str(text)
-        # 连续四次过滤确保彻底清除顽固序列
-        for _ in range(4):
-            cleaned_text = strip_control_chars(cleaned_text)
+        cleaned_text = deep_clean(text)
         if cleaned_text.strip():
             print(cleaned_text, flush=True)
     except Exception as e:
         error_text = f"[Error in safe_print]: {str(e)}"
-        cleaned_error = strip_control_chars(error_text)
+        cleaned_error = deep_clean(error_text)
         print(cleaned_error, flush=True)
 
 
@@ -80,7 +93,7 @@ def get_git_env():
 
 
 def run_command(cmd, cwd=None, capture_output=False):
-    """执行命令并对输出进行多层过滤"""
+    """执行命令并对输出进行深度过滤"""
     original_cwd = os.getcwd()
     output = ""
     try:
@@ -89,7 +102,7 @@ def run_command(cmd, cwd=None, capture_output=False):
             safe_print(f"[Working directory]: {cwd}")
 
         # 过滤命令中的控制字符后再打印
-        safe_print(f"[Executing command]: {strip_control_chars(cmd)}")
+        safe_print(f"[Executing command]: {deep_clean(cmd)}")
         env = get_git_env()
 
         # 构建环境变量命令
@@ -116,16 +129,15 @@ def run_command(cmd, cwd=None, capture_output=False):
                 temp_file = f.name
             full_cmd += f" > {safe_quote_path(temp_file)} 2>&1"
             os.system(full_cmd)
-            # 读取时进行多重过滤
+            # 读取时进行深度过滤
             with open(
                 temp_file, "r", encoding="utf-8", errors="replace", newline=""
             ) as f:
                 content = f.read()
-                output = strip_control_chars(content)
-                output = strip_control_chars(output)  # 二次过滤
+                output = deep_clean(content)
             os.remove(temp_file)
         else:
-            # 使用subprocess确保兼容性
+            # 使用subprocess，修复bufsize警告
             process = subprocess.Popen(
                 full_cmd,
                 shell=True,
@@ -133,7 +145,7 @@ def run_command(cmd, cwd=None, capture_output=False):
                 stderr=subprocess.STDOUT,
                 cwd=cwd,
                 env=env,
-                bufsize=1,
+                bufsize=0,  # 无缓冲，解决二进制模式下行缓冲警告
             )
 
             # 逐行读取并过滤输出
@@ -146,9 +158,8 @@ def run_command(cmd, cwd=None, capture_output=False):
                     line_str = line.decode("utf-8", errors="replace")
                 except UnicodeDecodeError:
                     line_str = line.decode("gbk", errors="replace")  # 兼容Windows
-                # 多重过滤
-                cleaned_line = strip_control_chars(line_str)
-                cleaned_line = strip_control_chars(cleaned_line)  # 二次过滤
+                # 深度过滤
+                cleaned_line = deep_clean(line_str)
                 if cleaned_line.strip():
                     print(cleaned_line, flush=True)
 
@@ -158,7 +169,7 @@ def run_command(cmd, cwd=None, capture_output=False):
 
         return True, output
     except Exception as e:
-        err_msg = strip_control_chars(str(e))
+        err_msg = deep_clean(str(e))
         safe_print(f"[Error] Command failed: {err_msg}")
         return False, err_msg
     finally:
@@ -177,7 +188,7 @@ def get_git_submodule_paths(git_root):
 
     submodule_abs_paths = []
     for line in re.split(r"[\r\n]+", output):
-        line = line.strip()
+        line = deep_clean(line).strip()
         if not line:
             continue
         parts = re.split(r"\s+", line, 2)
@@ -217,7 +228,7 @@ def get_git_submodule_modified(git_root):
 
     modified_submodules = []
     for line in re.split(r"[\r\n]+", output):
-        line = line.strip()
+        line = deep_clean(line).strip()
         if not line:
             continue
         if line.startswith(("+", "-")):
@@ -335,7 +346,7 @@ def get_file_size(file_rel_path, git_root):
             return 0
         return os.path.getsize(file_abs)
     except OSError as e:
-        err_msg = strip_control_chars(str(e))
+        err_msg = deep_clean(str(e))
         safe_print(f"[Warning]: Failed to get size of '{file_rel_path}' - {err_msg}")
         return 0
 
@@ -403,6 +414,10 @@ def commit_and_push(valid_normal, modified_submodules, commit_msg_file):
 
 
 def main():
+    # 清理命令行参数中的控制字符
+    clean_args = [deep_clean(arg) for arg in sys.argv]
+    sys.argv = clean_args
+
     if len(sys.argv) < 2:
         safe_print(
             "[Error]: Usage: python git_batch_commit.py <commit_message_file.txt>"
@@ -419,9 +434,7 @@ def main():
         sys.exit(1)
     try:
         with open(original_commit_file, "r", encoding="utf-8", errors="replace") as f:
-            lines = [
-                strip_control_chars(line).replace("\r", "") for line in f.readlines()
-            ]
+            lines = [deep_clean(line).replace("\r", "") for line in f.readlines()]
         with open(commit_msg_file, "w", encoding="utf-8") as f:
             for line in lines:
                 if line.strip().startswith("#") or not line.strip():
@@ -429,9 +442,7 @@ def main():
                 f.write(f"{line.strip()}\n")
                 push_allow = True
     except Exception as e:
-        safe_print(
-            f"[Error]: Process commit file failed - {strip_control_chars(str(e))}"
-        )
+        safe_print(f"[Error]: Process commit file failed - {deep_clean(str(e))}")
         if os.path.exists(commit_msg_file):
             os.remove(commit_msg_file)
         sys.exit(1)
