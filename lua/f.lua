@@ -658,15 +658,15 @@ function F.ensure_file_exists(file_path)
 end
 
 local function filter_control_chars(text)
-	if not text then
-		return ""
-	end
-	-- 移除窗口标题序列
-	text = text:gsub(string.char(27) .. "%]0;[^" .. string.char(7) .. "]*" .. string.char(7), "")
-	-- 移除其他常见的控制序列
-	text = text:gsub(string.char(27) .. "%[[%d;]*[a-zA-Z]", "")
-	-- 移除整行控制字符
-	text = text:gsub("^[\27\n\r\t]*$", "")
+	-- if not text then
+	--   return ""
+	-- end
+	-- -- 移除窗口标题序列
+	-- text = text:gsub(string.char(27) .. "%]0;[^" .. string.char(7) .. "]*" .. string.char(7), "")
+	-- -- 移除其他常见的控制序列
+	-- text = text:gsub(string.char(27) .. "%[[%d;]*[a-zA-Z]", "")
+	-- -- 移除整行控制字符
+	-- text = text:gsub("^[\27\n\r\t]*$", "")
 	return text
 end
 
