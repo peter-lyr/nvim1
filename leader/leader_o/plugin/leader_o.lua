@@ -42,6 +42,14 @@ require("which-key").register({
 		mode = { "n", "v" },
 		silent = true,
 	},
+	["<leader>o<leader>c"] = {
+		function()
+			O.open_temp_txt_commit()
+		end,
+		"open: temp.txt.commit",
+		mode = { "n", "v" },
+		silent = true,
+	},
 	["<leader>o<leader>s"] = {
 		function()
 			O.open_stdout_txt()

@@ -22,6 +22,10 @@ function O.open_temp_txt_txt()
 	require("f").jump_or_split(TempTxt .. ".txt")
 end
 
+function O.open_temp_txt_commit()
+	require("f").jump_or_split(TempTxt .. ".commit")
+end
+
 function O.open_stdout_txt()
 	require("f").jump_or_split(StdOutTxt)
 end
