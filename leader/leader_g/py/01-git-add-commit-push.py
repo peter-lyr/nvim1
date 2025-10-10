@@ -1,4 +1,3 @@
-# todo: .gitignore要在所有拆分的文件都提交完之后才去把原文件相对路径加到.gitignore文件中去，不要一股脑就加进去了
 import os
 import sys
 import time
@@ -13,6 +12,7 @@ MAX_SINGLE_FILE_SIZE = 50 * 1024 * 1024
 MAX_RETRIES = 5
 CUR_WORKING_DIR = ""
 SPLIT_FILE_EXTENSION = ".split_part_"
+MAX_CMD_LENGTH = 8000  # Windows命令行限制约8191，留一些余量
 
 # 全局缓存，避免重复查询
 _git_submodule_cache = None
@@ -446,26 +446,72 @@ def add_to_local_gitignore(file_pattern, local_dir, git_root):
         print(f"[Error] Failed to update local .gitignore: {str(e)}")
 
 
+def batch_add_files(files, git_root):
+    """分批添加文件，避免命令行过长"""
+    if not files:
+        return True
+
+    print(f"[Info]: Staging {len(files)} files in batches...")
+
+    current_batch = []
+    current_length = 0
+
+    for i, f in enumerate(files):
+        file_path = safe_quote_path(os.path.join(git_root, f))
+        file_length = len(file_path) + 1  # +1 for space
+
+        # 如果添加这个文件会超过限制，或者已经是最后一个文件，则执行当前批次
+        if current_batch and (
+            current_length + file_length > MAX_CMD_LENGTH or i == len(files) - 1
+        ):
+            # 执行当前批次
+            cmd_add = f"git add {' '.join(current_batch)}"
+            success, _ = run_command(cmd_add, cwd=git_root)
+            if not success:
+                print(f"[Error]: Failed to stage batch of {len(current_batch)} files")
+                return False
+            print(f"[Info]: Successfully staged batch of {len(current_batch)} files")
+
+            # 重置批次
+            current_batch = []
+            current_length = 0
+
+        # 添加文件到当前批次
+        current_batch.append(file_path)
+        current_length += file_length
+
+    # 处理最后一批
+    if current_batch:
+        cmd_add = f"git add {' '.join(current_batch)}"
+        success, _ = run_command(cmd_add, cwd=git_root)
+        if not success:
+            print(f"[Error]: Failed to stage final batch of {len(current_batch)} files")
+            return False
+        print(f"[Info]: Successfully staged final batch of {len(current_batch)} files")
+
+    return True
+
+
 def commit_and_push(valid_normal, modified_submodules, commit_msg_file):
     git_root = find_git_root()
     if not git_root:
         print("[Error]: Could not find Git repository root")
         return False
+
+    # 分批添加普通文件
     if valid_normal:
-        print(f"[Info]: Staging {len(valid_normal)} normal files...")
-        files_quoted = [
-            safe_quote_path(os.path.join(git_root, f)) for f in valid_normal
-        ]
-        cmd_add = f"git add {' '.join(files_quoted)}"
-        success, _ = run_command(cmd_add, cwd=git_root)
-        if not success:
+        if not batch_add_files(valid_normal, git_root):
             print("[Error]: Failed to stage normal files")
             return False
+
+    # 处理子模块
     if modified_submodules:
         print(f"[Info]: Handling {len(modified_submodules)} submodules...")
         for sm_rel in modified_submodules:
             if not handle_git_submodule(sm_rel, git_root):
                 return False
+
+    # 提交更改
     commit_msg_abs = os.path.abspath(commit_msg_file)
     cmd_commit = f"git commit -F {safe_quote_path(commit_msg_abs)}"
     print("[Info]: Committing changes...")
@@ -473,8 +519,11 @@ def commit_and_push(valid_normal, modified_submodules, commit_msg_file):
     if not success:
         print("[Error]: Failed to commit changes")
         return False
+
     total = len(valid_normal) + len(modified_submodules)
     print(f"[Success]: Committed {total} items (files + submodules)")
+
+    # 推送更改
     for retry in range(MAX_RETRIES):
         print(f"[Pushing]: Attempt {retry+1}/{MAX_RETRIES}...")
         cmd_push = "git push --recurse-submodules=on-demand"
@@ -485,6 +534,7 @@ def commit_and_push(valid_normal, modified_submodules, commit_msg_file):
         print(f"[Error]: Push attempt {retry+1} failed")
         if retry < MAX_RETRIES - 1:
             time.sleep(2)
+
     print(f"[Error]: Maximum retries ({MAX_RETRIES}) reached")
     return False
 
