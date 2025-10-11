@@ -1,1 +1,1 @@
-leader/leader_g/py/03-git-auto-commit.py
+测试删除^#.*和^\s*$的行

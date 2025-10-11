@@ -49,6 +49,8 @@ end
 function G.write_TempTxt_and_quit_and_add_commit_push()
 	require("f").write_lines_to_file({}, G.commit_info_txt())
 	require("f").cmd("bw %s", G.commit_info_txt())
+	vim.cmd("g/^#.*/d")
+	vim.cmd([[g/^\s*$/d]])
 	require("f").cmd("silent w! %s", G.commit_info_txt())
 	if not require("f").is(require("f").is_cur_last_win()) then
 		vim.cmd("silent q")
