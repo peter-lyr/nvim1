@@ -112,6 +112,18 @@ function F.cmd(...)
 	return nil
 end
 
+function F.cmd_try(cmd)
+	vim.cmd(string.format(
+		[[
+		try
+			%s
+		catch
+		endtry
+	]],
+		cmd
+	))
+end
+
 function F.print(...)
 	vim.print(...)
 end
