@@ -1,6 +1,8 @@
 local G = {}
 
-TempCommitTxt = TempTxt .. ".commit"
+function G.commit_info_txt()
+	return vim.loop.cwd() .. "\\commit-info.txt"
+end
 
 local function get_py(py)
 	local info = debug.getinfo(1, "S")
@@ -28,7 +30,8 @@ function G.add_commit_push_file(file)
 		return
 	end
 	local git_status_py = get_py("02-git-status.py")
-	local git_add_commit_push_py = get_py("01-git-add-commit-push.py")
+	-- local git_add_commit_push_py = get_py("01-git-add-commit-push.py")
+	local git_add_commit_push_py = get_py("03-git-auto-commit.py")
 	require("f").run_and_notify_title("git status", "python %s", git_status_py)
 	_G.add_commit_push_retry_cnt = 50
 	G.add_commit_push_do(git_add_commit_push_py, file)
@@ -39,24 +42,24 @@ function G.add_commit_push_infos(infos)
 		return
 	end
 	infos = require("f").to_table(infos)
-	require("f").write_lines_to_file(infos, TempCommitTxt)
-	G.add_commit_push_file(TempCommitTxt)
+	require("f").write_lines_to_file(infos, G.commit_info_txt())
+	G.add_commit_push_file(G.commit_info_txt())
 end
 
 function G.write_TempTxt_and_quit_and_add_commit_push()
-	require("f").write_lines_to_file({}, TempCommitTxt)
-	require("f").cmd("bw %s", TempCommitTxt)
-	require("f").cmd("silent w! %s", TempCommitTxt)
+	require("f").write_lines_to_file({}, G.commit_info_txt())
+	require("f").cmd("bw %s", G.commit_info_txt())
+	require("f").cmd("silent w! %s", G.commit_info_txt())
 	if not require("f").is(require("f").is_cur_last_win()) then
 		vim.cmd("silent q")
 	end
 	for _ = 1, 1000 do
-		local lines = require("f").read_lines_from_file(TempCommitTxt)
+		local lines = require("f").read_lines_from_file(G.commit_info_txt())
 		if #lines > 0 then
 			break
 		end
 	end
-	G.add_commit_push_file(TempCommitTxt)
+	G.add_commit_push_file(G.commit_info_txt())
 	vim.keymap.del({ "n", "v" }, "<cr><cr>", { buffer = vim.g.bufnr })
 end
 
