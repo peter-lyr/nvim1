@@ -15,3 +15,4 @@ def pip_install(plugin):
 # pip_install("psutil")
 # pip_install("pyautogui")
 # pip_install("xpinyin")
+# pip_install("matplotlib")
