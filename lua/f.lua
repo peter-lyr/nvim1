@@ -933,6 +933,11 @@ function F.run_and_notify_title_on_err_pty(title, on_stderr, ...)
 	F.async_run(cmd, { title = title, on_stderr = on_stderr, use_pty = true, interval = 5000 })
 end
 
+function F.run_and_notify_title_on_exit_err_pty(title, on_exit, on_stderr, ...)
+	local cmd = string.format(...)
+	F.async_run(cmd, { title = title, on_stderr = on_exit, on_stderr = on_stderr, use_pty = true, interval = 5000 })
+end
+
 function F.run_and_notify_title_on_exit(title, on_exit, ...)
 	local cmd = string.format(...)
 	F.async_run(cmd, { title = title, on_exit = on_exit })
@@ -1050,7 +1055,7 @@ function F.go_cfile(force, fd_or_systemopen)
 	if not cfile then
 		cfile = F.get_cfile(64)
 		if not cfile then
-			cfile = F.safe_eval(F.expand_cfile())
+			cfile = F.safe_eval(vim.fn.expand("<cWORD>"))
 			if not cfile then
 				return
 			end
