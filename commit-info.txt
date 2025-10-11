@@ -1,1 +1,1 @@
-local job_id = vim.fn.jobstart(cmd
+on_exit = function(jid, exit_code, signal)

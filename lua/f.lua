@@ -793,9 +793,9 @@ function F.async_run(cmd, opts)
 				end
 			end
 		end,
-		on_exit = function(_, exit_code, signal)
-			if job_id then
-				_G.running_jobs[job_id] = nil
+		on_exit = function(jid, exit_code, signal)
+			if jid then
+				_G.running_jobs[jid] = nil
 			end
 			local end_time = vim.loop.hrtime()
 			local duration_ms = (end_time - start_time) / 1e6
