@@ -3,6 +3,7 @@ import sys
 import subprocess
 import math
 import time
+import shutil
 
 
 def run_git_command(cmd, max_retries=3):
@@ -111,6 +112,22 @@ def add_to_gitignore(file_path):
                 print(f"已将 {line} 添加到 {gitignore_path}")
 
 
+def copy_merge_exe_to_directory(target_dir):
+    current_script_dir = os.path.dirname(os.path.abspath(__file__))
+    exe_source_path = os.path.join(current_script_dir, "merge_split_file.exe")
+    if not os.path.exists(exe_source_path):
+        print(f"警告: merge_split_file.exe 不存在于 {current_script_dir}")
+        return False
+    exe_target_path = os.path.join(target_dir, "merge_split_file.exe")
+    try:
+        shutil.copy2(exe_source_path, exe_target_path)
+        print(f"已复制 merge_split_file.exe 到 {target_dir}")
+        return True
+    except Exception as e:
+        print(f"复制 merge_split_file.exe 失败: {e}")
+        return False
+
+
 def split_large_file(file_path, chunk_size=50 * 1024 * 1024):
     print(f"开始拆分大文件: {file_path}")
     file_dir = os.path.dirname(file_path)
@@ -129,6 +146,7 @@ def split_large_file(file_path, chunk_size=50 * 1024 * 1024):
             chunk_files.append(chunk_file_path)
             print(f"创建分块文件: {chunk_file_path} ({len(data)} bytes)")
     mark_file_as_split(file_path)
+    copy_merge_exe_to_directory(file_dir)
     return chunk_files
 
 

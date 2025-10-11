@@ -1,1 +1,1 @@
-测试on_exit里的jid参数是对的
+def copy_merge_exe_to_directory(target_dir):
