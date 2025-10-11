@@ -50,6 +50,8 @@ function G.write_TempTxt_and_quit_and_add_commit_push()
 	local reg = vim.fn.getreg("/")
 	vim.cmd("g/^#.*/d")
 	vim.cmd([[g/^\s*$/d]])
+	vim.cmd([[%s/\s\+$//]])
+	vim.cmd([[%s/\s\+/ /g]])
 	vim.fn.setreg("/", reg)
 	require("f").cmd("silent w! %s", G.commit_info_txt())
 	if not require("f").is(require("f").is_cur_last_win()) then
