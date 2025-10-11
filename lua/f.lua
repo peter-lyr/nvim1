@@ -706,7 +706,7 @@ function F.async_run(cmd, opts)
 			partial_line = ""
 		end
 		if #stdout_cache == 0 then
-			vim.notify("no output", vim.log.levels.INFO, { title = title .. "..." })
+			-- vim.notify("no output", vim.log.levels.INFO, { title = title .. "..." })
 			return
 		end
 		local output = vim.list_slice(stdout_cache)
@@ -830,7 +830,7 @@ function F.async_run(cmd, opts)
 		end
 		vim.notify("failed to run " .. vim.inspect(cmd), vim.log.levels.ERROR, { title = "Command Error" })
 	else
-		vim.notify("[job_id]: " .. vim.g.job_id .. ". " .. cmd, vim.log.levels.INFO, { title = "[" .. title .. "]" })
+		-- vim.notify("[job_id]: " .. vim.g.job_id .. ". " .. cmd, vim.log.levels.INFO, { title = "[" .. title .. "]" })
 		_G.running_jobs[vim.g.job_id] = {
 			cmd = cmd,
 			title = title,
