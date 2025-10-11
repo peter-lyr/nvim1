@@ -111,3 +111,36 @@ SendAfterActivate(keys) {
     if ActivateTargetWindow()
         Send(keys)
 }
+
+GetExplorerPath() {
+    activeClass := WinGetClass("A")
+    if (activeClass = "CabinetWClass" || activeClass = "ExploreWClass") {
+        try {
+            for window in ComObject("Shell.Application").Windows {
+                if window.hwnd = WinGetID("A") {
+                    currentPath := window.Document.Folder.Self.Path
+                    A_Clipboard := currentPath
+                    return
+                }
+            }
+        }
+        try {
+            winTitle := WinGetTitle("A")
+            if RegExMatch(winTitle, "([A-Z]:\\.*)", &match) {
+                A_Clipboard := match[1]
+            }
+        }
+    }
+}
+
+CopyGetPath() {
+    Send("^c")
+    if !ClipWait(2) {
+        MsgBox "复制操作超时或失败"
+        return
+    }
+    Sleep(100)
+    clipContent := A_Clipboard
+    A_Clipboard := clipContent
+    ShowTimedTooltipLaterDo(clipContent)
+}

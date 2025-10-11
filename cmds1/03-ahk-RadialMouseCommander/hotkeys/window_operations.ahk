@@ -19,3 +19,8 @@
 ^#l:: {
     TransparencyUp("A")
 }
+
+^+c:: {
+    CopyGetPath()
+}
+

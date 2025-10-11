@@ -9,5 +9,7 @@
 }
 
 ^+\:: {
+    tooltip("test.ahk exiting...")
+    Sleep(1000)
     ExitApp
 }
