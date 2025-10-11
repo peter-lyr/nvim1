@@ -340,7 +340,7 @@ int copy_merge_exe_to_directory(const char *target_dir) {
   if (last_slash != NULL) {
     int dir_len = last_slash - exe_source_path;
 #ifdef _WIN32
-    strncpy(exe_source_path + dir_len + 1, "merge_split_file.exe",
+    strncpy(exe_source_path + dir_len + 1, "merge-split-files.exe",
             OUR_MAX_PATH - dir_len - 1);
 #else
     strncpy(exe_source_path + dir_len + 1, "merge_split_file",
@@ -348,14 +348,14 @@ int copy_merge_exe_to_directory(const char *target_dir) {
 #endif
   } else {
 #ifdef _WIN32
-    strcpy(exe_source_path, "merge_split_file.exe");
+    strcpy(exe_source_path, "merge-split-files.exe");
 #else
     strcpy(exe_source_path, "merge_split_file");
 #endif
   }
 
 #ifdef _WIN32
-  snprintf(exe_target_path, sizeof(exe_target_path), "%s\\merge_split_file.exe",
+  snprintf(exe_target_path, sizeof(exe_target_path), "%s\\merge-split-files.exe",
            target_dir);
 #else
   snprintf(exe_target_path, sizeof(exe_target_path), "%s/merge_split_file",

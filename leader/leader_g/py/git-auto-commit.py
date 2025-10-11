@@ -114,17 +114,17 @@ def add_to_gitignore(file_path):
 
 def copy_merge_exe_to_directory(target_dir):
     current_script_dir = os.path.dirname(os.path.abspath(__file__))
-    exe_source_path = os.path.join(current_script_dir, "merge_split_file.exe")
+    exe_source_path = os.path.join(current_script_dir, "merge-split-files.exe")
     if not os.path.exists(exe_source_path):
-        print(f"警告: merge_split_file.exe 不存在于 {current_script_dir}")
+        print(f"警告: merge-split-files.exe 不存在于 {current_script_dir}")
         return False
-    exe_target_path = os.path.join(target_dir, "merge_split_file.exe")
+    exe_target_path = os.path.join(target_dir, "merge-split-files.exe")
     try:
         shutil.copy2(exe_source_path, exe_target_path)
-        print(f"已复制 merge_split_file.exe 到 {target_dir}")
+        print(f"已复制 merge-split-files.exe 到 {target_dir}")
         return True
     except Exception as e:
-        print(f"复制 merge_split_file.exe 失败: {e}")
+        print(f"复制 merge-split-files.exe 失败: {e}")
         return False
 
 
