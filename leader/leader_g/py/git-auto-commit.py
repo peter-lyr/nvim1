@@ -120,8 +120,9 @@ def copy_merge_exe_to_directory(target_dir):
         return False
     exe_target_path = os.path.join(target_dir, "merge-split-files.exe")
     try:
-        shutil.copy2(exe_source_path, exe_target_path)
-        print(f"已复制 merge-split-files.exe 到 {target_dir}")
+        if not os.path.exists(exe_target_path):
+            shutil.copy2(exe_source_path, exe_target_path)
+            print(f"已复制 merge-split-files.exe 到 {target_dir}")
         return True
     except Exception as e:
         print(f"复制 merge-split-files.exe 失败: {e}")
