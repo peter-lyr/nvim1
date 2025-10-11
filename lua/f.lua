@@ -407,6 +407,10 @@ function F.jump_or_split(file, no_split)
 	F.cmd("e %s", file)
 end
 
+function F.jump_or_edit(file)
+	F.jump_or_split(file, 1)
+end
+
 function F.edit(file)
 	if not file then
 		return
@@ -532,12 +536,14 @@ function F.copy_multiple_filenames()
 end
 
 function F.telescope_cmd_dir(cmd, dir)
-	F.lazy_load("telescope")
-	if dir then
+	F.lazy_load("telescope.nvim")
+	if dir and F.is_file_exists(dir) then
 		F.cmd("Telescope %s cwd=%s", cmd, dir)
+		F.project_cd()
 		return
 	end
 	F.cmd("Telescope %s", cmd)
+	F.project_cd()
 end
 
 function F.prev_hunk()
@@ -971,6 +977,91 @@ function F.windo(...)
 	local cmd = string.format(...)
 	F.cmd([[windo %s]], cmd)
 	vim.fn.win_gotoid(wid)
+end
+
+function F.telescope_do(dir)
+	F.lazy_load("telescope.nvim")
+	if F.is_file_exists(dir) then
+		F.cmd("Telescope %s cwd=%s", vim.g.telescope_cmd, dir)
+		F.project_cd()
+	end
+end
+
+function F.join_path(dir, ...)
+	if ... then
+		return F.rep(F.new_file(dir):joinpath(...).filename)
+	end
+	return dir
+end
+
+function F.expand_cfile()
+	local cfile = vim.split(vim.fn.expand("<cfile>"), "=")
+	return cfile[#cfile]
+end
+
+function F.get_cfile(depth)
+	if not depth then
+		depth = 1
+	end
+	local file = F.expand_cfile()
+	file = string.gsub(file, "~", Home)
+	if F.in_str("/", file) or F.in_str("\\", file) then
+		if F.is_file_exists(file) then
+			return file
+		end
+	end
+	local f = F.join_path(vim.loop.cwd(), file)
+	if F.is_file_exists(f) then
+		return f
+	end
+	local dirs = require("plenary.scandir").scan_dir(
+		vim.loop.cwd(),
+		{ hidden = false, depth = depth, add_dirs = true, only_dirs = true }
+	)
+	for _, dir in ipairs(dirs) do
+		f = F.join_path(dir, file)
+		if F.is_file_exists(f) then
+			return f
+		end
+	end
+	return nil
+end
+
+function F.go_cfile(force, fd_or_systemopen)
+	local cfile = F.get_cfile()
+	if cfile then
+		cfile = F.new_file(cfile):absolute()
+	end
+	if not cfile then
+		cfile = F.get_cfile(64)
+		if not cfile then
+			cfile = load(string.format("return %s", F.expand_cfile()))()
+			if not cfile then
+				return
+			end
+		end
+	end
+	if fd_or_systemopen == "fd" then
+		if not F.is_dir(cfile) then
+			cfile = F.get_parent(cfile)
+		end
+		F.telescope_cmd_dir("fd", cfile)
+		return
+	elseif fd_or_systemopen == "systemopen" then
+		if F.is_file(cfile) then
+			F.run_and_silent(cfile)
+		end
+		return
+	end
+	if F.is_file(cfile) then
+		if not force and vim.fn.getfsize(cfile) >= 20 * 1024 * 1024 then
+			F.run_and_silent(cfile)
+		else
+			F.jump_or_edit(cfile)
+		end
+	else
+		F.cmd("e %s", cfile)
+	end
 end
 
 return F
