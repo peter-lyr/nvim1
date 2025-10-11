@@ -1027,6 +1027,21 @@ function F.get_cfile(depth)
 	return nil
 end
 
+function F.safe_eval(lua_code)
+	if not lua_code:match("^%s*return") then
+		lua_code = "return " .. lua_code
+	end
+	local func, _ = load(lua_code)
+	if not func then
+		return nil
+	end
+	local success, result = pcall(func)
+	if not success then
+		return nil
+	end
+	return result
+end
+
 function F.go_cfile(force, fd_or_systemopen)
 	local cfile = F.get_cfile()
 	if cfile then
@@ -1035,7 +1050,7 @@ function F.go_cfile(force, fd_or_systemopen)
 	if not cfile then
 		cfile = F.get_cfile(64)
 		if not cfile then
-			cfile = load(string.format("return %s", F.expand_cfile()))()
+			cfile = safe_eval(F.expand_cfile())
 			if not cfile then
 				return
 			end
