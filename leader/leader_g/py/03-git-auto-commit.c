@@ -1,5 +1,6 @@
 #include <dirent.h>
 #include <errno.h>
+#include <locale.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -872,6 +873,12 @@ int main(int argc, char *argv[]) {
     printf("用法: %s <commit_message_file>\n", argv[0]);
     return 1;
   }
+  // 设置控制台编码为 UTF-8
+  SetConsoleOutputCP(65001);
+  SetConsoleCP(65001);
+
+  // 设置本地化
+  setlocale(LC_ALL, "zh_CN.UTF-8");
 
   const char *commit_msg_file = argv[1];
 
