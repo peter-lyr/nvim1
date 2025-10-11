@@ -1,1 +1,1 @@
-测试删除^#.*和^\s*$的行
+f'git add "{file}" & echo {os.path.getsize(file)/(1024*1024):.2f}M'

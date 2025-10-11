@@ -246,7 +246,7 @@ def batch_commit_files(commit_msg_file, git_root):
             )
             for file in batch:
                 run_git_command(
-                    f'git add "{file}" # {os.path.getsize(file)/(1024*1024):.2f}M'
+                    f'git add "{file}" & echo {os.path.getsize(file)/(1024*1024):.2f}M'
                 )
             commit_result = run_git_command(f'git commit -F "{commit_msg_file}"')
             if commit_result != 0:
