@@ -13,7 +13,6 @@ end
 
 function G.add_commit_push_do(py, file)
 	require("f").run_and_notify_title_on_exit_err_pty("git add commit push", function(exit_code, signal, output_file)
-		print(file, "rf")
 		vim.fn.delete(file, "rf")
 	end, function(errors)
 		local message = table.concat(errors, "\n")

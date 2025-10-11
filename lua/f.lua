@@ -935,7 +935,7 @@ end
 
 function F.run_and_notify_title_on_exit_err_pty(title, on_exit, on_stderr, ...)
 	local cmd = string.format(...)
-	F.async_run(cmd, { title = title, on_stderr = on_exit, on_stderr = on_stderr, use_pty = true, interval = 5000 })
+	F.async_run(cmd, { title = title, on_exit = on_exit, on_stderr = on_stderr, use_pty = true, interval = 5000 })
 end
 
 function F.run_and_notify_title_on_exit(title, on_exit, ...)
