@@ -1,4 +1,4 @@
 @echo off
 cd %~dp0
-gcc -o git_auto_commit.exe 03-git-auto-commit.c
+gcc -o git-auto-commit.exe 03-git-auto-commit.c
 pause
