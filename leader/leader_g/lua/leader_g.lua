@@ -1,7 +1,7 @@
 local G = {}
 
 function G.commit_info_txt()
-	return vim.loop.cwd() .. "\\commit-info.txt"
+	return Dp1Temp .. vim.fn.strftime("\\commit-info-%y%m%d-%H%M%S.txt")
 end
 
 local function get_py(py)
