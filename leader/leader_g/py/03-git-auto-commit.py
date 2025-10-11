@@ -219,20 +219,38 @@ def batch_commit_files(commit_msg_file, git_root):
                     status = parts[0]
                     filename = parts[1].strip()
                     file_path = os.path.join(git_root, filename)
-                    if status in (
-                        "??",
-                        "?",
-                        "M",
-                        "A",
-                        " M",
-                        "M ",
-                        "A ",
-                        "AM",
-                        "MM",
-                    ) and os.path.isfile(file_path):
-                        all_files.append((filename, get_file_size(file_path)))
+                    if status in ("??", "?", "M", "A", " M", "M ", "A ", "AM", "MM"):
+                        if os.path.isfile(file_path):
+                            all_files.append((filename, get_file_size(file_path)))
+                    elif status in ("D", " D"):
+                        all_files.append((filename, 0))
+                        run_git_command(f'git rm "{filename}"')
                 else:
                     print(f"无法解析的git状态行: {line}")
+        if not all_files:
+            result_staged = subprocess.run(
+                ["git", "diff", "--name-only", "--cached"],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="ignore",
+                check=True,
+            )
+            if result_staged.stdout.strip():
+                print("检测到已暂存的删除操作，将继续提交")
+                commit_result = run_git_command(f'git commit -F "{commit_msg_file}"')
+                if commit_result != 0:
+                    print("提交失败")
+                    return False
+                push_result = run_git_command("git push", max_retries=5)
+                if push_result != 0:
+                    print("推送失败")
+                    return False
+                print("删除操作提交并推送成功")
+                return True
+            else:
+                print("没有检测到需要提交的文件变更")
+                return True
         batches = []
         current_batch = []
         current_batch_size = 0
@@ -263,9 +281,8 @@ def batch_commit_files(commit_msg_file, git_root):
                 f"\n提交批次 {i+1}/{len(batches)}，包含 {len(batch)} 个文件，总大小 {batch_size/(1024*1024):.2f}M"
             )
             for file in batch:
-                run_git_command(
-                    f'echo {os.path.getsize(file)/(1024*1024):.2f}M>nul&git add "{file}"'
-                )
+                if os.path.exists(os.path.join(git_root, file)):
+                    run_git_command(f'git add "{file}"')
             commit_result = run_git_command(f'git commit -F "{commit_msg_file}"')
             if commit_result != 0:
                 print(f"提交批次 {i+1} 失败")

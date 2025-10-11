@@ -1,1 +1,0 @@
-def copy_merge_exe_to_directory(target_dir):
