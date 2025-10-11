@@ -1050,11 +1050,14 @@ function F.go_cfile(force, fd_or_systemopen)
 	if not cfile then
 		cfile = F.get_cfile(64)
 		if not cfile then
-			cfile = safe_eval(F.expand_cfile())
+			cfile = F.safe_eval(F.expand_cfile())
 			if not cfile then
 				return
 			end
 		end
+	end
+	if not F.is_file_exists(cfile) then
+		return
 	end
 	if fd_or_systemopen == "fd" then
 		if not F.is_dir(cfile) then
