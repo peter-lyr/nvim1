@@ -1,1 +1,1 @@
-echo>nul
+f'echo {os.path.getsize(file)/(1024*1024):.2f}M>nul&git add "{file}"'
