@@ -245,7 +245,9 @@ def batch_commit_files(commit_msg_file, git_root):
                 f"\n提交批次 {i+1}/{len(batches)}，包含 {len(batch)} 个文件，总大小 {batch_size/(1024*1024):.2f}M"
             )
             for file in batch:
-                run_git_command(f'git add "{file}"')
+                run_git_command(
+                    f'git add "{file}" # {os.path.getsize(file)/(1024*1024):.2f}M'
+                )
             commit_result = run_git_command(f'git commit -F "{commit_msg_file}"')
             if commit_result != 0:
                 print(f"提交批次 {i+1} 失败")
