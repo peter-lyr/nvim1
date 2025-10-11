@@ -729,7 +729,7 @@ function F.async_run(cmd, opts)
 	if timer then
 		timer:start(interval, interval, vim.schedule_wrap(process_cache))
 	end
-	vim.g.job_id = vim.fn.jobstart(cmd, {
+	local job_id = vim.fn.jobstart(cmd, {
 		pty = use_pty,
 		stdout_buffered = false,
 		stderr_buffered = false,
@@ -794,8 +794,8 @@ function F.async_run(cmd, opts)
 			end
 		end,
 		on_exit = function(_, exit_code, signal)
-			if vim.g.job_id then
-				_G.running_jobs[vim.g.job_id] = nil
+			if job_id then
+				_G.running_jobs[job_id] = nil
 			end
 			local end_time = vim.loop.hrtime()
 			local duration_ms = (end_time - start_time) / 1e6
@@ -818,7 +818,7 @@ function F.async_run(cmd, opts)
 			end
 		end,
 	})
-	if vim.g.job_id <= 0 then
+	if job_id <= 0 then
 		vim.notify("failed to run " .. vim.inspect(cmd), vim.log.levels.ERROR, { title = "Command Error" })
 		if fd then
 			vim.loop.fs_close(fd)
@@ -830,8 +830,8 @@ function F.async_run(cmd, opts)
 		end
 		vim.notify("failed to run " .. vim.inspect(cmd), vim.log.levels.ERROR, { title = "Command Error" })
 	else
-		-- vim.notify("[job_id]: " .. vim.g.job_id .. ". " .. cmd, vim.log.levels.INFO, { title = "[" .. title .. "]" })
-		_G.running_jobs[vim.g.job_id] = {
+		-- vim.notify("[job_id]: " .. job_id .. ". " .. cmd, vim.log.levels.INFO, { title = "[" .. title .. "]" })
+		_G.running_jobs[job_id] = {
 			cmd = cmd,
 			title = title,
 			start_time = start_time,
@@ -839,7 +839,7 @@ function F.async_run(cmd, opts)
 		}
 		F.fidget_notify("running: " .. cmd, vim.log.levels.INFO)
 	end
-	return vim.g.job_id
+	return job_id
 end
 
 function F.kill_all_running_jobs()

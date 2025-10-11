@@ -1,2 +1,1 @@
--- vim.notify("[job_id]:
--- vim.notify("no output",
+local job_id = vim.fn.jobstart(cmd
