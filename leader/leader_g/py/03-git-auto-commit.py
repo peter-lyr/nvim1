@@ -282,7 +282,9 @@ def batch_commit_files(commit_msg_file, git_root):
             )
             for file in batch:
                 if os.path.exists(os.path.join(git_root, file)):
-                    run_git_command(f'git add "{file}"')
+                    run_git_command(
+                        f'echo {os.path.getsize(file)/(1024*1024):.2f}M>nul&git add "{file}"'
+                    )
             commit_result = run_git_command(f'git commit -F "{commit_msg_file}"')
             if commit_result != 0:
                 print(f"提交批次 {i+1} 失败")
