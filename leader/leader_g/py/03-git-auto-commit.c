@@ -7,8 +7,21 @@
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
+#include <windows.h>
 
+// 使用系统定义的 MAX_PATH，或者定义我们自己的常量
+#ifndef MAX_PATH
 #define MAX_PATH 4096
+#else
+// 如果系统 MAX_PATH 太小，我们可以定义一个新的常量
+#define OUR_MAX_PATH 4096
+#endif
+
+// 如果没有定义 OUR_MAX_PATH，就使用 MAX_PATH
+#ifndef OUR_MAX_PATH
+#define OUR_MAX_PATH MAX_PATH
+#endif
+
 #define MAX_CMD 8192
 #define CHUNK_SIZE (50 * 1024 * 1024)
 #define MAX_RETRIES 3
@@ -44,7 +57,7 @@ int run_git_command(const char *cmd, int max_retries) {
       if (attempt < max_retries - 1) {
         int wait_time = 5 * (attempt + 1);
         printf("等待 %d 秒后重试...\n", wait_time);
-        sleep(wait_time);
+        Sleep(wait_time * 1000); // Windows 使用 Sleep，单位是毫秒
       }
     }
   }
@@ -68,7 +81,7 @@ char *get_git_root() {
     return NULL;
   }
 
-  char buffer[MAX_PATH];
+  char buffer[OUR_MAX_PATH];
   if (fgets(buffer, sizeof(buffer), fp) == NULL) {
     pclose(fp);
     printf("错误: 当前目录不是git仓库\n");
@@ -90,7 +103,7 @@ char **get_unstaged_files(int *file_count) {
     return NULL;
   }
 
-  char buffer[MAX_PATH];
+  char buffer[OUR_MAX_PATH];
   char **files = NULL;
   int count = 0;
   int capacity = 10;
@@ -122,24 +135,42 @@ char **get_unstaged_files(int *file_count) {
 
 // 检查文件是否已经被拆分
 int is_file_already_split(const char *file_path) {
-  char marker_path[MAX_PATH];
+  char marker_path[OUR_MAX_PATH];
   const char *file_name = strrchr(file_path, '/');
   if (file_name == NULL) {
-    file_name = file_path;
+    file_name = strrchr(file_path, '\\');
+    if (file_name == NULL) {
+      file_name = file_path;
+    } else {
+      file_name++;
+    }
   } else {
     file_name++;
   }
 
   const char *dir_path = file_path;
   char *last_slash = strrchr(file_path, '/');
+  if (last_slash == NULL) {
+    last_slash = strrchr(file_path, '\\');
+  }
+
   if (last_slash != NULL) {
     int dir_len = last_slash - file_path;
     strncpy(marker_path, file_path, dir_len);
     marker_path[dir_len] = '\0';
-    snprintf(marker_path + dir_len, MAX_PATH - dir_len, "/.%s.split",
+#ifdef _WIN32
+    snprintf(marker_path + dir_len, sizeof(marker_path) - dir_len,
+             "\\.%s.split", file_name);
+#else
+    snprintf(marker_path + dir_len, sizeof(marker_path) - dir_len, "/.%s.split",
              file_name);
+#endif
   } else {
+#ifdef _WIN32
     snprintf(marker_path, sizeof(marker_path), ".%s.split", file_name);
+#else
+    snprintf(marker_path, sizeof(marker_path), ".%s.split", file_name);
+#endif
   }
 
   struct stat st;
@@ -148,24 +179,42 @@ int is_file_already_split(const char *file_path) {
 
 // 标记文件为已拆分
 void mark_file_as_split(const char *file_path) {
-  char marker_path[MAX_PATH];
+  char marker_path[OUR_MAX_PATH];
   const char *file_name = strrchr(file_path, '/');
   if (file_name == NULL) {
-    file_name = file_path;
+    file_name = strrchr(file_path, '\\');
+    if (file_name == NULL) {
+      file_name = file_path;
+    } else {
+      file_name++;
+    }
   } else {
     file_name++;
   }
 
   const char *dir_path = file_path;
   char *last_slash = strrchr(file_path, '/');
+  if (last_slash == NULL) {
+    last_slash = strrchr(file_path, '\\');
+  }
+
   if (last_slash != NULL) {
     int dir_len = last_slash - file_path;
     strncpy(marker_path, file_path, dir_len);
     marker_path[dir_len] = '\0';
-    snprintf(marker_path + dir_len, MAX_PATH - dir_len, "/.%s.split",
+#ifdef _WIN32
+    snprintf(marker_path + dir_len, sizeof(marker_path) - dir_len,
+             "\\.%s.split", file_name);
+#else
+    snprintf(marker_path + dir_len, sizeof(marker_path) - dir_len, "/.%s.split",
              file_name);
+#endif
   } else {
+#ifdef _WIN32
     snprintf(marker_path, sizeof(marker_path), ".%s.split", file_name);
+#else
+    snprintf(marker_path, sizeof(marker_path), ".%s.split", file_name);
+#endif
   }
 
   FILE *f = fopen(marker_path, "wb");
@@ -176,17 +225,22 @@ void mark_file_as_split(const char *file_path) {
 
 // 添加到.gitignore
 void add_to_gitignore(const char *file_path) {
-  char gitignore_path[MAX_PATH];
+  char gitignore_path[OUR_MAX_PATH];
   const char *file_name = strrchr(file_path, '/');
   if (file_name == NULL) {
-    file_name = file_path;
+    file_name = strrchr(file_path, '\\');
+    if (file_name == NULL) {
+      file_name = file_path;
+    } else {
+      file_name++;
+    }
   } else {
     file_name++;
   }
 
   // 提取文件名和扩展名
-  char file_base[MAX_PATH];
-  char file_ext[MAX_PATH];
+  char file_base[OUR_MAX_PATH];
+  char file_ext[OUR_MAX_PATH];
   const char *dot = strrchr(file_name, '.');
 
   if (dot != NULL) {
@@ -201,18 +255,30 @@ void add_to_gitignore(const char *file_path) {
 
   const char *dir_path = file_path;
   char *last_slash = strrchr(file_path, '/');
+  if (last_slash == NULL) {
+    last_slash = strrchr(file_path, '\\');
+  }
+
   if (last_slash != NULL) {
     int dir_len = last_slash - file_path;
     strncpy(gitignore_path, file_path, dir_len);
     gitignore_path[dir_len] = '\0';
+#ifdef _WIN32
+    strcat(gitignore_path, "\\.gitignore");
+#else
     strcat(gitignore_path, "/.gitignore");
+#endif
   } else {
+#ifdef _WIN32
     strcpy(gitignore_path, ".gitignore");
+#else
+    strcpy(gitignore_path, ".gitignore");
+#endif
   }
 
   // 构建要添加的文件名
-  char original_file[MAX_PATH];
-  char merged_file[MAX_PATH];
+  char original_file[OUR_MAX_PATH];
+  char merged_file[OUR_MAX_PATH];
 
   strcpy(original_file, file_name);
   snprintf(merged_file, sizeof(merged_file), "%s-merged%s", file_base,
@@ -249,14 +315,14 @@ void add_to_gitignore(const char *file_path) {
 
 // 复制合并工具到目录
 int copy_merge_exe_to_directory(const char *target_dir) {
-  char exe_source_path[MAX_PATH];
-  char exe_target_path[MAX_PATH];
+  char exe_source_path[OUR_MAX_PATH];
+  char exe_target_path[OUR_MAX_PATH];
 
 // 获取当前可执行文件路径
 #ifdef _WIN32
-  GetModuleFileName(NULL, exe_source_path, MAX_PATH);
+  GetModuleFileName(NULL, exe_source_path, OUR_MAX_PATH);
 #else
-  ssize_t len = readlink("/proc/self/exe", exe_source_path, MAX_PATH - 1);
+  ssize_t len = readlink("/proc/self/exe", exe_source_path, OUR_MAX_PATH - 1);
   if (len != -1) {
     exe_source_path[len] = '\0';
   } else {
@@ -266,16 +332,34 @@ int copy_merge_exe_to_directory(const char *target_dir) {
 
   // 构建源路径和目标路径
   char *last_slash = strrchr(exe_source_path, '/');
-  if (last_slash != NULL) {
-    int dir_len = last_slash - exe_source_path;
-    strncpy(exe_source_path + dir_len + 1, "merge_split_file",
-            MAX_PATH - dir_len - 1);
-  } else {
-    strcpy(exe_source_path, "merge_split_file");
+  if (last_slash == NULL) {
+    last_slash = strrchr(exe_source_path, '\\');
   }
 
+  if (last_slash != NULL) {
+    int dir_len = last_slash - exe_source_path;
+#ifdef _WIN32
+    strncpy(exe_source_path + dir_len + 1, "merge_split_file.exe",
+            OUR_MAX_PATH - dir_len - 1);
+#else
+    strncpy(exe_source_path + dir_len + 1, "merge_split_file",
+            OUR_MAX_PATH - dir_len - 1);
+#endif
+  } else {
+#ifdef _WIN32
+    strcpy(exe_source_path, "merge_split_file.exe");
+#else
+    strcpy(exe_source_path, "merge_split_file");
+#endif
+  }
+
+#ifdef _WIN32
+  snprintf(exe_target_path, sizeof(exe_target_path), "%s\\merge_split_file.exe",
+           target_dir);
+#else
   snprintf(exe_target_path, sizeof(exe_target_path), "%s/merge_split_file",
            target_dir);
+#endif
 
   // 检查源文件是否存在
   struct stat st;
@@ -332,13 +416,18 @@ int split_large_file(const char *file_path, long chunk_size) {
   // 提取文件名和扩展名
   const char *file_name = strrchr(file_path, '/');
   if (file_name == NULL) {
-    file_name = file_path;
+    file_name = strrchr(file_path, '\\');
+    if (file_name == NULL) {
+      file_name = file_path;
+    } else {
+      file_name++;
+    }
   } else {
     file_name++;
   }
 
-  char file_base[MAX_PATH];
-  char file_ext[MAX_PATH];
+  char file_base[OUR_MAX_PATH];
+  char file_ext[OUR_MAX_PATH];
   const char *dot = strrchr(file_name, '.');
 
   if (dot != NULL) {
@@ -352,8 +441,12 @@ int split_large_file(const char *file_path, long chunk_size) {
   }
 
   // 获取目录路径
-  char dir_path[MAX_PATH];
+  char dir_path[OUR_MAX_PATH];
   const char *last_slash = strrchr(file_path, '/');
+  if (last_slash == NULL) {
+    last_slash = strrchr(file_path, '\\');
+  }
+
   if (last_slash != NULL) {
     int dir_len = last_slash - file_path;
     strncpy(dir_path, file_path, dir_len);
@@ -370,13 +463,18 @@ int split_large_file(const char *file_path, long chunk_size) {
 
   int success = 1;
   for (int i = 0; i < num_chunks; i++) {
-    char chunk_file_name[MAX_PATH];
-    char chunk_file_path[MAX_PATH];
+    char chunk_file_name[OUR_MAX_PATH];
+    char chunk_file_path[OUR_MAX_PATH];
 
     snprintf(chunk_file_name, sizeof(chunk_file_name), "%s_part%03d%s",
              file_base, i + 1, file_ext);
+#ifdef _WIN32
+    snprintf(chunk_file_path, sizeof(chunk_file_path), "%s\\%s", dir_path,
+             chunk_file_name);
+#else
     snprintf(chunk_file_path, sizeof(chunk_file_path), "%s/%s", dir_path,
              chunk_file_name);
+#endif
 
     FILE *chunk_file = fopen(chunk_file_path, "wb");
     if (chunk_file == NULL) {
@@ -436,9 +534,14 @@ char **process_large_files(const char *git_root, int *chunk_count) {
   all_chunks = (char **)malloc(chunks_capacity * sizeof(char *));
 
   for (int i = 0; i < unstaged_count; i++) {
-    char file_path[MAX_PATH];
+    char file_path[OUR_MAX_PATH];
+#ifdef _WIN32
+    snprintf(file_path, sizeof(file_path), "%s\\%s", git_root,
+             unstaged_files[i]);
+#else
     snprintf(file_path, sizeof(file_path), "%s/%s", git_root,
              unstaged_files[i]);
+#endif
 
     struct stat st;
     if (stat(file_path, &st) == 0 && S_ISREG(st.st_mode)) {
@@ -493,7 +596,7 @@ int check_remote_connection() {
     return 0;
   }
 
-  char buffer[MAX_PATH];
+  char buffer[OUR_MAX_PATH];
   if (fgets(buffer, sizeof(buffer), fp) == NULL) {
     pclose(fp);
     printf("错误: 未配置远程仓库 origin\n");
@@ -507,7 +610,11 @@ int check_remote_connection() {
       return 1;
     }
     printf("网络连接检查失败，等待 3 秒后重试... (%d/2)\n", i + 1);
+#ifdef _WIN32
+    Sleep(3000);
+#else
     sleep(3);
+#endif
   }
 
   printf("警告: 网络连接可能有问题，但仍将继续尝试提交\n");
@@ -566,7 +673,7 @@ int batch_commit_files(const char *commit_msg_file, const char *git_root) {
     return 0;
   }
 
-  char buffer[MAX_PATH];
+  char buffer[OUR_MAX_PATH];
   char **all_files = NULL;
   long *file_sizes = NULL;
   int file_count = 0;
@@ -582,8 +689,12 @@ int batch_commit_files(const char *commit_msg_file, const char *git_root) {
       char status[3] = {buffer[0], buffer[1], '\0'};
       const char *filename = buffer + 3;
 
-      char file_path[MAX_PATH];
+      char file_path[OUR_MAX_PATH];
+#ifdef _WIN32
+      snprintf(file_path, sizeof(file_path), "%s\\%s", git_root, filename);
+#else
       snprintf(file_path, sizeof(file_path), "%s/%s", git_root, filename);
+#endif
 
       if (strcmp(status, "??") == 0 || strcmp(status, "?") == 0 ||
           status[0] == 'M' || status[0] == 'A' ||
