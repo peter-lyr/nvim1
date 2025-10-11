@@ -63,6 +63,18 @@ return {
 					end, { buffer = ev.buf, nowait = true, silent = true })
 				end,
 			})
+			vim.keymap.set({ "n", "v" }, "gf", function()
+				require("f").go_cfile()
+			end, { desc = "go file" })
+			vim.keymap.set({ "n", "v" }, "gF", function()
+				require("f").go_cfile(1)
+			end, { desc = "go file force" })
+			vim.keymap.set({ "n", "v" }, "gd", function()
+				require("f").go_cfile(nil, "fd")
+			end, { desc = "fd under file" })
+			vim.keymap.set({ "n", "v" }, "go", function()
+				require("f").go_cfile(nil, "systemopen")
+			end, { desc = "fd under file" })
 		end,
 	},
 
@@ -125,18 +137,6 @@ return {
 				require("f").copy_multiple_filenames()
 			end, { desc = "copy_multiple_filenames" })
 			vim.keymap.set("n", "y<leader>", '"+y', { desc = '"+y' })
-			vim.keymap.set({ "n", "v" }, "gf", function()
-				require("f").go_cfile()
-			end, { desc = "go file" })
-			vim.keymap.set({ "n", "v" }, "gF", function()
-				require("f").go_cfile(1)
-			end, { desc = "go file force" })
-			vim.keymap.set({ "n", "v" }, "gd", function()
-				require("f").go_cfile(nil, "fd")
-			end, { desc = "fd under file" })
-			vim.keymap.set({ "n", "v" }, "go", function()
-				require("f").go_cfile(nil, "systemopen")
-			end, { desc = "fd under file" })
 		end,
 	},
 
