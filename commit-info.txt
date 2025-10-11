@@ -1,1 +1,1 @@
-测试on_exit里的jid参数是多少
+测试on_exit里的jid参数是对的

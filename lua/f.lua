@@ -795,10 +795,7 @@ function F.async_run(cmd, opts)
 		end,
 		on_exit = function(jid, exit_code, signal)
 			if jid then
-				print(jid, "============")
 				_G.running_jobs[jid] = nil
-			else
-				print(jid, "000000000000")
 			end
 			local end_time = vim.loop.hrtime()
 			local duration_ms = (end_time - start_time) / 1e6
